@@ -267,9 +267,6 @@ export default function VisitsScreen({
     return (
       <div className="stack">
         <h3>{t.visitNotes}</h3>
-        <div className="alert alertInfo">
-  DEBUG NOTES v2 — visits={visits.length} — selectedVisitId={String(selectedVisitId)} — editingNote={String(!!editingNote)}
-</div>
 
         {!selectedVisitId && (
           <>
