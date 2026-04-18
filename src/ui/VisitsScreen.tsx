@@ -267,6 +267,9 @@ export default function VisitsScreen({
     return (
       <div className="stack">
         <h3>{t.visitNotes}</h3>
+        <div className="alert alertInfo">
+  DEBUG NOTES v2 — visits={visits.length} — selectedVisitId={String(selectedVisitId)} — editingNote={String(!!editingNote)}
+</div>
 
         {!selectedVisitId && (
           <>
@@ -384,7 +387,7 @@ export default function VisitsScreen({
     <div className="stack">
       <h3>{t.viewDocument}</h3>
 
-      <div className="alert alertInfo">
+      <div className="alert alertInfo"> 
         💡 You can print this page (Ctrl+P or Cmd+P) to take with you to your vet visit.
       </div>
 
