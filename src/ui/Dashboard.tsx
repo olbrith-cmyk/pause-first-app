@@ -1,3 +1,4 @@
+import { EmergencyGuide, MedicalDisclaimer } from "./Modals";
 import { useMemo, useState } from "react";
 import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
@@ -18,6 +19,8 @@ export default function Dashboard({
 }) {
   const t = useTranslation(lang);
   const [tab, setTab] = useState<Tab>("pets");
+  const [showEmergency, setShowEmergency] = useState(false);
+const [showDisclaimer, setShowDisclaimer] = useState(false);
 
   const tabs = useMemo(
     () => [
@@ -32,6 +35,14 @@ export default function Dashboard({
   return (
     <main className="card">
       <div className="topRow">
+        <div className="row">
+  <button className="btn btnSecondary" onClick={() => setShowEmergency(true)}>
+    {t.emergencyGuide}
+  </button>
+  <button className="btn btnSecondary" onClick={() => setShowDisclaimer(true)}>
+    {t.medicalDisclaimer}
+  </button>
+</div>
         <div className="muted">Signed in as: {email}</div>
       </div>
 
@@ -53,6 +64,12 @@ export default function Dashboard({
           <VisitsScreen lang={lang} userId={userId} mode={tab} />
         )}
       </div>
+      {showEmergency && (
+  <EmergencyGuide lang={lang} onClose={() => setShowEmergency(false)} />
+)}
+{showDisclaimer && (
+  <MedicalDisclaimer lang={lang} onClose={() => setShowDisclaimer(false)} />
+)}
     </main>
   );
 }
