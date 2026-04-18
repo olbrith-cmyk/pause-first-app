@@ -103,28 +103,3 @@ export const getVisitNote = async (visitId: string) => {
   const snap = await getDocs(q);
   return snap.docs[0]?.data() as VisitNote | undefined;
 };
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-
-    function signedIn() {
-      return request.auth != null;
-    }
-
-    function isOwner(userId) {
-      return signedIn() && request.auth.uid == userId;
-    }
-
-    match /users/{userId} {
-      allow read, write: if isOwner(userId);
-
-      match /pets/{petId} {
-        allow read, write: if isOwner(userId);
-
-        match /visits/{visitId} {
-          allow read, write: if isOwner(userId);
-        }
-      }
-    }
-  }
-}
