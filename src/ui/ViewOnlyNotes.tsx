@@ -12,21 +12,9 @@ function Row({ label, value }: { label: string; value?: string }) {
 }
 
 export function ViewOnlyNotes({ note }: { note?: VisitNote }) {
-  const hasAny =
-    !!note &&
-    !!(
-      note.vetName ||
-      note.diagnosis ||
-      note.testsPerformed ||
-      note.treatmentMeds ||
-      note.homeInstructions ||
-      note.followUp
-    );
-
   return (
     <div className="vo">
       <h3 className="vo-title">Visit Notes</h3>
-
       <div className="vo-card">
         <Row label="Vet Name" value={note?.vetName} />
         <Row label="Diagnosis / Findings" value={note?.diagnosis} />
@@ -35,8 +23,6 @@ export function ViewOnlyNotes({ note }: { note?: VisitNote }) {
         <Row label="Home Instructions" value={note?.homeInstructions} />
         <Row label="Follow-up" value={note?.followUp} />
       </div>
-
-      {!hasAny && <p className="muted">No visit notes saved yet.</p>}
     </div>
   );
 }
