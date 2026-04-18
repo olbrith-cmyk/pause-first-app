@@ -93,7 +93,7 @@ export default function VisitsScreen({
 
   const loadNote = async (visitId: string) => {
     try {
-      const note = await getVisitNote(visitId);
+      const note = await getVisitNote(userId, visitId);
       setSelectedVisitId(visitId);
       setEditingNote(note ? note : emptyNote(userId, visitId));
     } catch (e: any) {
