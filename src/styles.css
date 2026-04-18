@@ -335,3 +335,61 @@ body {
     width: 100%;
   }
 }
+/* Modal */
+.modalOverlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(17,24,39,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  z-index: 50;
+}
+
+.modalCard{
+  width: min(720px, 100%);
+  background: var(--card);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  overflow: hidden;
+}
+
+.modalHeader{
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modalTitle{
+  margin:0;
+  color: var(--blue);
+  font-size: 22px;
+}
+
+.modalClose{
+  border: none;
+  background: transparent;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 8px 10px;
+  border-radius: 8px;
+}
+.modalClose:hover{
+  background: var(--bg);
+}
+
+.modalBody{
+  padding: 16px;
+}
+
+.list{
+  padding-left: 18px;
+}
+.list li{
+  margin: 8px 0;
+}
