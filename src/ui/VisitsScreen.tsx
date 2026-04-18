@@ -53,8 +53,9 @@ export default function VisitsScreen({
   const [pets, setPets] = useState<Pet[]>([]);
   const [visits, setVisits] = useState<Visit[]>([]);
   const [editing, setEditing] = useState<Visit>(emptyVisit(userId));
-  const [editingNote, setEditingNote] = useState<VisitNote | null>(null);
+
   const [selectedVisitId, setSelectedVisitId] = useState<string | null>(null);
+  const [editingNote, setEditingNote] = useState<VisitNote | null>(null);
 
   const load = async () => {
     const [p, v] = await Promise.all([getUserPets(userId), getUserVisits(userId)]);
@@ -66,11 +67,6 @@ export default function VisitsScreen({
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
-
-  const petName = useMemo(() => {
-    const p = pets.find((x) => x.id === editing.petId);
-    return p?.name ?? "";
-  }, [editing.petId, pets]);
 
   const save = async () => {
     if (!editing.petId) return alert("Pick a pet first");
@@ -89,24 +85,6 @@ export default function VisitsScreen({
     }
   };
 
-  const saveNote = async () => {
-    if (!editingNote) return;
-    try {
-      if (editingNote.id) {
-        const { id, ...rest } = editingNote;
-        await updateVisitNote(id, rest);
-      } else {
-        await addVisitNote(editingNote);
-      }
-      setEditingNote(null);
-      setSelectedVisitId(null);
-      await load();
-      alert(t.saved);
-    } catch (e: any) {
-      alert(t.error + ": " + (e?.message ?? String(e)));
-    }
-  };
-
   const remove = async (visitId: string) => {
     if (!confirm("Delete visit?")) return;
     await deleteVisit(visitId);
@@ -116,14 +94,28 @@ export default function VisitsScreen({
   const loadNote = async (visitId: string) => {
     try {
       const note = await getVisitNote(visitId);
-      if (note) {
-        setEditingNote(note);
-      } else {
-        setEditingNote(emptyNote(userId, visitId));
-      }
       setSelectedVisitId(visitId);
+      setEditingNote(note ? note : emptyNote(userId, visitId));
     } catch (e: any) {
       alert("Error loading note: " + (e?.message ?? String(e)));
+    }
+  };
+
+  const saveNote = async () => {
+    if (!editingNote) return;
+    try {
+      if (editingNote.id) {
+        const { id, ...rest } = editingNote;
+        await updateVisitNote(id, rest);
+      } else {
+        await addVisitNote(editingNote);
+      }
+      alert(t.saved);
+      setEditingNote(null);
+      setSelectedVisitId(null);
+      await load();
+    } catch (e: any) {
+      alert(t.error + ": " + (e?.message ?? String(e)));
     }
   };
 
@@ -264,13 +256,18 @@ export default function VisitsScreen({
   }
 
   if (mode === "notes") {
+    const selectedVisit = selectedVisitId
+      ? visits.find((v) => v.id === selectedVisitId) ?? null
+      : null;
+
     return (
       <div className="stack">
         <h3>{t.visitNotes}</h3>
 
-        {!selectedVisitId && (
+        {!selectedVisit && (
           <>
             <div className="muted">Select a visit to add notes:</div>
+
             {visits.length === 0 && (
               <div className="alert alertWarn">
                 No visits yet. Create one in "Prepare Visit" first.
@@ -296,7 +293,7 @@ export default function VisitsScreen({
           </>
         )}
 
-        {selectedVisitId && editingNote && (
+        {selectedVisit && editingNote && (
           <>
             <button
               className="btn btnSecondary"
@@ -307,6 +304,11 @@ export default function VisitsScreen({
             >
               ← Back
             </button>
+
+            <h4>
+              {pets.find((p) => p.id === selectedVisit.petId)?.name || "(Unnamed)"} —{" "}
+              {selectedVisit.visitDate || "No date"}
+            </h4>
 
             <label className="label">
               {t.vetName}
@@ -384,8 +386,8 @@ export default function VisitsScreen({
     <div className="stack">
       <h3>{t.viewDocument}</h3>
 
-      <div className="alert alertInfo"> 
-        💡 You can print this page (Ctrl+P or Cmd+P) to take with you to your vet visit.
+      <div className="alert alertInfo">
+        You can print this page (Ctrl+P or Cmd+P) to take with you to your vet visit.
       </div>
 
       {!selectedVisitId && (
@@ -403,4 +405,65 @@ export default function VisitsScreen({
                 style={{ cursor: "pointer", textAlign: "left" }}
               >
                 <div className="itemTitle">
-                  
+                  {pet?.name || "(Unnamed)"} — {v.visitDate || "No date"}
+                </div>
+                <div className="muted">{v.mainConcern}</div>
+              </button>
+            );
+          })}
+        </>
+      )}
+
+      {selectedVisitId && (
+        <>
+          <button className="btn btnSecondary" onClick={() => setSelectedVisitId(null)}>
+            ← Back
+          </button>
+
+          <div className="printDocument">
+            {visits
+              .filter((v) => v.id === selectedVisitId)
+              .map((v) => {
+                const pet = pets.find((p) => p.id === v.petId);
+                return (
+                  <div key={v.id}>
+                    <h2>{pet?.name || "(Unnamed)"}</h2>
+                    <p>
+                      <strong>Visit Date:</strong> {v.visitDate}
+                    </p>
+
+                    <h3>Preparation</h3>
+                    <p>
+                      <strong>Main Concern:</strong> {v.mainConcern}
+                    </p>
+                    <p>
+                      <strong>When Started:</strong> {v.whenStart}
+                    </p>
+                    <p>
+                      <strong>Progression:</strong> {v.howProgressing}
+                    </p>
+                    <p>
+                      <strong>Patterns:</strong> {v.patterns}
+                    </p>
+                    <p>
+                      <strong>Associated Signs:</strong> {v.associatedSigns}
+                    </p>
+                    <p>
+                      <strong>Previous Treatment:</strong> {v.previousTreatment}
+                    </p>
+                    <p>
+                      <strong>Questions for Vet:</strong> {v.questionsVet}
+                    </p>
+                  </div>
+                );
+              })}
+          </div>
+
+          <button className="btn btnPrimary" onClick={() => window.print()} style={{ marginTop: 16 }}>
+            Print / Save as PDF
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
