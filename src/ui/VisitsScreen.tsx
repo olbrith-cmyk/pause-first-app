@@ -99,6 +99,8 @@ export default function VisitsScreen({
         await addVisitNote(editingNote);
       }
       setEditingNote(null);
+      setSelectedVisitId(null);
+      await load();
       alert(t.saved);
     } catch (e: any) {
       alert(t.error + ": " + (e?.message ?? String(e)));
@@ -112,13 +114,17 @@ export default function VisitsScreen({
   };
 
   const loadNote = async (visitId: string) => {
-    const note = await getVisitNote(visitId);
-    if (note) {
-      setEditingNote(note);
-    } else {
-      setEditingNote(emptyNote(userId, visitId));
+    try {
+      const note = await getVisitNote(visitId);
+      if (note) {
+        setEditingNote(note);
+      } else {
+        setEditingNote(emptyNote(userId, visitId));
+      }
+      setSelectedVisitId(visitId);
+    } catch (e: any) {
+      alert("Error loading note: " + (e?.message ?? String(e)));
     }
-    setSelectedVisitId(visitId);
   };
 
   if (mode === "prepare") {
@@ -265,7 +271,11 @@ export default function VisitsScreen({
         {!selectedVisitId && (
           <>
             <div className="muted">Select a visit to add notes:</div>
-            {visits.length === 0 && <div className="alert alertWarn">No visits yet. Create one in "Prepare Visit" first.</div>}
+            {visits.length === 0 && (
+              <div className="alert alertWarn">
+                No visits yet. Create one in "Prepare Visit" first.
+              </div>
+            )}
 
             {visits.map((v) => {
               const pet = pets.find((p) => p.id === v.petId);
@@ -286,9 +296,15 @@ export default function VisitsScreen({
           </>
         )}
 
-        {editingNote && (
+        {selectedVisitId && editingNote && (
           <>
-            <button className="btn btnSecondary" onClick={() => setEditingNote(null)}>
+            <button
+              className="btn btnSecondary"
+              onClick={() => {
+                setEditingNote(null);
+                setSelectedVisitId(null);
+              }}
+            >
               ← Back
             </button>
 
@@ -315,7 +331,9 @@ export default function VisitsScreen({
               <textarea
                 className="textarea"
                 value={editingNote.testsPerformed}
-                onChange={(e) => setEditingNote({ ...editingNote, testsPerformed: e.target.value })}
+                onChange={(e) =>
+                  setEditingNote({ ...editingNote, testsPerformed: e.target.value })
+                }
               />
             </label>
 
@@ -324,7 +342,9 @@ export default function VisitsScreen({
               <textarea
                 className="textarea"
                 value={editingNote.treatmentMeds}
-                onChange={(e) => setEditingNote({ ...editingNote, treatmentMeds: e.target.value })}
+                onChange={(e) =>
+                  setEditingNote({ ...editingNote, treatmentMeds: e.target.value })
+                }
               />
             </label>
 
@@ -333,7 +353,9 @@ export default function VisitsScreen({
               <textarea
                 className="textarea"
                 value={editingNote.homeInstructions}
-                onChange={(e) => setEditingNote({ ...editingNote, homeInstructions: e.target.value })}
+                onChange={(e) =>
+                  setEditingNote({ ...editingNote, homeInstructions: e.target.value })
+                }
               />
             </label>
 
@@ -381,69 +403,4 @@ export default function VisitsScreen({
                 style={{ cursor: "pointer", textAlign: "left" }}
               >
                 <div className="itemTitle">
-                  {pet?.name || "(Unnamed)"} — {v.visitDate || "No date"}
-                </div>
-                <div className="muted">{v.mainConcern}</div>
-              </button>
-            );
-          })}
-        </>
-      )}
-
-      {selectedVisitId && (
-        <>
-          <button className="btn btnSecondary" onClick={() => setSelectedVisitId(null)}>
-            ← Back
-          </button>
-
-          <div className="printDocument">
-            {visits
-              .filter((v) => v.id === selectedVisitId)
-              .map((v) => {
-                const pet = pets.find((p) => p.id === v.petId);
-                return (
-                  <div key={v.id}>
-                    <h2>{pet?.name || "(Unnamed)"}</h2>
-                    <p>
-                      <strong>Visit Date:</strong> {v.visitDate}
-                    </p>
-
-                    <h3>Preparation</h3>
-                    <p>
-                      <strong>Main Concern:</strong> {v.mainConcern}
-                    </p>
-                    <p>
-                      <strong>When Started:</strong> {v.whenStart}
-                    </p>
-                    <p>
-                      <strong>Progression:</strong> {v.howProgressing}
-                    </p>
-                    <p>
-                      <strong>Patterns:</strong> {v.patterns}
-                    </p>
-                    <p>
-                      <strong>Associated Signs:</strong> {v.associatedSigns}
-                    </p>
-                    <p>
-                      <strong>Previous Treatment:</strong> {v.previousTreatment}
-                    </p>
-                    <p>
-                      <strong>Questions for Vet:</strong> {v.questionsVet}
-                    </p>
-                  </div>
-                );
-              })}
-          </div>
-
-          <button
-            className="btn btnPrimary"
-            onClick={() => window.print()}
-            style={{ marginTop: "16px" }}
-          >
-            Print / Save as PDF
-          </button>
-        </>
-      )}
-    </div>
-  );
-}
+                  
