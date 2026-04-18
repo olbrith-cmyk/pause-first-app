@@ -12,26 +12,9 @@ function Row({ label, value }: { label: string; value?: string }) {
 }
 
 export function ViewOnlyPet({ pet }: { pet: Pet }) {
-  const hasAny = !!(
-    pet.name ||
-    pet.species ||
-    pet.breed ||
-    pet.age ||
-    pet.sex ||
-    pet.weight ||
-    pet.microchip ||
-    pet.allergies ||
-    pet.medications ||
-    pet.diet ||
-    pet.clinic ||
-    pet.emergencyContact ||
-    pet.notes
-  );
-
   return (
     <div className="vo">
       <h3 className="vo-title">Pet Profile</h3>
-
       <div className="vo-card">
         <Row label="Name" value={pet.name} />
         <Row label="Species" value={pet.species} />
@@ -46,8 +29,6 @@ export function ViewOnlyPet({ pet }: { pet: Pet }) {
         <Row label="Emergency Contact" value={pet.emergencyContact} />
         <Row label="Notes" value={pet.notes} />
       </div>
-
-      {!hasAny && <p className="muted">No pet data yet.</p>}
     </div>
   );
 }
