@@ -101,5 +101,6 @@ export const updateVisitNote = (noteId: string, data: Partial<VisitNote>) =>
 export const getVisitNote = async (visitId: string) => {
   const q = query(collection(db, "visitNotes"), where("visitId", "==", visitId));
   const snap = await getDocs(q);
-  return snap.docs[0]?.data() as VisitNote | undefined;
+  const d = snap.docs[0];
+  return d ? ({ id: d.id, ...d.data() } as VisitNote) : undefined;
 };
