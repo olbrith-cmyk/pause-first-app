@@ -1,12 +1,16 @@
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+
 const firebaseConfig = {
-  apiKey: "AIzaSyCCX5qQcR2q-CyaAJFMyGk8PbP6mGRQCbM",
-  authDomain: "pause-first.firebaseapp.com",
-  projectId: "pause-first",
-  storageBucket: "pause-first.firebasestorage.app",
-  messagingSenderId: "343532727072",
-  appId: "1:343532727072:web:993f08c3a72f8b4ff78545",
-  measurementId: "G-X8LXCFYHBQ"
+  apiKey: "PASTE_YOURS_HERE",
+  authDomain: "PASTE_YOURS_HERE",
+  projectId: "PASTE_YOURS_HERE",
+  storageBucket: "PASTE_YOURS_HERE",
+  messagingSenderId: "PASTE_YOURS_HERE",
+  appId: "PASTE_YOURS_HERE"
 };
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+
+export const firebaseApp = initializeApp(firebaseConfig);
+export const auth = getAuth(firebaseApp);
+export const db = getFirestore(firebaseApp);
