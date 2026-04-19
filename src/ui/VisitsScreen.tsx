@@ -1,3 +1,4 @@
+import ViewOnlyNotes from "./ViewOnlyNotes";
 import { useEffect, useState } from "react";
 import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
@@ -59,7 +60,7 @@ const [prepMode, setPrepMode] = useState<"view" | "edit">("view");
 
   const [selectedVisitId, setSelectedVisitId] = useState<string | null>(null);
   const [editingNote, setEditingNote] = useState<VisitNote | null>(null);
-
+const [notesMode, setNotesMode] = useState<"view" | "edit">("view");
   const load = async () => {
     const [p, v] = await Promise.all([getUserPets(userId), getUserVisits(userId)]);
     setPets(p);
@@ -449,7 +450,10 @@ const selectedPrepPet = selectedPrep ? pets.find((p) => p.id === selectedPrep.pe
               <button
                 key={v.id}
                 className="itemCard"
-                onClick={() => setSelectedVisitId(v.id!)}
+                onClick={() => {
+  setSelectedVisitId(v.id!);
+  setNotesMode("view");
+}}
                 style={{ cursor: "pointer", textAlign: "left" }}
               >
                 <div className="itemTitle">
