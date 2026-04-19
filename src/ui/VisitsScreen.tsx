@@ -358,14 +358,15 @@ const selectedPrepPet = selectedPrep ? pets.find((p) => p.id === selectedPrep.pe
         className="btn btnSecondary"
         onClick={() =>
   setEditingNote({
-    visitId: selectedVisit.id!, // important: VisitNote expects visitId
-    vetName: selectedVisit.vetName || "",
-    diagnosis: selectedVisit.diagnosis || "",
-    testsPerformed: selectedVisit.testsPerformed || "",
-    treatmentMeds: selectedVisit.treatmentMeds || "",
-    homeInstructions: selectedVisit.homeInstructions || "",
-    followUp: selectedVisit.followUp || "",
-  })
+  userId: "",
+  visitId: selectedVisit.id!,
+  vetName: selectedVisit.vetName || "",
+  diagnosis: selectedVisit.diagnosis || "",
+  testsPerformed: selectedVisit.testsPerformed || "",
+  treatmentMeds: selectedVisit.treatmentMeds || "",
+  homeInstructions: selectedVisit.homeInstructions || "",
+  followUp: selectedVisit.followUp || "",
+})
 }
       >
         Edit
@@ -379,7 +380,18 @@ const selectedPrepPet = selectedPrep ? pets.find((p) => p.id === selectedPrep.pe
       </h4>
     </div>
 
-    <ViewOnlyNotes note={selectedVisit} />
+    <ViewOnlyNotes
+  note={{
+    userId: "",
+    visitId: selectedVisit.id!,
+    vetName: selectedVisit.vetName || "",
+    diagnosis: selectedVisit.diagnosis || "",
+    testsPerformed: selectedVisit.testsPerformed || "",
+    treatmentMeds: selectedVisit.treatmentMeds || "",
+    homeInstructions: selectedVisit.homeInstructions || "",
+    followUp: selectedVisit.followUp || "",
+  }}
+/>
   </div>
 )}
         {selectedVisit && editingNote && (
