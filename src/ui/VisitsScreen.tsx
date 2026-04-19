@@ -273,7 +273,6 @@ const selectedPrepPet = selectedPrep ? pets.find((p) => p.id === selectedPrep.pe
               </div>
               <div className="muted">{v.mainConcern}</div>
               <div className="row rowWrap">
-                <button
                   <button
   className="btn btnSecondary"
   onClick={() => {
