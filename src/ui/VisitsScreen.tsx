@@ -120,11 +120,10 @@ const [prepMode, setPrepMode] = useState<"view" | "edit">("view");
       alert(t.error + ": " + (e?.message ?? String(e)));
     }
   };
-
+const selectedPrep = prepViewId ? visits.find((v) => v.id === prepViewId) ?? null : null;
+const selectedPrepPet = selectedPrep ? pets.find((p) => p.id === selectedPrep.petId) ?? null : null;
   if (mode === "prepare") {
     return (
-      const selectedPrep = prepViewId ? visits.find((v) => v.id === prepViewId) ?? null : null;
-const selectedPrepPet = selectedPrep ? pets.find((p) => p.id === selectedPrep.petId) ?? null : null;
       <div className="stack">
         <h3>{t.prepareVisit}</h3>
         {selectedPrep && (
