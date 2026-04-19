@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
+import { ViewOnlyPrepare } from "./ViewOnlyPrepare";
 import type { Pet, Visit, VisitNote } from "../firestore";
 import {
   addVisit,
@@ -52,6 +53,8 @@ export default function VisitsScreen({
 
   const [pets, setPets] = useState<Pet[]>([]);
   const [visits, setVisits] = useState<Visit[]>([]);
+  const [prepViewId, setPrepViewId] = useState<string | null>(null);
+const [prepMode, setPrepMode] = useState<"view" | "edit">("view");
   const [editing, setEditing] = useState<Visit>(emptyVisit(userId));
 
   const [selectedVisitId, setSelectedVisitId] = useState<string | null>(null);
@@ -120,8 +123,43 @@ export default function VisitsScreen({
 
   if (mode === "prepare") {
     return (
+      const selectedPrep = prepViewId ? visits.find((v) => v.id === prepViewId) ?? null : null;
+const selectedPrepPet = selectedPrep ? pets.find((p) => p.id === selectedPrep.petId) ?? null : null;
       <div className="stack">
         <h3>{t.prepareVisit}</h3>
+        {selectedPrep && (
+  <div className="panel">
+    <div className="panelHeader">
+      <h4 style={{ margin: 0 }}>
+        {selectedPrepPet?.name || "(Unnamed)"} — {selectedPrep.visitDate || "No date"}
+      </h4>
+    </div>
+
+    {prepMode === "view" ? (
+      <ViewOnlyPrepare visit={selectedPrep} />
+    ) : (
+      <div className="stack">
+        <div className="alert alertInfo">Editing this saved preparation</div>
+      </div>
+    )}
+
+    <div className="row rowWrap" style={{ marginTop: 12 }}>
+      {prepMode === "view" ? (
+        <button className="btn btnSecondary" onClick={() => { setPrepMode("edit"); setEditing(selectedPrep); }}>
+          Edit
+        </button>
+      ) : (
+        <button className="btn btnSecondary" onClick={() => setPrepMode("view")}>
+          Cancel
+        </button>
+      )}
+
+      <button className="btn btnSecondary" onClick={() => { setPrepViewId(null); setPrepMode("view"); }}>
+        ← Back
+      </button>
+    </div>
+  </div>
+)}
 
         <label className="label">
           {t.petName}
@@ -238,6 +276,12 @@ export default function VisitsScreen({
               </div>
               <div className="muted">{v.mainConcern}</div>
               <div className="row rowWrap">
+                <button
+  className="btn btnSecondary"
+  onClick={() => { setPrepViewId(v.id!); setPrepMode("view"); }}
+>
+  View
+</button>
                 <button className="btn btnSecondary" onClick={() => setEditing(v)}>
                   Edit
                 </button>
