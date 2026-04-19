@@ -1,4 +1,4 @@
-import ViewOnlyNotes from "./ViewOnlyNotes";
+import { ViewOnlyNotes } from "./ViewOnlyNotes";
 import { useEffect, useState } from "react";
 import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
@@ -356,7 +356,16 @@ const selectedPrepPet = selectedPrep ? pets.find((p) => p.id === selectedPrep.pe
 
       <button
         className="btn btnSecondary"
-        onClick={() => setEditingNote(selectedVisit)}
+        onClick={() =>
+          setEditingNote({
+            vetName: selectedVisit.vetName || "",
+            diagnosis: selectedVisit.diagnosis || "",
+            testsPerformed: selectedVisit.testsPerformed || "",
+            treatmentMeds: selectedVisit.treatmentMeds || "",
+            homeInstructions: selectedVisit.homeInstructions || "",
+            followUp: selectedVisit.followUp || "",
+          })
+        }
       >
         Edit
       </button>
@@ -369,7 +378,7 @@ const selectedPrepPet = selectedPrep ? pets.find((p) => p.id === selectedPrep.pe
       </h4>
     </div>
 
-    <ViewOnlyNotes visit={selectedVisit} />
+    <ViewOnlyNotes note={selectedVisit} />
   </div>
 )}
         {selectedVisit && editingNote && (
