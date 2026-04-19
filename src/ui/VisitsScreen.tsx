@@ -273,7 +273,7 @@ const selectedPrepPet = selectedPrep ? pets.find((p) => p.id === selectedPrep.pe
         <h4>Your Visits</h4>
         {visits.length === 0 && <div className="muted">No visits yet.</div>}
 
-        {visits.map((v) => {
+        {visitsSorted.map((v) => {
           const pet = pets.find((p) => p.id === v.petId);
           return (
             <div key={v.id} className="itemCard">
@@ -330,7 +330,7 @@ const selectedPrepPet = selectedPrep ? pets.find((p) => p.id === selectedPrep.pe
               </div>
             )}
 
-            {visits.map((v) => {
+            {visitsSorted.map((v) => {
               const pet = pets.find((p) => p.id === v.petId);
               return (
                 <button
@@ -504,7 +504,7 @@ const selectedPrepPet = selectedPrep ? pets.find((p) => p.id === selectedPrep.pe
           <div className="muted">Select a visit to view:</div>
           {visits.length === 0 && <div className="alert alertWarn">No visits yet.</div>}
 
-          {visits.map((v) => {
+          {visitsSorted.map((v) => {
             const pet = pets.find((p) => p.id === v.petId);
             return (
               <button
