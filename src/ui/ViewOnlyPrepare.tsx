@@ -12,20 +12,9 @@ function Row({ label, value }: { label: string; value?: string }) {
 }
 
 export function ViewOnlyPrepare({ visit }: { visit: Visit }) {
-  const hasAny = !!(
-    visit.mainConcern ||
-    visit.whenStart ||
-    visit.howProgressing ||
-    visit.patterns ||
-    visit.associatedSigns ||
-    visit.previousTreatment ||
-    visit.questionsVet
-  );
-
   return (
     <div className="vo">
       <h3 className="vo-title">Preparation</h3>
-
       <div className="vo-card">
         <Row label="Main Concern" value={visit.mainConcern} />
         <Row label="When Started" value={visit.whenStart} />
@@ -35,8 +24,6 @@ export function ViewOnlyPrepare({ visit }: { visit: Visit }) {
         <Row label="Previous Treatment" value={visit.previousTreatment} />
         <Row label="Questions for Vet" value={visit.questionsVet} />
       </div>
-
-      {!hasAny && <p className="muted">No preparation saved yet.</p>}
     </div>
   );
 }
