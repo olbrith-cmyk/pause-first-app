@@ -123,6 +123,14 @@ const [notesMode, setNotesMode] = useState<"view" | "edit">("view");
   };
 const selectedPrep = prepViewId ? visits.find((v) => v.id === prepViewId) ?? null : null;
 const selectedPrepPet = selectedPrep ? pets.find((p) => p.id === selectedPrep.petId) ?? null : null;
+ 
+  const visitsSorted = [...visits].sort((a, b) => {
+  const ad = a.visitDate || "";
+  const bd = b.visitDate || "";
+  // dates are "YYYY-MM-DD" so string compare works
+  return bd.localeCompare(ad); // newest first
+});
+  
   if (mode === "prepare") {
     return (
       <div className="stack">
