@@ -328,10 +328,19 @@ const selectedPrepPet = selectedPrep ? pets.find((p) => p.id === selectedPrep.pe
                 <button
                   key={v.id}
                   className="itemCard"
-                  onClick={() => {
-                    setSelectedVisitId(v.id!);
-                    setEditingNote(null);
-                  }}
+                  onClick={async () => {
+  setSelectedVisitId(v.id!);
+  setEditingNote(null);
+
+  try {
+    const note = await getVisitNote(userId, v.id!);
+    if (note) {
+      setEditingNote(note);
+    }
+  } catch (e) {
+    console.error("Error loading note:", e);
+  }
+}}
                   style={{ cursor: "pointer", textAlign: "left" }}
                 >
                   <div className="itemTitle">
