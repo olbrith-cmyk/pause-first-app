@@ -393,3 +393,20 @@ body {
 .list li{
   margin: 8px 0;
 }
+.vo { display: grid; gap: 12px; }
+.vo-title { margin: 0; }
+.vo-card {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px;
+  background: #fff;
+}
+.vo-row {
+  display: grid;
+  gap: 6px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.vo-row:last-child { border-bottom: none; }
+.vo-label { font-size: 12px; color: var(--muted); }
+.vo-value { white-space: pre-wrap; line-height: 1.35; }
