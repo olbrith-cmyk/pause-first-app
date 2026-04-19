@@ -222,7 +222,6 @@ export default function PetsScreen({ lang, userId }: { lang: Lang; userId: strin
     <div className="itemTitle">
       {p.name || "(Unnamed)"} <span className="muted">— {p.species}</span>
     </div>
-    <div className="muted">Tap to open</div>
   </button>
 ))}
       </div>
