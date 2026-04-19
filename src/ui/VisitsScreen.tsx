@@ -303,7 +303,6 @@ const selectedPrepPet = selectedPrep ? pets.find((p) => p.id === selectedPrep.pe
       </div>
     );
   }
-
   if (mode === "notes") {
     const selectedVisit = selectedVisitId
       ? visits.find((v) => v.id === selectedVisitId) ?? null
@@ -329,7 +328,10 @@ const selectedPrepPet = selectedPrep ? pets.find((p) => p.id === selectedPrep.pe
                 <button
                   key={v.id}
                   className="itemCard"
-                  onClick={() => loadNote(v.id!)}
+                  onClick={() => {
+                    setSelectedVisitId(v.id!);
+                    setEditingNote(null);
+                  }}
                   style={{ cursor: "pointer", textAlign: "left" }}
                 >
                   <div className="itemTitle">
@@ -340,6 +342,49 @@ const selectedPrepPet = selectedPrep ? pets.find((p) => p.id === selectedPrep.pe
               );
             })}
           </>
+        )}
+
+        {selectedVisit && !editingNote && (
+          <div className="panel" id="notes-view-panel">
+            <div className="row rowWrap" style={{ marginBottom: 12 }}>
+              <button
+                className="btn btnSecondary"
+                onClick={() => {
+                  setSelectedVisitId(null);
+                  setEditingNote(null);
+                }}
+              >
+                ← Back
+              </button>
+
+              <button
+                className="btn btnSecondary"
+                onClick={() => {
+                  setEditingNote(emptyNote(userId, selectedVisit.id!));
+                  setTimeout(() => {
+                    document
+                      .getElementById("notes-view-panel")
+                      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }, 0);
+                }}
+              >
+                Edit
+              </button>
+            </div>
+
+            <div className="panelHeader">
+              <h4 style={{ margin: 0 }}>
+                {pets.find((p) => p.id === selectedVisit.petId)?.name || "(Unnamed)"} —{" "}
+                {selectedVisit.visitDate || "No date"}
+              </h4>
+            </div>
+
+            {editingNote ? (
+              <ViewOnlyNotes note={editingNote} />
+            ) : (
+              <div className="muted">No notes yet. Click Edit to add them.</div>
+            )}
+          </div>
         )}
 {selectedVisit && !editingNote && (
   <div className="panel" id="notes-view-panel">
@@ -394,7 +439,7 @@ const selectedPrepPet = selectedPrep ? pets.find((p) => p.id === selectedPrep.pe
 />
   </div>
 )}
-        {selectedVisit && editingNote && (
+                {selectedVisit && editingNote && (
           <>
             <button
               className="btn btnSecondary"
@@ -481,7 +526,6 @@ const selectedPrepPet = selectedPrep ? pets.find((p) => p.id === selectedPrep.pe
       </div>
     );
   }
-
   // mode === "document"
   return (
     <div className="stack">
