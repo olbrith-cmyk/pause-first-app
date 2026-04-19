@@ -112,25 +112,10 @@ export default function PetsScreen({ lang, userId }: { lang: Lang; userId: strin
       {(selected || mode === "edit") && (
         <div className="panel">
           <div className="panelHeader">
-            <h4 style={{ margin: 0 }}>
-              {selected ? selected.name || "(Unnamed)" : "New Pet"}
-            </h4>
-            <div className="row">
-              {selected && mode === "view" && (
-                <button className="btn btnSecondary" onClick={openEdit}>
-                  {t.editPet}
-                </button>
-              )}
-              <button className="btn btnSecondary" onClick={cancel}>
-                Cancel
-              </button>
-              {selected?.id && (
-                <button className="btn btnDanger" onClick={() => remove(selected.id!)}>
-                  {t.deletePet}
-                </button>
-              )}
-            </div>
-          </div>
+  <h4 style={{ margin: 0 }}>
+    {selected ? selected.name || "(Unnamed)" : "New Pet"}
+  </h4>
+</div>
 
           {mode === "view" && selected && <ViewOnlyPet pet={selected} />}
 
@@ -202,6 +187,23 @@ export default function PetsScreen({ lang, userId }: { lang: Lang; userId: strin
               </div>
             </>
           )}
+          <div className="row rowWrap" style={{ marginTop: 12 }}>
+  {selected && mode === "view" && (
+    <button className="btn btnSecondary" onClick={openEdit}>
+      {t.editPet}
+    </button>
+  )}
+
+  <button className="btn btnSecondary" onClick={cancel}>
+    Cancel
+  </button>
+
+  {selected?.id && (
+    <button className="btn btnDanger" onClick={() => remove(selected.id!)}>
+      {t.deletePet}
+    </button>
+  )}
+</div>
         </div>
       )}
 
@@ -211,17 +213,18 @@ export default function PetsScreen({ lang, userId }: { lang: Lang; userId: strin
         {pets.length === 0 && <div className="muted">No pets yet.</div>}
 
         {pets.map((p) => (
-          <div key={p.id} className="itemCard">
-            <div className="itemTitle">
-              {p.name || "(Unnamed)"} <span className="muted">— {p.species}</span>
-            </div>
-            <div className="row rowWrap">
-              <button className="btn btnSecondary" onClick={() => openView(p)}>
-                View
-              </button>
-            </div>
-          </div>
-        ))}
+  <button
+    key={p.id}
+    className="itemCard"
+    onClick={() => openView(p)}
+    style={{ cursor: "pointer", textAlign: "left" }}
+  >
+    <div className="itemTitle">
+      {p.name || "(Unnamed)"} <span className="muted">— {p.species}</span>
+    </div>
+    <div className="muted">Tap to open</div>
+  </button>
+))}
       </div>
     </div>
   );
