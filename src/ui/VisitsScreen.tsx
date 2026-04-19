@@ -126,40 +126,6 @@ const selectedPrepPet = selectedPrep ? pets.find((p) => p.id === selectedPrep.pe
     return (
       <div className="stack">
         <h3>{t.prepareVisit}</h3>
-        {selectedPrep && (
-  <div className="panel">
-    <div className="panelHeader">
-      <h4 style={{ margin: 0 }}>
-        {selectedPrepPet?.name || "(Unnamed)"} — {selectedPrep.visitDate || "No date"}
-      </h4>
-    </div>
-
-    {prepMode === "view" ? (
-      <ViewOnlyPrepare visit={selectedPrep} />
-    ) : (
-      <div className="stack">
-        <div className="alert alertInfo">Editing this saved preparation</div>
-      </div>
-    )}
-
-    <div className="row rowWrap" style={{ marginTop: 12 }}>
-      {prepMode === "view" ? (
-        <button className="btn btnSecondary" onClick={() => { setPrepMode("edit"); setEditing(selectedPrep); }}>
-          Edit
-        </button>
-      ) : (
-        <button className="btn btnSecondary" onClick={() => setPrepMode("view")}>
-          Cancel
-        </button>
-      )}
-
-      <button className="btn btnSecondary" onClick={() => { setPrepViewId(null); setPrepMode("view"); }}>
-        ← Back
-      </button>
-    </div>
-  </div>
-)}
-
         <label className="label">
           {t.petName}
           <select
@@ -262,7 +228,39 @@ const selectedPrepPet = selectedPrep ? pets.find((p) => p.id === selectedPrep.pe
         </div>
 
         <hr className="hr" />
+{selectedPrep && (
+  <div className="panel">
+    <div className="panelHeader">
+      <h4 style={{ margin: 0 }}>
+        {selectedPrepPet?.name || "(Unnamed)"} — {selectedPrep.visitDate || "No date"}
+      </h4>
+    </div>
 
+    {prepMode === "view" ? (
+      <ViewOnlyPrepare visit={selectedPrep} />
+    ) : (
+      <div className="stack">
+        <div className="alert alertInfo">Editing this saved preparation</div>
+      </div>
+    )}
+
+    <div className="row rowWrap" style={{ marginTop: 12 }}>
+      {prepMode === "view" ? (
+        <button className="btn btnSecondary" onClick={() => { setPrepMode("edit"); setEditing(selectedPrep); }}>
+          Edit
+        </button>
+      ) : (
+        <button className="btn btnSecondary" onClick={() => setPrepMode("view")}>
+          Cancel
+        </button>
+      )}
+
+      <button className="btn btnSecondary" onClick={() => { setPrepViewId(null); setPrepMode("view"); }}>
+        ← Back
+      </button>
+    </div>
+  </div>
+)}
         <h4>Your Visits</h4>
         {visits.length === 0 && <div className="muted">No visits yet.</div>}
 
@@ -276,8 +274,16 @@ const selectedPrepPet = selectedPrep ? pets.find((p) => p.id === selectedPrep.pe
               <div className="muted">{v.mainConcern}</div>
               <div className="row rowWrap">
                 <button
+  <button
   className="btn btnSecondary"
-  onClick={() => { setPrepViewId(v.id!); setPrepMode("view"); }}
+  onClick={() => {
+    setPrepViewId(v.id!);
+    setPrepMode("view");
+    // Auto-scroll to the panel
+    setTimeout(() => {
+      document.querySelector(".panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 0);
+  }}
 >
   View
 </button>
