@@ -357,15 +357,16 @@ const selectedPrepPet = selectedPrep ? pets.find((p) => p.id === selectedPrep.pe
       <button
         className="btn btnSecondary"
         onClick={() =>
-          setEditingNote({
-            vetName: selectedVisit.vetName || "",
-            diagnosis: selectedVisit.diagnosis || "",
-            testsPerformed: selectedVisit.testsPerformed || "",
-            treatmentMeds: selectedVisit.treatmentMeds || "",
-            homeInstructions: selectedVisit.homeInstructions || "",
-            followUp: selectedVisit.followUp || "",
-          })
-        }
+  setEditingNote({
+    visitId: selectedVisit.id!, // important: VisitNote expects visitId
+    vetName: selectedVisit.vetName || "",
+    diagnosis: selectedVisit.diagnosis || "",
+    testsPerformed: selectedVisit.testsPerformed || "",
+    treatmentMeds: selectedVisit.treatmentMeds || "",
+    homeInstructions: selectedVisit.homeInstructions || "",
+    followUp: selectedVisit.followUp || "",
+  })
+}
       >
         Edit
       </button>
