@@ -274,27 +274,30 @@ const selectedPrepPet = selectedPrep ? pets.find((p) => p.id === selectedPrep.pe
               <div className="muted">{v.mainConcern}</div>
               <div className="row rowWrap">
                 <button
-  <button
+                  <button
   className="btn btnSecondary"
   onClick={() => {
     setPrepViewId(v.id!);
     setPrepMode("view");
-    // Auto-scroll to the panel
     setTimeout(() => {
-      document.querySelector(".panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      document
+        .querySelector(".panel")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 0);
   }}
 >
   View
 </button>
-                <button className="btn btnSecondary" onClick={() => setEditing(v)}>
-                  Edit
-                </button>
-                {v.id && (
-                  <button className="btn btnDanger" onClick={() => remove(v.id!)}>
-                    Delete
-                  </button>
-                )}
+
+<button className="btn btnSecondary" onClick={() => setEditing(v)}>
+  Edit
+</button>
+
+{v.id && (
+  <button className="btn btnDanger" onClick={() => remove(v.id!)}>
+    Delete
+  </button>
+)}
               </div>
             </div>
           );
