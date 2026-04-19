@@ -229,7 +229,7 @@ const selectedPrepPet = selectedPrep ? pets.find((p) => p.id === selectedPrep.pe
 
         <hr className="hr" />
 {selectedPrep && (
-  <div className="panel">
+  <div className="panel" id="prep-view-panel">
     <div className="panelHeader">
       <h4 style={{ margin: 0 }}>
         {selectedPrepPet?.name || "(Unnamed)"} — {selectedPrep.visitDate || "No date"}
@@ -279,9 +279,7 @@ const selectedPrepPet = selectedPrep ? pets.find((p) => p.id === selectedPrep.pe
     setPrepViewId(v.id!);
     setPrepMode("view");
     setTimeout(() => {
-      document
-        .querySelector(".panel")
-        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      document.getElementById("prep-view-panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 0);
   }}
 >
