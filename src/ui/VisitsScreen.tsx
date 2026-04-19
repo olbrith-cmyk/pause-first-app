@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
 import type { Pet, Visit, VisitNote } from "../firestore";
@@ -65,7 +65,6 @@ export default function VisitsScreen({
 
   useEffect(() => {
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   const save = async () => {
@@ -296,4 +295,174 @@ export default function VisitsScreen({
         {selectedVisit && editingNote && (
           <>
             <button
-              
+              className="btn btnSecondary"
+              onClick={() => {
+                setEditingNote(null);
+                setSelectedVisitId(null);
+              }}
+            >
+              ← Back
+            </button>
+
+            <h4>
+              {pets.find((p) => p.id === selectedVisit.petId)?.name || "(Unnamed)"} —{" "}
+              {selectedVisit.visitDate || "No date"}
+            </h4>
+
+            <label className="label">
+              {t.vetName}
+              <input
+                className="input"
+                value={editingNote.vetName}
+                onChange={(e) => setEditingNote({ ...editingNote, vetName: e.target.value })}
+              />
+            </label>
+
+            <label className="label">
+              {t.diagnosis}
+              <textarea
+                className="textarea"
+                value={editingNote.diagnosis}
+                onChange={(e) => setEditingNote({ ...editingNote, diagnosis: e.target.value })}
+              />
+            </label>
+
+            <label className="label">
+              {t.testsPerformed}
+              <textarea
+                className="textarea"
+                value={editingNote.testsPerformed}
+                onChange={(e) =>
+                  setEditingNote({ ...editingNote, testsPerformed: e.target.value })
+                }
+              />
+            </label>
+
+            <label className="label">
+              {t.treatmentMeds}
+              <textarea
+                className="textarea"
+                value={editingNote.treatmentMeds}
+                onChange={(e) =>
+                  setEditingNote({ ...editingNote, treatmentMeds: e.target.value })
+                }
+              />
+            </label>
+
+            <label className="label">
+              {t.homeInstructions}
+              <textarea
+                className="textarea"
+                value={editingNote.homeInstructions}
+                onChange={(e) =>
+                  setEditingNote({ ...editingNote, homeInstructions: e.target.value })
+                }
+              />
+            </label>
+
+            <label className="label">
+              {t.followUp}
+              <textarea
+                className="textarea"
+                value={editingNote.followUp}
+                onChange={(e) => setEditingNote({ ...editingNote, followUp: e.target.value })}
+              />
+            </label>
+
+            <div className="row">
+              <button className="btn btnPrimary" onClick={saveNote}>
+                {t.saveNotes}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    );
+  }
+
+  // mode === "document"
+  return (
+    <div className="stack">
+      <h3>{t.viewDocument}</h3>
+
+      <div className="alert alertInfo">
+        You can print this page (Ctrl+P or Cmd+P) to take with you to your vet visit.
+      </div>
+
+      {!selectedVisitId && (
+        <>
+          <div className="muted">Select a visit to view:</div>
+          {visits.length === 0 && <div className="alert alertWarn">No visits yet.</div>}
+
+          {visits.map((v) => {
+            const pet = pets.find((p) => p.id === v.petId);
+            return (
+              <button
+                key={v.id}
+                className="itemCard"
+                onClick={() => setSelectedVisitId(v.id!)}
+                style={{ cursor: "pointer", textAlign: "left" }}
+              >
+                <div className="itemTitle">
+                  {pet?.name || "(Unnamed)"} — {v.visitDate || "No date"}
+                </div>
+                <div className="muted">{v.mainConcern}</div>
+              </button>
+            );
+          })}
+        </>
+      )}
+
+      {selectedVisitId && (
+        <>
+          <button className="btn btnSecondary" onClick={() => setSelectedVisitId(null)}>
+            ← Back
+          </button>
+
+          <div className="printDocument">
+            {visits
+              .filter((v) => v.id === selectedVisitId)
+              .map((v) => {
+                const pet = pets.find((p) => p.id === v.petId);
+                return (
+                  <div key={v.id}>
+                    <h2>{pet?.name || "(Unnamed)"}</h2>
+                    <p>
+                      <strong>Visit Date:</strong> {v.visitDate}
+                    </p>
+
+                    <h3>Preparation</h3>
+                    <p>
+                      <strong>Main Concern:</strong> {v.mainConcern}
+                    </p>
+                    <p>
+                      <strong>When Started:</strong> {v.whenStart}
+                    </p>
+                    <p>
+                      <strong>Progression:</strong> {v.howProgressing}
+                    </p>
+                    <p>
+                      <strong>Patterns:</strong> {v.patterns}
+                    </p>
+                    <p>
+                      <strong>Associated Signs:</strong> {v.associatedSigns}
+                    </p>
+                    <p>
+                      <strong>Previous Treatment:</strong> {v.previousTreatment}
+                    </p>
+                    <p>
+                      <strong>Questions for Vet:</strong> {v.questionsVet}
+                    </p>
+                  </div>
+                );
+              })}
+          </div>
+
+          <button className="btn btnPrimary" onClick={() => window.print()} style={{ marginTop: 16 }}>
+            Print / Save as PDF
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
