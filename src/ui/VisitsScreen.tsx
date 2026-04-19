@@ -452,7 +452,7 @@ const selectedPrepPet = selectedPrep ? pets.find((p) => p.id === selectedPrep.pe
                 className="itemCard"
                 onClick={() => {
   setSelectedVisitId(v.id!);
-  setNotesMode("view");
+  setEditingNote(null);
 }}
                 style={{ cursor: "pointer", textAlign: "left" }}
               >
