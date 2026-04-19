@@ -386,59 +386,6 @@ const selectedPrepPet = selectedPrep ? pets.find((p) => p.id === selectedPrep.pe
             )}
           </div>
         )}
-{selectedVisit && !editingNote && (
-  <div className="panel" id="notes-view-panel">
-    <div className="row rowWrap" style={{ marginBottom: 12 }}>
-      <button
-        className="btn btnSecondary"
-        onClick={() => {
-          setSelectedVisitId(null);
-          setEditingNote(null);
-        }}
-      >
-        ← Back
-      </button>
-
-      <button
-        className="btn btnSecondary"
-        onClick={() =>
-  setEditingNote({
-  userId: "",
-  visitId: selectedVisit.id!,
-  vetName: selectedVisit.vetName || "",
-  diagnosis: selectedVisit.diagnosis || "",
-  testsPerformed: selectedVisit.testsPerformed || "",
-  treatmentMeds: selectedVisit.treatmentMeds || "",
-  homeInstructions: selectedVisit.homeInstructions || "",
-  followUp: selectedVisit.followUp || "",
-})
-}
-      >
-        Edit
-      </button>
-    </div>
-
-    <div className="panelHeader">
-      <h4 style={{ margin: 0 }}>
-        {pets.find((p) => p.id === selectedVisit.petId)?.name || "(Unnamed)"} —{" "}
-        {selectedVisit.visitDate || "No date"}
-      </h4>
-    </div>
-
-    <ViewOnlyNotes
-  note={{
-    userId: "",
-    visitId: selectedVisit.id!,
-    vetName: selectedVisit.vetName || "",
-    diagnosis: selectedVisit.diagnosis || "",
-    testsPerformed: selectedVisit.testsPerformed || "",
-    treatmentMeds: selectedVisit.treatmentMeds || "",
-    homeInstructions: selectedVisit.homeInstructions || "",
-    followUp: selectedVisit.followUp || "",
-  }}
-/>
-  </div>
-)}
                 {selectedVisit && editingNote && (
           <>
             <button
