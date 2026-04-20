@@ -62,7 +62,12 @@ const tabs = useMemo(
       <div className="panel">
         {tab === "pets" && <PetsScreen lang={lang} userId={userId} />}
 {(tab === "myVisits" || tab === "prepare" || tab === "notes" || tab === "document") && (
-  <VisitsScreen lang={lang} userId={userId} mode={tab} />
+  <VisitsScreen
+    lang={lang}
+    userId={userId}
+    mode={tab}
+    goToTab={(next) => setTab(next)}
+  />
 )}
       </div>
       {showEmergency && (
