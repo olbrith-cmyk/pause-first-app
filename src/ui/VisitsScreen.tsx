@@ -15,7 +15,7 @@ import {
   updateVisitNote
 } from "../firestore";
 
-type Mode = "prepare" | "notes" | "document";
+type Mode = "myVisits" | "prepare" | "notes" | "document";
 
 const emptyVisit = (userId: string): Visit => ({
   userId,
@@ -123,14 +123,106 @@ const [notesMode, setNotesMode] = useState<"view" | "edit">("view");
   };
 const selectedPrep = prepViewId ? visits.find((v) => v.id === prepViewId) ?? null : null;
 const selectedPrepPet = selectedPrep ? pets.find((p) => p.id === selectedPrep.petId) ?? null : null;
- 
+ const [openVisitId, setOpenVisitId] = useState<string | null>(null);
+const [openNote, setOpenNote] = useState<VisitNote | null>(null);
   const visitsSorted = [...visits].sort((a, b) => {
   const ad = a.visitDate || "";
   const bd = b.visitDate || "";
   // dates are "YYYY-MM-DD" so string compare works
   return bd.localeCompare(ad); // newest first
 });
-  
+  if (mode === "myVisits") {
+  const openVisit = openVisitId ? visits.find((v) => v.id === openVisitId) ?? null : null;
+  const openPet = openVisit ? pets.find((p) => p.id === openVisit.petId) ?? null : null;
+
+  const openVisitCard = async (visitId: string) => {
+    setOpenVisitId(visitId);
+    try {
+      const note = await getVisitNote(userId, visitId);
+      setOpenNote(note ?? null);
+    } catch (e) {
+      console.error("Error loading note:", e);
+      setOpenNote(null);
+    }
+  };
+
+  return (
+    <div className="stack">
+      <h3>My Visits</h3>
+      {visits.length === 0 && <div className="muted">No visits yet.</div>}
+
+      {!openVisit && (
+        <>
+          {visitsSorted.map((v) => {
+            const pet = pets.find((p) => p.id === v.petId);
+            return (
+              <button
+                key={v.id}
+                className="itemCard"
+                onClick={() => openVisitCard(v.id!)}
+                style={{ cursor: "pointer", textAlign: "left" }}
+              >
+                <div className="itemTitle">
+                  {pet?.name || "(Unnamed)"} — {v.visitDate || "No date"}
+                </div>
+                <div className="muted">{v.mainConcern || "No main concern yet."}</div>
+              </button>
+            );
+          })}
+        </>
+      )}
+
+      {openVisit && (
+        <div className="panel">
+          <div className="row rowWrap" style={{ marginBottom: 12 }}>
+            <button
+              className="btn btnSecondary"
+              onClick={() => {
+                setOpenVisitId(null);
+                setOpenNote(null);
+              }}
+            >
+              ← Back
+            </button>
+
+            <button
+              className="btn btnSecondary"
+              onClick={() => {
+                setEditing(openVisit);
+                setPrepViewId(openVisit.id!);
+                setPrepMode("edit");
+              }}
+            >
+              Edit Preparation
+            </button>
+
+            <button
+              className="btn btnSecondary"
+              onClick={() => {
+                setSelectedVisitId(openVisit.id!);
+                setEditingNote(openNote ?? emptyNote(userId, openVisit.id!));
+              }}
+            >
+              Edit Visit Notes
+            </button>
+          </div>
+
+          <div className="panelHeader">
+            <h4 style={{ margin: 0 }}>
+              {openPet?.name || "(Unnamed)"} — {openVisit.visitDate || "No date"}
+            </h4>
+          </div>
+
+          <h4 style={{ marginTop: 12 }}>Preparation</h4>
+          <ViewOnlyPrepare visit={openVisit} />
+
+          <h4 style={{ marginTop: 16 }}>Visit Notes</h4>
+          {openNote ? <ViewOnlyNotes note={openNote} /> : <div className="muted">No visit notes yet.</div>}
+        </div>
+      )}
+    </div>
+  );
+}
   if (mode === "prepare") {
     return (
       <div className="stack">
