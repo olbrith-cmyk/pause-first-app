@@ -48,8 +48,8 @@ export type Translations = {
   treatmentMeds: string;
   homeInstructions: string;
   followUp: string;
-  saveNotes: string;
-  clearNotes: string;
+  saveNote: string;
+  cancel: string;
 
   // View Document
   viewDocument: string;
@@ -108,8 +108,8 @@ const en: Translations = {
   treatmentMeds: "Medications / Treatment",
   homeInstructions: "Instructions at Home",
   followUp: "Follow-up Plan",
-  saveNotes: "Save Visit Notes",
-  clearNotes: "Clear Notes",
+  saveNote: "Save Visit Notes",
+  cancel: "Cancel",
 
   // View Document
   viewDocument: "View Document",
@@ -168,8 +168,8 @@ const da: Translations = {
   treatmentMeds: "Medicin / Behandling",
   homeInstructions: "Instruktioner derhjemme",
   followUp: "Opfølgningsplan",
-  saveNotes: "Gem besøgsnoter",
-  clearNotes: "Ryd noter",
+  saveNote: "Gem besøgsnoter",
+  cancel: "Annuller",
 
   // View Document
   viewDocument: "Se dokument",
