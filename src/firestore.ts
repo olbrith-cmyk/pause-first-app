@@ -108,3 +108,76 @@ export const getVisitNote = async (userId: string, visitId: string) => {
   const d = snap.docs[0];
   return d ? ({ id: d.id, ...d.data() } as VisitNote) : undefined;
 };
+// Delete Account (with full data cleanup)
+import { writeBatch } from "firebase/firestore";
+import { deleteUser, getAuth } from "firebase/auth";
+
+async function deleteAllDocsForUser(params: {
+  collectionName: string;
+  userId: string;
+}) {
+  const { collectionName, userId } = params;
+
+  const q = query(collection(db, collectionName), where("userId", "==", userId));
+  const snap = await getDocs(q);
+
+  if (snap.empty) return 0;
+
+  // Firestore batch limit is 500 ops
+  let deleted = 0;
+  let batch = writeBatch(db);
+  let opCount = 0;
+
+  for (const d of snap.docs) {
+    batch.delete(d.ref);
+    opCount += 1;
+    deleted += 1;
+
+    if (opCount >= 450) {
+      await batch.commit();
+      batch = writeBatch(db);
+      opCount = 0;
+    }
+  }
+
+  if (opCount > 0) {
+    await batch.commit();
+  }
+
+  return deleted;
+}
+
+export async function deleteUserAccount(userId: string) {
+  const auth = getAuth();
+  const user = auth.currentUser;
+
+  if (!user) {
+    throw new Error("Not logged in.");
+  }
+
+  if (user.uid !== userId) {
+    throw new Error("User mismatch. Please log in again.");
+  }
+
+  // Delete all Firestore docs for this user (in order: notes → visits → pets)
+  const collectionsToDelete = ["visitNotes", "visits", "pets"];
+
+  const results: Record<string, number> = {};
+  for (const name of collectionsToDelete) {
+    results[name] = await deleteAllDocsForUser({ collectionName: name, userId });
+  }
+
+  // Finally delete the auth user
+  try {
+    await deleteUser(user);
+  } catch (e: any) {
+    if (e?.code === "auth/requires-recent-login") {
+      throw new Error(
+        "For security, please log out and log in again, then try deleting your account once more."
+      );
+    }
+    throw e;
+  }
+
+  return results;
+}
