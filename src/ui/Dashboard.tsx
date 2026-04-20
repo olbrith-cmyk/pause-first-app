@@ -1,11 +1,9 @@
-import { logOut } from "../auth";
+      import { logOut } from "../auth";
 import { deleteUserAccount } from "../firestore";
-import { logOut } from "../auth";
 import { EmergencyGuide, MedicalDisclaimer, PrivacyPolicy } from "./Modals";
 import { useMemo, useState } from "react";
 import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
-import { logOut } from "../auth";
 
 import PetsScreen from "./PetsScreen";
 import VisitsScreen from "./VisitsScreen";
@@ -40,30 +38,15 @@ export default function Dashboard({
   );
 
   const handleDeleteAccount = async () => {
-  const ok = confirm(
-    "Are you sure? This will permanently delete your account and all your data."
-  );
-  if (!ok) return;
-
-  try {
-    await deleteUserAccount(userId);
-    alert("Account deleted successfully.");
-    await logOut();
-  } catch (error: any) {
-    const message = error?.message ?? String(error);
-    if (message.includes("requires-recent-login")) {
-      alert("For security, please log out and log in again, then try deleting your account.");
-    } else {
-      alert("Error deleting account: " + message);
-    }
-  }
-};
+    const ok = confirm(
+      "Are you sure? This will permanently delete your account and all your data."
+    );
+    if (!ok) return;
 
     try {
-      // Call a delete function (we'll create this in auth.ts)
       await deleteUserAccount(userId);
-      alert("Account deleted successfully. Redirecting...");
-      logOut();
+      alert("Account deleted successfully.");
+      await logOut();
     } catch (error: any) {
       const message = error?.message ?? String(error);
       if (message.includes("requires-recent-login")) {
@@ -89,9 +72,6 @@ export default function Dashboard({
           <button className="btn btnSecondary" onClick={() => setShowPrivacy(true)}>
             Privacy Policy
           </button>
-          <button className="btn btnDanger" onClick={onDeleteAccount}>
-  Delete Account
-</button>
         </div>
         <div className="muted">Signed in as: {email}</div>
       </div>
@@ -142,10 +122,4 @@ export default function Dashboard({
       </div>
     </main>
   );
-}
-
-// Placeholder function (we'll add this to auth.ts)
-async function deleteUserAccount(userId: string) {
-  // This will be implemented in auth.ts
-  throw new Error("deleteUserAccount not yet implemented");
-}
+}    
