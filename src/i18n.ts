@@ -1,158 +1,185 @@
-type Lang = "en" | "da";
+export type Lang = "en" | "da";
 
-const translations = {
-  en: {
-    appTitle: "Pause First™",
-    appSubtitle: "A structured clarity tool for veterinary visits",
-    
-    // Auth
-    welcome: "Welcome to Pause First™",
-    accountInfo: "Please enter your account information. This ensures your vet visit preparations are kept private and secure.",
-    accountName: "Account Name",
-    email: "Email",
-    password: "Password",
-    createPassword: "Create a secure password",
-    signUp: "Sign Up",
-    login: "Login",
-    forgotPassword: "Forgot password?",
-    resetPassword: "Reset Password",
-    sendReset: "Send Reset Link",
-    backToLogin: "Back to Login",
-    logout: "Logout",
-    deleteAccount: "Delete Account",
-    confirmDelete: "Are you sure? This cannot be undone.",
-    
-    // Tabs
-    myPets: "My Pets",
-    prepareVisit: "Prepare Visit",
-    visitNotes: "Visit Notes",
-    viewDocument: "View Document",
-    
-    // Pets
-    addPet: "Add Pet",
-    petName: "Pet Name",
-    species: "Species/Breed",
-    age: "Age",
-    sex: "Sex/Gender",
-    weight: "Weight",
-    microchip: "Microchip Number",
-    allergies: "Allergies",
-    medications: "Current Medications",
-    diet: "Diet/Food Restrictions",
-    clinic: "Veterinary Clinic",
-    emergencyContact: "Emergency Contact (Name + Phone)",
-    notes: "Notes",
-    savePet: "Save Pet",
-    deletePet: "Delete Pet",
-    editPet: "Edit Pet",
-    
-    // Visits
-    visitDate: "Visit Date (or Expected)",
-    mainConcern: "Main Concern — What brought you in today?",
-    whenStart: "When Did This Start?",
-    howProgressing: "How Is It Progressing?",
-    patterns: "Patterns or Triggers",
-    associatedSigns: "Associated Signs (What Else Is Different?)",
-    previousTreatment: "Previous Treatment",
-    questionsVet: "Questions for Your Veterinarian",
-    vetName: "Veterinarian Name",
-    diagnosis: "Diagnosis / Findings",
-    testsPerformed: "Tests Performed",
-    treatmentMeds: "Medications / Treatment",
-    homeInstructions: "Instructions at Home",
-    followUp: "Follow-up Plan",
-    savePrep: "Save Visit Preparation",
-    saveNotes: "Save Visit Notes",
-    clearForm: "Clear Form",
-    
-    // Modals
-    emergencyGuide: "Emergency Guide",
-    medicalDisclaimer: "Medical Disclaimer",
-    close: "Close",
-    
-    // Messages
-    saved: "Saved!",
-    error: "Error",
-    loading: "Loading...",
-  },
-  da: {
-    appTitle: "Pause First™",
-    appSubtitle: "Et struktureret værktøj til forberedelse til dyrlægekonsultationer",
-    
-    // Auth
-    welcome: "Velkommen til Pause First™",
-    accountInfo: "Indtast dine kontooplysninger. Dette sikrer, at dine dyrlægekonsultationer holdes private og sikre.",
-    accountName: "Kontonavn",
-    email: "Email",
-    password: "Adgangskode",
-    createPassword: "Opret en sikker adgangskode",
-    signUp: "Opret konto",
-    login: "Log ind",
-    forgotPassword: "Glemt adgangskode?",
-    resetPassword: "Nulstil adgangskode",
-    sendReset: "Send nulstillings-link",
-    backToLogin: "Tilbage til login",
-    logout: "Log ud",
-    deleteAccount: "Slet konto",
-    confirmDelete: "Er du sikker? Dette kan ikke fortrydes.",
-    
-    // Tabs
-    myPets: "Mine kæledyr",
-    prepareVisit: "Forbered besøg",
-    visitNotes: "Besøgsnoter",
-    viewDocument: "Se dokument",
-    
-    // Pets
-    addPet: "Tilføj kæledyr",
-    petName: "Navn på kæledyr",
-    species: "Art/race",
-    age: "Alder",
-    sex: "Køn",
-    weight: "Vægt",
-    microchip: "Chipnummer",
-    allergies: "Allergier",
-    medications: "Nuværende medicin",
-    diet: "Diæt/fødevarerestriktioner",
-    clinic: "Dyrlægeklinik",
-    emergencyContact: "Nødkontakt (navn + telefon)",
-    notes: "Noter",
-    savePet: "Gem kæledyr",
-    deletePet: "Slet kæledyr",
-    editPet: "Rediger kæledyr",
-    
-    // Visits
-    visitDate: "Besøgsdato (eller forventet)",
-    mainConcern: "Hovedbekymring — Hvad bragte dig hertil i dag?",
-    whenStart: "Hvornår startede det?",
-    howProgressing: "Hvordan udvikler det sig?",
-    patterns: "Mønstre eller udløsere",
-    associatedSigns: "Andre tegn (Hvad er anderledes?)",
-    previousTreatment: "Tidligere behandling",
-    questionsVet: "Spørgsmål til din dyrlæge",
-    vetName: "Dyrlægens navn",
-    diagnosis: "Diagnose / Fund",
-    testsPerformed: "Udførte tests",
-    treatmentMeds: "Medicin / behandling",
-    homeInstructions: "Instruktioner derhjemme",
-    followUp: "Opfølgningsplan",
-    savePrep: "Gem forberedelse til besøg",
-    saveNotes: "Gem besøgsnoter",
-    clearForm: "Ryd formular",
-    
-    // Modals
-    emergencyGuide: "Nødguide",
-    medicalDisclaimer: "Medicinsk ansvarsfraskrivelse",
-    close: "Luk",
-    
-    // Messages
-    saved: "Gemt!",
-    error: "Fejl",
-    loading: "Indlæser...",
-  }
+export type Translations = {
+  appTitle: string;
+  appSubtitle: string;
+  loading: string;
+  logout: string;
+  error: string;
+  saved: string;
+
+  // Pets
+  myPets: string;
+  petName: string;
+  species: string;
+  age: string;
+  sex: string;
+  weight: string;
+  microchip: string;
+  allergies: string;
+  medications: string;
+  diet: string;
+  clinic: string;
+  emergencyContact: string;
+  notes: string;
+  savePet: string;
+  editPet: string;
+  deletePet: string;
+
+  // Visits
+  myVisits: string;
+  prepareVisit: string;
+  visitDate: string;
+  mainConcern: string;
+  whenStart: string;
+  howProgressing: string;
+  patterns: string;
+  associatedSigns: string;
+  previousTreatment: string;
+  questionsVet: string;
+  savePrep: string;
+  clearForm: string;
+
+  // Visit Notes
+  visitNotes: string;
+  vetName: string;
+  diagnosis: string;
+  testsPerformed: string;
+  treatmentMeds: string;
+  homeInstructions: string;
+  followUp: string;
+  saveNotes: string;
+  clearNotes: string;
+
+  // View Document
+  viewDocument: string;
+
+  // Modals
+  emergencyGuide: string;
+  medicalDisclaimer: string;
+  close: string;
 };
 
-export const useTranslation = (lang: Lang) => {
-  return translations[lang];
+const en: Translations = {
+  appTitle: "Pause First™",
+  appSubtitle: "A structured clarity tool for veterinary visits",
+  loading: "Loading...",
+  logout: "Logout",
+  error: "Error",
+  saved: "Saved!",
+
+  // Pets
+  myPets: "My Pets",
+  petName: "Pet's Name",
+  species: "Species",
+  age: "Age",
+  sex: "Sex",
+  weight: "Weight",
+  microchip: "Microchip",
+  allergies: "Allergies",
+  medications: "Medications",
+  diet: "Diet",
+  clinic: "Clinic",
+  emergencyContact: "Emergency Contact",
+  notes: "Notes",
+  savePet: "Save Pet",
+  editPet: "Edit",
+  deletePet: "Delete",
+
+  // Visits
+  myVisits: "My Visits",
+  prepareVisit: "Prepare Visit",
+  visitDate: "Visit Date (or Expected)",
+  mainConcern: "Main Concern — What brought you in today?",
+  whenStart: "When Did This Start?",
+  howProgressing: "How Is It Progressing?",
+  patterns: "Patterns or Triggers",
+  associatedSigns: "Associated Signs (What Else Is Different?)",
+  previousTreatment: "Previous Treatment",
+  questionsVet: "Questions for Your Veterinarian",
+  savePrep: "Save Visit Preparation",
+  clearForm: "Clear Form",
+
+  // Visit Notes
+  visitNotes: "Visit Notes",
+  vetName: "Veterinarian Name",
+  diagnosis: "Diagnosis / Findings",
+  testsPerformed: "Tests Performed",
+  treatmentMeds: "Medications / Treatment",
+  homeInstructions: "Instructions at Home",
+  followUp: "Follow-up Plan",
+  saveNotes: "Save Visit Notes",
+  clearNotes: "Clear Notes",
+
+  // View Document
+  viewDocument: "View Document",
+
+  // Modals
+  emergencyGuide: "Emergency Guide",
+  medicalDisclaimer: "Medical Disclaimer",
+  close: "Close"
 };
 
-export type { Lang };
+const da: Translations = {
+  appTitle: "Pause First™",
+  appSubtitle: "Et struktureret værktøj til dyrlægekonsultationer",
+  loading: "Indlæser...",
+  logout: "Log ud",
+  error: "Fejl",
+  saved: "Gemt!",
+
+  // Pets
+  myPets: "Mine kæledyr",
+  petName: "Kæledyrets navn",
+  species: "Art",
+  age: "Alder",
+  sex: "Køn",
+  weight: "Vægt",
+  microchip: "Mikrochip",
+  allergies: "Allergier",
+  medications: "Medicin",
+  diet: "Diæt",
+  clinic: "Klinik",
+  emergencyContact: "Nødkontakt",
+  notes: "Noter",
+  savePet: "Gem kæledyr",
+  editPet: "Rediger",
+  deletePet: "Slet",
+
+  // Visits
+  myVisits: "Mine besøg",
+  prepareVisit: "Forbered besøg",
+  visitDate: "Besøgsdato (eller forventet)",
+  mainConcern: "Hovedbekymring — Hvad bragte dig herind i dag?",
+  whenStart: "Hvornår startede det?",
+  howProgressing: "Hvordan udvikler det sig?",
+  patterns: "Mønstre eller triggere",
+  associatedSigns: "Tilknyttede tegn (Hvad er anderledes?)",
+  previousTreatment: "Tidligere behandling",
+  questionsVet: "Spørgsmål til dyrlægen",
+  savePrep: "Gem besøgsforberedelse",
+  clearForm: "Ryd formular",
+
+  // Visit Notes
+  visitNotes: "Besøgsnoter",
+  vetName: "Dyrlægens navn",
+  diagnosis: "Diagnose / Resultater",
+  testsPerformed: "Udførte tests",
+  treatmentMeds: "Medicin / Behandling",
+  homeInstructions: "Instruktioner derhjemme",
+  followUp: "Opfølgningsplan",
+  saveNotes: "Gem besøgsnoter",
+  clearNotes: "Ryd noter",
+
+  // View Document
+  viewDocument: "Se dokument",
+
+  // Modals
+  emergencyGuide: "Nødvejledning",
+  medicalDisclaimer: "Medicinsk ansvarsfraskrivelse",
+  close: "Luk"
+};
+
+export function useTranslation(lang: Lang): Translations {
+  return lang === "da" ? da : en;
+}
