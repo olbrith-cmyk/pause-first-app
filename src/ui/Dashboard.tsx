@@ -6,7 +6,7 @@ import { useTranslation } from "../i18n";
 import PetsScreen from "./PetsScreen";
 import VisitsScreen from "./VisitsScreen";
 
-type Tab = "pets" | "prepare" | "notes" | "document";
+type Tab = "pets" | "myVisits" | "prepare" | "notes" | "document";
 
 export default function Dashboard({
   lang,
@@ -22,15 +22,16 @@ export default function Dashboard({
   const [showEmergency, setShowEmergency] = useState(false);
 const [showDisclaimer, setShowDisclaimer] = useState(false);
 
-  const tabs = useMemo(
-    () => [
-      { id: "pets" as const, label: t.myPets },
-      { id: "prepare" as const, label: t.prepareVisit },
-      { id: "notes" as const, label: t.visitNotes },
-      { id: "document" as const, label: t.viewDocument }
-    ],
-    [t]
-  );
+const tabs = useMemo(
+  () => [
+    { id: "pets" as const, label: t.myPets },
+    { id: "myVisits" as const, label: t.myVisits ?? "My Visits" },
+    { id: "prepare" as const, label: t.prepareVisit },
+    { id: "notes" as const, label: t.visitNotes },
+    { id: "document" as const, label: t.viewDocument }
+  ],
+  [t]
+);
 
   return (
     <main className="card">
@@ -60,9 +61,9 @@ const [showDisclaimer, setShowDisclaimer] = useState(false);
 
       <div className="panel">
         {tab === "pets" && <PetsScreen lang={lang} userId={userId} />}
-        {(tab === "prepare" || tab === "notes" || tab === "document") && (
-          <VisitsScreen lang={lang} userId={userId} mode={tab} />
-        )}
+{(tab === "myVisits" || tab === "prepare" || tab === "notes" || tab === "document") && (
+  <VisitsScreen lang={lang} userId={userId} mode={tab} />
+)}
       </div>
       {showEmergency && (
   <EmergencyGuide lang={lang} onClose={() => setShowEmergency(false)} />
