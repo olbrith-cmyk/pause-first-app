@@ -87,8 +87,7 @@ export default function VisitsScreen({
     return [...visits].sort((a, b) => {
       const ad = a.visitDate || "";
       const bd = b.visitDate || "";
-      // dates are "YYYY-MM-DD" so string compare works
-      return bd.localeCompare(ad); // newest first
+      return bd.localeCompare(ad);
     });
   }, [visits]);
 
@@ -136,9 +135,7 @@ export default function VisitsScreen({
     }
   };
 
-  // -----------------------------
   // MY VISITS (combined overview)
-  // -----------------------------
   if (mode === "myVisits") {
     const openVisit = openVisitId ? visits.find((v) => v.id === openVisitId) ?? null : null;
     const openPet = openVisit ? pets.find((p) => p.id === openVisit.petId) ?? null : null;
@@ -197,7 +194,6 @@ export default function VisitsScreen({
               <button
                 className="btn btnSecondary"
                 onClick={() => {
-                  // Prepare edit
                   setEditing(openVisit);
                   setPrepViewId(openVisit.id!);
                   setPrepMode("edit");
@@ -210,7 +206,6 @@ export default function VisitsScreen({
               <button
                 className="btn btnSecondary"
                 onClick={() => {
-                  // Notes edit
                   setSelectedVisitId(openVisit.id!);
                   setEditingNote(openNote ?? emptyNote(userId, openVisit.id!));
                   goToTab("notes");
@@ -237,9 +232,7 @@ export default function VisitsScreen({
     );
   }
 
-  // -----------------------------
   // PREPARE VISIT
-  // -----------------------------
   if (mode === "prepare") {
     return (
       <div className="stack">
@@ -444,9 +437,7 @@ export default function VisitsScreen({
     );
   }
 
-  // -----------------------------
   // VISIT NOTES
-  // -----------------------------
   if (mode === "notes") {
     const selectedVisit = selectedVisitId
       ? visits.find((v) => v.id === selectedVisitId) ?? null
@@ -534,8 +525,12 @@ export default function VisitsScreen({
               </h4>
             </div>
 
-            {/* In view mode we need the note to display; if none loaded, show message */}
-            <div className="muted">No notes loaded yet. Click Edit to add or view notes.</div>
+            {/* View mode: show the loaded note */}
+            {editingNote ? (
+              <ViewOnlyNotes note={editingNote} />
+            ) : (
+              <div className="muted">No notes yet. Click Edit to add notes.</div>
+            )}
           </div>
         )}
 
@@ -559,4 +554,89 @@ export default function VisitsScreen({
             <label className="label">
               {t.vetName}
               <input
-               
+                className="input"
+                type="text"
+                value={editingNote.vetName}
+                onChange={(e) => setEditingNote({ ...editingNote, vetName: e.target.value })}
+                placeholder="Name of the veterinarian"
+              />
+            </label>
+
+            <label className="label">
+              {t.diagnosis}
+              <textarea
+                className="textarea"
+                value={editingNote.diagnosis}
+                onChange={(e) => setEditingNote({ ...editingNote, diagnosis: e.target.value })}
+                placeholder="What did the vet find? What is the diagnosis?"
+              />
+            </label>
+
+            <label className="label">
+              {t.testsPerformed}
+              <textarea
+                className="textarea"
+                value={editingNote.testsPerformed}
+                onChange={(e) => setEditingNote({ ...editingNote, testsPerformed: e.target.value })}
+                placeholder="Blood test, X-ray, ultrasound, etc."
+              />
+            </label>
+
+            <label className="label">
+              {t.treatmentMeds}
+              <textarea
+                className="textarea"
+                value={editingNote.treatmentMeds}
+                onChange={(e) => setEditingNote({ ...editingNote, treatmentMeds: e.target.value })}
+                placeholder="Medications, dosage, frequency, duration"
+              />
+            </label>
+
+            <label className="label">
+              {t.homeInstructions}
+              <textarea
+                className="textarea"
+                value={editingNote.homeInstructions}
+                onChange={(e) => setEditingNote({ ...editingNote, homeInstructions: e.target.value })}
+                placeholder="Rest, diet changes, activity restrictions, wound care..."
+              />
+            </label>
+
+            <label className="label">
+              {t.followUp}
+              <textarea
+                className="textarea"
+                value={editingNote.followUp}
+                onChange={(e) => setEditingNote({ ...editingNote, followUp: e.target.value })}
+                placeholder="Follow-up appointment date, recheck labs, when to call..."
+              />
+            </label>
+
+            <div className="row">
+              <button className="btn btnPrimary" onClick={saveNote}>
+                {t.saveNote}
+              </button>
+              <button
+                className="btn btnSecondary"
+                onClick={() => {
+                  setEditingNote(null);
+                  setSelectedVisitId(null);
+                }}
+              >
+                {t.cancel}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    );
+  }
+
+  // VIEW DOCUMENT (placeholder)
+  return (
+    <div className="stack">
+      <h3>{t.viewDocument}</h3>
+      <div className="muted">Document view coming soon.</div>
+    </div>
+  );
+}
