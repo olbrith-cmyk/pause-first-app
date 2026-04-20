@@ -1,3 +1,6 @@
+import { logOut } from "../auth";
+import { deleteUserAccount } from "../firestore";
+import { logOut } from "../auth";
 import { EmergencyGuide, MedicalDisclaimer, PrivacyPolicy } from "./Modals";
 import { useMemo, useState } from "react";
 import type { Lang } from "../i18n";
@@ -37,13 +40,24 @@ export default function Dashboard({
   );
 
   const handleDeleteAccount = async () => {
-    if (
-      !confirm(
-        "Are you sure? This will permanently delete your account and all data. This cannot be undone."
-      )
-    ) {
-      return;
+  const ok = confirm(
+    "Are you sure? This will permanently delete your account and all your data."
+  );
+  if (!ok) return;
+
+  try {
+    await deleteUserAccount(userId);
+    alert("Account deleted successfully.");
+    await logOut();
+  } catch (error: any) {
+    const message = error?.message ?? String(error);
+    if (message.includes("requires-recent-login")) {
+      alert("For security, please log out and log in again, then try deleting your account.");
+    } else {
+      alert("Error deleting account: " + message);
     }
+  }
+};
 
     try {
       // Call a delete function (we'll create this in auth.ts)
@@ -75,6 +89,9 @@ export default function Dashboard({
           <button className="btn btnSecondary" onClick={() => setShowPrivacy(true)}>
             Privacy Policy
           </button>
+          <button className="btn btnDanger" onClick={onDeleteAccount}>
+  Delete Account
+</button>
         </div>
         <div className="muted">Signed in as: {email}</div>
       </div>
