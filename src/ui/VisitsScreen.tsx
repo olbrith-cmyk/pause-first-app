@@ -1,8 +1,7 @@
-import { ViewOnlyNotes } from "./ViewOnlyNotes";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
-import { ViewOnlyPrepare } from "./ViewOnlyPrepare";
+
 import type { Pet, Visit, VisitNote } from "../firestore";
 import {
   addVisit,
@@ -15,7 +14,10 @@ import {
   updateVisitNote
 } from "../firestore";
 
-type Mode = "myVisits" | "prepare" | "notes" | "document";
+import { ViewOnlyPrepare } from "./ViewOnlyPrepare";
+import { ViewOnlyNotes } from "./ViewOnlyNotes";
+
+export type Mode = "myVisits" | "prepare" | "notes" | "document";
 
 const emptyVisit = (userId: string): Visit => ({
   userId,
@@ -56,13 +58,20 @@ export default function VisitsScreen({
 
   const [pets, setPets] = useState<Pet[]>([]);
   const [visits, setVisits] = useState<Visit[]>([]);
+
+  // Prepare Visit state
   const [prepViewId, setPrepViewId] = useState<string | null>(null);
-const [prepMode, setPrepMode] = useState<"view" | "edit">("view");
+  const [prepMode, setPrepMode] = useState<"view" | "edit">("view");
   const [editing, setEditing] = useState<Visit>(emptyVisit(userId));
 
+  // Visit Notes state
   const [selectedVisitId, setSelectedVisitId] = useState<string | null>(null);
   const [editingNote, setEditingNote] = useState<VisitNote | null>(null);
-const [notesMode, setNotesMode] = useState<"view" | "edit">("view");
+
+  // My Visits (combined) state
+  const [openVisitId, setOpenVisitId] = useState<string | null>(null);
+  const [openNote, setOpenNote] = useState<VisitNote | null>(null);
+
   const load = async () => {
     const [p, v] = await Promise.all([getUserPets(userId), getUserVisits(userId)]);
     setPets(p);
@@ -71,7 +80,20 @@ const [notesMode, setNotesMode] = useState<"view" | "edit">("view");
 
   useEffect(() => {
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
+
+  const visitsSorted = useMemo(() => {
+    return [...visits].sort((a, b) => {
+      const ad = a.visitDate || "";
+      const bd = b.visitDate || "";
+      // dates are "YYYY-MM-DD" so string compare works
+      return bd.localeCompare(ad); // newest first
+    });
+  }, [visits]);
+
+  const selectedPrep = prepViewId ? visits.find((v) => v.id === prepViewId) ?? null : null;
+  const selectedPrepPet = selectedPrep ? pets.find((p) => p.id === selectedPrep.petId) ?? null : null;
 
   const save = async () => {
     if (!editing.petId) return alert("Pick a pet first");
@@ -96,16 +118,6 @@ const [notesMode, setNotesMode] = useState<"view" | "edit">("view");
     await load();
   };
 
-  const loadNote = async (visitId: string) => {
-    try {
-      const note = await getVisitNote(userId, visitId);
-      setSelectedVisitId(visitId);
-      setEditingNote(note ? note : emptyNote(userId, visitId));
-    } catch (e: any) {
-      alert("Error loading note: " + (e?.message ?? String(e)));
-    }
-  };
-
   const saveNote = async () => {
     if (!editingNote) return;
     try {
@@ -123,114 +135,116 @@ const [notesMode, setNotesMode] = useState<"view" | "edit">("view");
       alert(t.error + ": " + (e?.message ?? String(e)));
     }
   };
-const selectedPrep = prepViewId ? visits.find((v) => v.id === prepViewId) ?? null : null;
-const selectedPrepPet = selectedPrep ? pets.find((p) => p.id === selectedPrep.petId) ?? null : null;
- const [openVisitId, setOpenVisitId] = useState<string | null>(null);
-const [openNote, setOpenNote] = useState<VisitNote | null>(null);
-  const visitsSorted = [...visits].sort((a, b) => {
-  const ad = a.visitDate || "";
-  const bd = b.visitDate || "";
-  // dates are "YYYY-MM-DD" so string compare works
-  return bd.localeCompare(ad); // newest first
-});
+
+  // -----------------------------
+  // MY VISITS (combined overview)
+  // -----------------------------
   if (mode === "myVisits") {
-  const openVisit = openVisitId ? visits.find((v) => v.id === openVisitId) ?? null : null;
-  const openPet = openVisit ? pets.find((p) => p.id === openVisit.petId) ?? null : null;
+    const openVisit = openVisitId ? visits.find((v) => v.id === openVisitId) ?? null : null;
+    const openPet = openVisit ? pets.find((p) => p.id === openVisit.petId) ?? null : null;
 
-  const openVisitCard = async (visitId: string) => {
-    setOpenVisitId(visitId);
-    try {
-      const note = await getVisitNote(userId, visitId);
-      setOpenNote(note ?? null);
-    } catch (e) {
-      console.error("Error loading note:", e);
-      setOpenNote(null);
-    }
-  };
+    const openVisitCard = async (visitId: string) => {
+      setOpenVisitId(visitId);
+      try {
+        const note = await getVisitNote(userId, visitId);
+        setOpenNote(note ?? null);
+      } catch (e) {
+        console.error("Error loading note:", e);
+        setOpenNote(null);
+      }
+    };
 
-  return (
-    <div className="stack">
-      <h3>My Visits</h3>
-      {visits.length === 0 && <div className="muted">No visits yet.</div>}
+    return (
+      <div className="stack">
+        <h3>{(t as any).myVisits ?? "My Visits"}</h3>
 
-      {!openVisit && (
-        <>
-          {visitsSorted.map((v) => {
-            const pet = pets.find((p) => p.id === v.petId);
-            return (
+        {visitsSorted.length === 0 && <div className="muted">No visits yet.</div>}
+
+        {!openVisit && (
+          <>
+            {visitsSorted.map((v) => {
+              const pet = pets.find((p) => p.id === v.petId);
+              return (
+                <button
+                  key={v.id}
+                  className="itemCard"
+                  onClick={() => openVisitCard(v.id!)}
+                  style={{ cursor: "pointer", textAlign: "left" }}
+                >
+                  <div className="itemTitle">
+                    {pet?.name || "(Unnamed)"} — {v.visitDate || "No date"}
+                  </div>
+                  <div className="muted">{v.mainConcern || "No main concern yet."}</div>
+                </button>
+              );
+            })}
+          </>
+        )}
+
+        {openVisit && (
+          <div className="panel">
+            <div className="row rowWrap" style={{ marginBottom: 12 }}>
               <button
-                key={v.id}
-                className="itemCard"
-                onClick={() => openVisitCard(v.id!)}
-                style={{ cursor: "pointer", textAlign: "left" }}
+                className="btn btnSecondary"
+                onClick={() => {
+                  setOpenVisitId(null);
+                  setOpenNote(null);
+                }}
               >
-                <div className="itemTitle">
-                  {pet?.name || "(Unnamed)"} — {v.visitDate || "No date"}
-                </div>
-                <div className="muted">{v.mainConcern || "No main concern yet."}</div>
+                ← Back
               </button>
-            );
-          })}
-        </>
-      )}
 
-      {openVisit && (
-        <div className="panel">
-          <div className="row rowWrap" style={{ marginBottom: 12 }}>
-            <button
-              className="btn btnSecondary"
-              onClick={() => {
-                setOpenVisitId(null);
-                setOpenNote(null);
-              }}
-            >
-              ← Back
-            </button>
+              <button
+                className="btn btnSecondary"
+                onClick={() => {
+                  // Prepare edit
+                  setEditing(openVisit);
+                  setPrepViewId(openVisit.id!);
+                  setPrepMode("edit");
+                  goToTab("prepare");
+                }}
+              >
+                Edit Preparation
+              </button>
 
-            <button
-  className="btn btnSecondary"
-  onClick={() => {
-    setEditing(openVisit);
-    setPrepViewId(openVisit.id!);
-    setPrepMode("edit");
-    goToTab("prepare");
-  }}
->
-  Edit Preparation
-</button>
+              <button
+                className="btn btnSecondary"
+                onClick={() => {
+                  // Notes edit
+                  setSelectedVisitId(openVisit.id!);
+                  setEditingNote(openNote ?? emptyNote(userId, openVisit.id!));
+                  goToTab("notes");
+                }}
+              >
+                Edit Visit Notes
+              </button>
+            </div>
 
-            <button
-  className="btn btnSecondary"
-  onClick={() => {
-    setSelectedVisitId(openVisit.id!);
-    setEditingNote(openNote ?? emptyNote(userId, openVisit.id!));
-    goToTab("notes");
-  }}
->
-  Edit Visit Notes
-</button>
+            <div className="panelHeader">
+              <h4 style={{ margin: 0 }}>
+                {openPet?.name || "(Unnamed)"} — {openVisit.visitDate || "No date"}
+              </h4>
+            </div>
+
+            <h4 style={{ marginTop: 12 }}>Preparation</h4>
+            <ViewOnlyPrepare visit={openVisit} />
+
+            <h4 style={{ marginTop: 16 }}>Visit Notes</h4>
+            {openNote ? <ViewOnlyNotes note={openNote} /> : <div className="muted">No visit notes yet.</div>}
           </div>
+        )}
+      </div>
+    );
+  }
 
-          <div className="panelHeader">
-            <h4 style={{ margin: 0 }}>
-              {openPet?.name || "(Unnamed)"} — {openVisit.visitDate || "No date"}
-            </h4>
-          </div>
-
-          <h4 style={{ marginTop: 12 }}>Preparation</h4>
-          <ViewOnlyPrepare visit={openVisit} />
-
-          <h4 style={{ marginTop: 16 }}>Visit Notes</h4>
-          {openNote ? <ViewOnlyNotes note={openNote} /> : <div className="muted">No visit notes yet.</div>}
-        </div>
-      )}
-    </div>
-  );
-}
+  // -----------------------------
+  // PREPARE VISIT
+  // -----------------------------
   if (mode === "prepare") {
     return (
       <div className="stack">
         <h3>{t.prepareVisit}</h3>
+
         <label className="label">
           {t.petName}
           <select
@@ -263,7 +277,7 @@ const [openNote, setOpenNote] = useState<VisitNote | null>(null);
             className="textarea"
             value={editing.mainConcern}
             onChange={(e) => setEditing({ ...editing, mainConcern: e.target.value })}
-            placeholder="Be specific..."
+            placeholder="What is the main concern? What changed?"
           />
         </label>
 
@@ -273,6 +287,7 @@ const [openNote, setOpenNote] = useState<VisitNote | null>(null);
             className="textarea"
             value={editing.whenStart}
             onChange={(e) => setEditing({ ...editing, whenStart: e.target.value })}
+            placeholder="e.g., Started 3 days ago, noticed after the hike on Saturday, gradually over 2 weeks..."
           />
         </label>
 
@@ -282,6 +297,7 @@ const [openNote, setOpenNote] = useState<VisitNote | null>(null);
             className="textarea"
             value={editing.howProgressing}
             onChange={(e) => setEditing({ ...editing, howProgressing: e.target.value })}
+            placeholder="Getting worse each day, seems to improve after rest, worst in the morning..."
           />
         </label>
 
@@ -291,6 +307,7 @@ const [openNote, setOpenNote] = useState<VisitNote | null>(null);
             className="textarea"
             value={editing.patterns}
             onChange={(e) => setEditing({ ...editing, patterns: e.target.value })}
+            placeholder="Only after running, happens at night, happens after eating certain foods..."
           />
         </label>
 
@@ -300,6 +317,7 @@ const [openNote, setOpenNote] = useState<VisitNote | null>(null);
             className="textarea"
             value={editing.associatedSigns}
             onChange={(e) => setEditing({ ...editing, associatedSigns: e.target.value })}
+            placeholder="Not eating as much, vomiting once, drinking more water, licking paws..."
           />
         </label>
 
@@ -309,6 +327,7 @@ const [openNote, setOpenNote] = useState<VisitNote | null>(null);
             className="textarea"
             value={editing.previousTreatment}
             onChange={(e) => setEditing({ ...editing, previousTreatment: e.target.value })}
+            placeholder="Had this 6 months ago, tried antibiotics, didn't help much..."
           />
         </label>
 
@@ -318,6 +337,7 @@ const [openNote, setOpenNote] = useState<VisitNote | null>(null);
             className="textarea"
             value={editing.questionsVet}
             onChange={(e) => setEditing({ ...editing, questionsVet: e.target.value })}
+            placeholder="Is this serious? Will it get better? What can I do at home?"
           />
         </label>
 
@@ -333,41 +353,55 @@ const [openNote, setOpenNote] = useState<VisitNote | null>(null);
         </div>
 
         <hr className="hr" />
-{selectedPrep && (
-  <div className="panel" id="prep-view-panel">
-    <div className="panelHeader">
-      <h4 style={{ margin: 0 }}>
-        {selectedPrepPet?.name || "(Unnamed)"} — {selectedPrep.visitDate || "No date"}
-      </h4>
-    </div>
 
-    {prepMode === "view" ? (
-      <ViewOnlyPrepare visit={selectedPrep} />
-    ) : (
-      <div className="stack">
-        <div className="alert alertInfo">Editing this saved preparation</div>
-      </div>
-    )}
+        {selectedPrep && (
+          <div className="panel" id="prep-view-panel">
+            <div className="panelHeader">
+              <h4 style={{ margin: 0 }}>
+                {selectedPrepPet?.name || "(Unnamed)"} — {selectedPrep.visitDate || "No date"}
+              </h4>
+            </div>
 
-    <div className="row rowWrap" style={{ marginTop: 12 }}>
-      {prepMode === "view" ? (
-        <button className="btn btnSecondary" onClick={() => { setPrepMode("edit"); setEditing(selectedPrep); }}>
-          Edit
-        </button>
-      ) : (
-        <button className="btn btnSecondary" onClick={() => setPrepMode("view")}>
-          Cancel
-        </button>
-      )}
+            {prepMode === "view" ? (
+              <ViewOnlyPrepare visit={selectedPrep} />
+            ) : (
+              <div className="stack">
+                <div className="alert alertInfo">Editing this saved preparation</div>
+              </div>
+            )}
 
-      <button className="btn btnSecondary" onClick={() => { setPrepViewId(null); setPrepMode("view"); }}>
-        ← Back
-      </button>
-    </div>
-  </div>
-)}
+            <div className="row rowWrap" style={{ marginTop: 12 }}>
+              {prepMode === "view" ? (
+                <button
+                  className="btn btnSecondary"
+                  onClick={() => {
+                    setPrepMode("edit");
+                    setEditing(selectedPrep);
+                  }}
+                >
+                  Edit
+                </button>
+              ) : (
+                <button className="btn btnSecondary" onClick={() => setPrepMode("view")}>
+                  Cancel
+                </button>
+              )}
+
+              <button
+                className="btn btnSecondary"
+                onClick={() => {
+                  setPrepViewId(null);
+                  setPrepMode("view");
+                }}
+              >
+                ← Back
+              </button>
+            </div>
+          </div>
+        )}
+
         <h4>Your Visits</h4>
-        {visits.length === 0 && <div className="muted">No visits yet.</div>}
+        {visitsSorted.length === 0 && <div className="muted">No visits yet.</div>}
 
         {visitsSorted.map((v) => {
           const pet = pets.find((p) => p.id === v.petId);
@@ -378,28 +412,30 @@ const [openNote, setOpenNote] = useState<VisitNote | null>(null);
               </div>
               <div className="muted">{v.mainConcern}</div>
               <div className="row rowWrap">
-                  <button
-  className="btn btnSecondary"
-  onClick={() => {
-    setPrepViewId(v.id!);
-    setPrepMode("view");
-    setTimeout(() => {
-      document.getElementById("prep-view-panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 0);
-  }}
->
-  View
-</button>
+                <button
+                  className="btn btnSecondary"
+                  onClick={() => {
+                    setPrepViewId(v.id!);
+                    setPrepMode("view");
+                    setTimeout(() => {
+                      document
+                        .getElementById("prep-view-panel")
+                        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }, 0);
+                  }}
+                >
+                  View
+                </button>
 
-<button className="btn btnSecondary" onClick={() => setEditing(v)}>
-  Edit
-</button>
+                <button className="btn btnSecondary" onClick={() => setEditing(v)}>
+                  Edit
+                </button>
 
-{v.id && (
-  <button className="btn btnDanger" onClick={() => remove(v.id!)}>
-    Delete
-  </button>
-)}
+                {v.id && (
+                  <button className="btn btnDanger" onClick={() => remove(v.id!)}>
+                    Delete
+                  </button>
+                )}
               </div>
             </div>
           );
@@ -407,6 +443,10 @@ const [openNote, setOpenNote] = useState<VisitNote | null>(null);
       </div>
     );
   }
+
+  // -----------------------------
+  // VISIT NOTES
+  // -----------------------------
   if (mode === "notes") {
     const selectedVisit = selectedVisitId
       ? visits.find((v) => v.id === selectedVisitId) ?? null
@@ -420,10 +460,8 @@ const [openNote, setOpenNote] = useState<VisitNote | null>(null);
           <>
             <div className="muted">Select a visit to add notes:</div>
 
-            {visits.length === 0 && (
-              <div className="alert alertWarn">
-                No visits yet. Create one in "Prepare Visit" first.
-              </div>
+            {visitsSorted.length === 0 && (
+              <div className="alert alertWarn">No visits yet. Create one in "Prepare Visit" first.</div>
             )}
 
             {visitsSorted.map((v) => {
@@ -433,18 +471,16 @@ const [openNote, setOpenNote] = useState<VisitNote | null>(null);
                   key={v.id}
                   className="itemCard"
                   onClick={async () => {
-  setSelectedVisitId(v.id!);
-  setEditingNote(null);
+                    setSelectedVisitId(v.id!);
+                    setEditingNote(null);
 
-  try {
-    const note = await getVisitNote(userId, v.id!);
-    if (note) {
-      setEditingNote(note);
-    }
-  } catch (e) {
-    console.error("Error loading note:", e);
-  }
-}}
+                    try {
+                      const note = await getVisitNote(userId, v.id!);
+                      if (note) setEditingNote(note);
+                    } catch (e) {
+                      console.error("Error loading note:", e);
+                    }
+                  }}
                   style={{ cursor: "pointer", textAlign: "left" }}
                 >
                   <div className="itemTitle">
@@ -472,13 +508,19 @@ const [openNote, setOpenNote] = useState<VisitNote | null>(null);
 
               <button
                 className="btn btnSecondary"
-                onClick={() => {
-                  setEditingNote(emptyNote(userId, selectedVisit.id!));
-                  setTimeout(() => {
-                    document
-                      .getElementById("notes-view-panel")
-                      ?.scrollIntoView({ behavior: "smooth", block: "start" });
-                  }, 0);
+                onClick={async () => {
+                  try {
+                    const note = await getVisitNote(userId, selectedVisit.id!);
+                    setEditingNote(note ?? emptyNote(userId, selectedVisit.id!));
+                    setTimeout(() => {
+                      document
+                        .getElementById("notes-view-panel")
+                        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }, 0);
+                  } catch (e) {
+                    console.error("Error loading note:", e);
+                    setEditingNote(emptyNote(userId, selectedVisit.id!));
+                  }
                 }}
               >
                 Edit
@@ -492,14 +534,12 @@ const [openNote, setOpenNote] = useState<VisitNote | null>(null);
               </h4>
             </div>
 
-            {editingNote ? (
-              <ViewOnlyNotes note={editingNote} />
-            ) : (
-              <div className="muted">No notes yet. Click Edit to add them.</div>
-            )}
+            {/* In view mode we need the note to display; if none loaded, show message */}
+            <div className="muted">No notes loaded yet. Click Edit to add or view notes.</div>
           </div>
         )}
-                {selectedVisit && editingNote && (
+
+        {selectedVisit && editingNote && (
           <>
             <button
               className="btn btnSecondary"
@@ -519,159 +559,4 @@ const [openNote, setOpenNote] = useState<VisitNote | null>(null);
             <label className="label">
               {t.vetName}
               <input
-                className="input"
-                value={editingNote.vetName}
-                onChange={(e) => setEditingNote({ ...editingNote, vetName: e.target.value })}
-              />
-            </label>
-
-            <label className="label">
-              {t.diagnosis}
-              <textarea
-                className="textarea"
-                value={editingNote.diagnosis}
-                onChange={(e) => setEditingNote({ ...editingNote, diagnosis: e.target.value })}
-              />
-            </label>
-
-            <label className="label">
-              {t.testsPerformed}
-              <textarea
-                className="textarea"
-                value={editingNote.testsPerformed}
-                onChange={(e) =>
-                  setEditingNote({ ...editingNote, testsPerformed: e.target.value })
-                }
-              />
-            </label>
-
-            <label className="label">
-              {t.treatmentMeds}
-              <textarea
-                className="textarea"
-                value={editingNote.treatmentMeds}
-                onChange={(e) =>
-                  setEditingNote({ ...editingNote, treatmentMeds: e.target.value })
-                }
-              />
-            </label>
-
-            <label className="label">
-              {t.homeInstructions}
-              <textarea
-                className="textarea"
-                value={editingNote.homeInstructions}
-                onChange={(e) =>
-                  setEditingNote({ ...editingNote, homeInstructions: e.target.value })
-                }
-              />
-            </label>
-
-            <label className="label">
-              {t.followUp}
-              <textarea
-                className="textarea"
-                value={editingNote.followUp}
-                onChange={(e) => setEditingNote({ ...editingNote, followUp: e.target.value })}
-              />
-            </label>
-
-            <div className="row">
-              <button className="btn btnPrimary" onClick={saveNote}>
-                {t.saveNotes}
-              </button>
-            </div>
-          </>
-        )}
-      </div>
-    );
-  }
-  // mode === "document"
-  return (
-    <div className="stack">
-      <h3>{t.viewDocument}</h3>
-
-      <div className="alert alertInfo">
-        You can print this page (Ctrl+P or Cmd+P) to take with you to your vet visit.
-      </div>
-
-      {!selectedVisitId && (
-        <>
-          <div className="muted">Select a visit to view:</div>
-          {visits.length === 0 && <div className="alert alertWarn">No visits yet.</div>}
-
-          {visitsSorted.map((v) => {
-            const pet = pets.find((p) => p.id === v.petId);
-            return (
-              <button
-                key={v.id}
-                className="itemCard"
-                onClick={() => {
-  setSelectedVisitId(v.id!);
-  setEditingNote(null);
-}}
-                style={{ cursor: "pointer", textAlign: "left" }}
-              >
-                <div className="itemTitle">
-                  {pet?.name || "(Unnamed)"} — {v.visitDate || "No date"}
-                </div>
-                <div className="muted">{v.mainConcern}</div>
-              </button>
-            );
-          })}
-        </>
-      )}
-
-      {selectedVisitId && (
-        <>
-          <button className="btn btnSecondary" onClick={() => setSelectedVisitId(null)}>
-            ← Back
-          </button>
-
-          <div className="printDocument">
-            {visits
-              .filter((v) => v.id === selectedVisitId)
-              .map((v) => {
-                const pet = pets.find((p) => p.id === v.petId);
-                return (
-                  <div key={v.id}>
-                    <h2>{pet?.name || "(Unnamed)"}</h2>
-                    <p>
-                      <strong>Visit Date:</strong> {v.visitDate}
-                    </p>
-
-                    <h3>Preparation</h3>
-                    <p>
-                      <strong>Main Concern:</strong> {v.mainConcern}
-                    </p>
-                    <p>
-                      <strong>When Started:</strong> {v.whenStart}
-                    </p>
-                    <p>
-                      <strong>Progression:</strong> {v.howProgressing}
-                    </p>
-                    <p>
-                      <strong>Patterns:</strong> {v.patterns}
-                    </p>
-                    <p>
-                      <strong>Associated Signs:</strong> {v.associatedSigns}
-                    </p>
-                    <p>
-                      <strong>Previous Treatment:</strong> {v.previousTreatment}
-                    </p>
-                    <p>
-                      <strong>Questions for Vet:</strong> {v.questionsVet}
-                    </p>
-                  </div>
-                );
-              })}
-          </div>
-
-          <button className="btn btnPrimary" onClick={() => window.print()} style={{ marginTop: 16 }}>
-            Print / Save as PDF
-          </button>
-        </>
-      )}
-    </div>
-  );
-}
+               
