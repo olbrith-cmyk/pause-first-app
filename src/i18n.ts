@@ -7,6 +7,18 @@ export type Translations = {
   logout: string;
   error: string;
   saved: string;
+  
+  // Auth
+  welcome: string;
+  accountInfo: string;
+  email: string;
+  password: string;
+  createPassword: string;
+  signUp: string;
+  login: string;
+  sendReset: string;
+  forgotPassword: string;
+  backToLogin: string;
 
   // Pets
   myPets: string;
@@ -67,7 +79,19 @@ const en: Translations = {
   logout: "Logout",
   error: "Error",
   saved: "Saved!",
-
+  
+  // Auth
+  welcome: "Welcome",
+  accountInfo: "Create an account or log in to save your pets and visits.",
+  email: "Email",
+  password: "Password",
+  createPassword: "Create a password",
+  signUp: "Sign up",
+  login: "Log in",
+  sendReset: "Send reset link",
+  forgotPassword: "Forgot password?",
+  backToLogin: "Back to login",
+  
   // Pets
   myPets: "My Pets",
   petName: "Pet's Name",
@@ -128,6 +152,18 @@ const da: Translations = {
   error: "Fejl",
   saved: "Gemt!",
 
+    // Auth
+  welcome: "Velkommen",
+  accountInfo: "Opret en konto eller log ind for at gemme dine kæledyr og besøg.",
+  email: "E-mail",
+  password: "Adgangskode",
+  createPassword: "Opret en adgangskode",
+  signUp: "Opret konto",
+  login: "Log ind",
+  sendReset: "Send nulstillingslink",
+  forgotPassword: "Glemt adgangskode?",
+  backToLogin: "Tilbage til login",
+  
   // Pets
   myPets: "Mine kæledyr",
   petName: "Kæledyrets navn",
