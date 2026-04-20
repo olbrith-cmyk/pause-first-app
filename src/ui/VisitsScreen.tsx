@@ -44,11 +44,13 @@ const emptyNote = (userId: string, visitId: string): VisitNote => ({
 export default function VisitsScreen({
   lang,
   userId,
-  mode
+  mode,
+  goToTab
 }: {
   lang: Lang;
   userId: string;
   mode: Mode;
+  goToTab: (next: Mode) => void;
 }) {
   const t = useTranslation(lang);
 
@@ -186,25 +188,27 @@ const [openNote, setOpenNote] = useState<VisitNote | null>(null);
             </button>
 
             <button
-              className="btn btnSecondary"
-              onClick={() => {
-                setEditing(openVisit);
-                setPrepViewId(openVisit.id!);
-                setPrepMode("edit");
-              }}
-            >
-              Edit Preparation
-            </button>
+  className="btn btnSecondary"
+  onClick={() => {
+    setEditing(openVisit);
+    setPrepViewId(openVisit.id!);
+    setPrepMode("edit");
+    goToTab("prepare");
+  }}
+>
+  Edit Preparation
+</button>
 
             <button
-              className="btn btnSecondary"
-              onClick={() => {
-                setSelectedVisitId(openVisit.id!);
-                setEditingNote(openNote ?? emptyNote(userId, openVisit.id!));
-              }}
-            >
-              Edit Visit Notes
-            </button>
+  className="btn btnSecondary"
+  onClick={() => {
+    setSelectedVisitId(openVisit.id!);
+    setEditingNote(openNote ?? emptyNote(userId, openVisit.id!));
+    goToTab("notes");
+  }}
+>
+  Edit Visit Notes
+</button>
           </div>
 
           <div className="panelHeader">
