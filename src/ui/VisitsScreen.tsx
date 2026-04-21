@@ -16,6 +16,7 @@ import {
 
 import { ViewOnlyPrepare } from "./ViewOnlyPrepare";
 import { ViewOnlyNotes } from "./ViewOnlyNotes";
+import ViewDocument from "./ViewDocument";
 
 export type Mode = "myVisits" | "prepare" | "notes" | "document";
 
@@ -71,6 +72,10 @@ export default function VisitsScreen({
   // My Visits (combined) state
   const [openVisitId, setOpenVisitId] = useState<string | null>(null);
   const [openNote, setOpenNote] = useState<VisitNote | null>(null);
+
+  // View Document state
+  const [docViewVisitId, setDocViewVisitId] = useState<string | null>(null);
+  const [docViewNote, setDocViewNote] = useState<VisitNote | null>(null);
 
   const load = async () => {
     const [p, v] = await Promise.all([getUserPets(userId), getUserVisits(userId)]);
@@ -212,6 +217,17 @@ export default function VisitsScreen({
                 }}
               >
                 Edit Visit Notes
+              </button>
+
+              <button
+                className="btn btnSecondary"
+                onClick={() => {
+                  setDocViewVisitId(openVisit.id!);
+                  setDocViewNote(openNote);
+                  goToTab("document");
+                }}
+              >
+                View Document
               </button>
             </div>
 
@@ -443,9 +459,7 @@ export default function VisitsScreen({
       ? visits.find((v) => v.id === selectedVisitId) ?? null
       : null;
 
-    return (
-      <div className="stack">
-        <h3>{t.visitNotes}</h3>
+  visitNotes}</h3>
 
         {!selectedVisit && (
           <>
@@ -467,9 +481,10 @@ export default function VisitsScreen({
 
                     try {
                       const note = await getVisitNote(userId, v.id!);
-                      if (note) setEditingNote(note);
+                      setEditingNote(note ?? emptyNote(userId, v.id!));
                     } catch (e) {
                       console.error("Error loading note:", e);
+                      setEditingNote(emptyNote(userId, v.id!));
                     }
                   }}
                   style={{ cursor: "pointer", textAlign: "left" }}
@@ -484,14 +499,14 @@ export default function VisitsScreen({
           </>
         )}
 
-        {selectedVisit && !editingNote && (
-          <div className="panel" id="notes-view-panel">
+        {selectedVisit && editingNote && (
+          <>
             <div className="row rowWrap" style={{ marginBottom: 12 }}>
               <button
                 className="btn btnSecondary"
                 onClick={() => {
-                  setSelectedVisitId(null);
                   setEditingNote(null);
+                  setSelectedVisitId(null);
                 }}
               >
                 ← Back
@@ -503,48 +518,27 @@ export default function VisitsScreen({
                   try {
                     const note = await getVisitNote(userId, selectedVisit.id!);
                     setEditingNote(note ?? emptyNote(userId, selectedVisit.id!));
-                    setTimeout(() => {
-                      document
-                        .getElementById("notes-view-panel")
-                        ?.scrollIntoView({ behavior: "smooth", block: "start" });
-                    }, 0);
                   } catch (e) {
                     console.error("Error loading note:", e);
                     setEditingNote(emptyNote(userId, selectedVisit.id!));
                   }
                 }}
               >
-                Edit
+                Reload
+              </button>
+
+              <button
+                className="btn btnSecondary"
+                onClick={() => {
+                  // Jump to document view for this visit
+                  setDocViewVisitId(selectedVisit.id!);
+                  setDocViewNote(editingNote);
+                  goToTab("document");
+                }}
+              >
+                View Document
               </button>
             </div>
-
-            <div className="panelHeader">
-              <h4 style={{ margin: 0 }}>
-                {pets.find((p) => p.id === selectedVisit.petId)?.name || "(Unnamed)"} —{" "}
-                {selectedVisit.visitDate || "No date"}
-              </h4>
-            </div>
-
-            {/* View mode: show the loaded note */}
-            {editingNote ? (
-              <ViewOnlyNotes note={editingNote} />
-            ) : (
-              <div className="muted">No notes yet. Click Edit to add notes.</div>
-            )}
-          </div>
-        )}
-
-        {selectedVisit && editingNote && (
-          <>
-            <button
-              className="btn btnSecondary"
-              onClick={() => {
-                setEditingNote(null);
-                setSelectedVisitId(null);
-              }}
-            >
-              ← Back
-            </button>
 
             <h4>
               {pets.find((p) => p.id === selectedVisit.petId)?.name || "(Unnamed)"} —{" "}
@@ -612,7 +606,7 @@ export default function VisitsScreen({
               />
             </label>
 
-            <div className="row">
+            <div className="row rowWrap">
               <button className="btn btnPrimary" onClick={saveNote}>
                 {t.saveNote}
               </button>
@@ -632,11 +626,62 @@ export default function VisitsScreen({
     );
   }
 
-  // VIEW DOCUMENT (placeholder)
+  // VIEW DOCUMENT
+  if (mode === "document") {
+    const docVisit = docViewVisitId ? visits.find((v) => v.id === docViewVisitId) ?? null : null;
+    const docPet = docVisit ? pets.find((p) => p.id === docVisit.petId) ?? null : null;
+
+    const loadDocVisit = async (visitId: string) => {
+      setDocViewVisitId(visitId);
+      try {
+        const note = await getVisitNote(userId, visitId);
+        setDocViewNote(note ?? null);
+      } catch (e) {
+        console.error("Error loading note:", e);
+        setDocViewNote(null);
+      }
+    };
+
+    return (
+      <div className="stack">
+        <h3>{t.viewDocument}</h3>
+
+        <label className="label">
+          Select visit
+          <select
+            className="input"
+            value={docViewVisitId ?? ""}
+            onChange={(e) => {
+              const id = e.target.value;
+              if (!id) {
+                setDocViewVisitId(null);
+                setDocViewNote(null);
+                return;
+              }
+              loadDocVisit(id);
+            }}
+          >
+            <option value="">-- Select a visit --</option>
+            {visitsSorted.map((v) => {
+              const pet = pets.find((p) => p.id === v.petId);
+              return (
+                <option key={v.id} value={v.id}>
+                  {pet?.name || "(Unnamed)"} — {v.visitDate || "No date"}
+                </option>
+              );
+            })}
+          </select>
+        </label>
+
+        <ViewDocument lang={lang} visit={docVisit} pet={docPet} note={docViewNote} />
+      </div>
+    );
+  }
+
+  // Fallback
   return (
     <div className="stack">
-      <h3>{t.viewDocument}</h3>
-      <div className="muted">Document view coming soon.</div>
+      <div className="muted">Unknown mode.</div>
     </div>
   );
 }
