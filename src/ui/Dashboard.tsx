@@ -1,4 +1,4 @@
-      import { logOut } from "../auth";
+import { logOut } from "../auth";
 import { deleteUserAccount } from "../firestore";
 import { EmergencyGuide, MedicalDisclaimer, PrivacyPolicy } from "./Modals";
 import { useMemo, useState } from "react";
@@ -59,6 +59,10 @@ export default function Dashboard({
     }
   };
 
+  const handleFirstPetSaved = () => {
+    setTab("prepare");
+  };
+
   return (
     <main className="card">
       <div className="topRow">
@@ -89,7 +93,13 @@ export default function Dashboard({
       </div>
 
       <div className="panel">
-        {tab === "pets" && <PetsScreen lang={lang} userId={userId} />}
+        {tab === "pets" && (
+          <PetsScreen
+            lang={lang}
+            userId={userId}
+            onFirstPetSaved={handleFirstPetSaved}
+          />
+        )}
         {(tab === "myVisits" || tab === "prepare" || tab === "notes" || tab === "document") && (
           <VisitsScreen
             lang={lang}
@@ -122,4 +132,4 @@ export default function Dashboard({
       </div>
     </main>
   );
-}    
+}
