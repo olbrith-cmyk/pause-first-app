@@ -459,7 +459,9 @@ export default function VisitsScreen({
       ? visits.find((v) => v.id === selectedVisitId) ?? null
       : null;
 
-  visitNotes}</h3>
+      return (
+    <div className="stack">
+      <h3>{t.visitNotes}</h3>
 
         {!selectedVisit && (
           <>
