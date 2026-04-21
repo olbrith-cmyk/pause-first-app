@@ -34,6 +34,7 @@ export type Translations = {
   clinic: string;
   emergencyContact: string;
   notes: string;
+  addPet: string;
   savePet: string;
   editPet: string;
   deletePet: string;
@@ -153,7 +154,7 @@ const da: Translations = {
   error: "Fejl",
   saved: "Gemt!",
 
-    // Auth
+  // Auth
   welcome: "Velkommen",
   accountInfo: "Opret en konto eller log ind for at gemme dine kæledyr og besøg.",
   email: "E-mail",
@@ -179,7 +180,7 @@ const da: Translations = {
   clinic: "Klinik",
   emergencyContact: "Nødkontakt",
   notes: "Noter",
-  tilføjPet: "Tilføj Kæledyr",
+  addPet: "Tilføj kæledyr",
   savePet: "Gem kæledyr",
   editPet: "Rediger",
   deletePet: "Slet",
