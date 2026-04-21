@@ -25,7 +25,6 @@ export default function Dashboard({
   const [showEmergency, setShowEmergency] = useState(false);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
-  const [showMenu, setShowMenu] = useState(false);
 
   const tabs = useMemo(
     () => [
@@ -66,15 +65,31 @@ export default function Dashboard({
 
   return (
     <main className="card">
-      <div className="topRow" style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
-        <div>
-          <h1 style={{ margin: "0 0 4px 0", fontSize: "28px" }}>{t.appTitle}</h1>
-          <p style={{ margin: 0, fontSize: "14px", color: "var(--textMuted)" }}>{t.appSubtitle}</p>
-          <p style={{ margin: "8px 0 0 0", fontSize: "12px", color: "var(--textMuted)" }}>Signed in as: {email}</p>
-        </div>
-        <button className="btn btnSecondary" onClick={() => setShowMenu(true)} style={{ whiteSpace: "nowrap" }}>
-          ☰ Menu
+      {/* Discreet top links (like your old app) */}
+      <div className="topLinks">
+        <button className="topLink" onClick={() => setShowEmergency(true)}>
+          {t.emergencyGuide}
         </button>
+        <button className="topLink" onClick={() => setShowDisclaimer(true)}>
+          {t.medicalDisclaimer}
+        </button>
+        <button className="topLink" onClick={() => setShowPrivacy(true)}>
+          Privacy Policy
+        </button>
+
+        <span className="topLinksSpacer" />
+
+        <button className="topLink" onClick={() => logOut()}>
+          {t.logout}
+        </button>
+        <button className="topLink topLinkDanger" onClick={handleDeleteAccount}>
+          Delete Account
+        </button>
+      </div>
+
+      {/* Optional: keep signed-in text small and out of the way */}
+      <div className="muted" style={{ fontSize: 12, marginBottom: 10 }}>
+        Signed in as: {email}
       </div>
 
       <div className="tabs">
@@ -97,7 +112,11 @@ export default function Dashboard({
             onFirstPetSaved={handleFirstPetSaved}
           />
         )}
-        {(tab === "myVisits" || tab === "prepare" || tab === "notes" || tab === "document") && (
+
+        {(tab === "myVisits" ||
+          tab === "prepare" ||
+          tab === "notes" ||
+          tab === "document") && (
           <VisitsScreen
             lang={lang}
             userId={userId}
@@ -115,68 +134,6 @@ export default function Dashboard({
       )}
       {showPrivacy && (
         <PrivacyPolicy lang={lang} onClose={() => setShowPrivacy(false)} />
-      )}
-
-      {showMenu && (
-        <div className="modal" onClick={() => setShowMenu(false)}>
-          <div className="modalContent" onClick={(e) => e.stopPropagation()}>
-            <div className="modalHeader">
-              <h3 style={{ margin: 0 }}>Menu</h3>
-              <button className="btnClose" onClick={() => setShowMenu(false)}>✕</button>
-            </div>
-            <div className="modalBody">
-              <button
-                className="menuItem"
-                onClick={() => {
-                  setShowEmergency(true);
-                  setShowMenu(false);
-                }}
-              >
-                {t.emergencyGuide}
-              </button>
-              <button
-                className="menuItem"
-                onClick={() => {
-                  setShowDisclaimer(true);
-                  setShowMenu(false);
-                }}
-              >
-                {t.medicalDisclaimer}
-              </button>
-              <button
-                className="menuItem"
-                onClick={() => {
-                  setShowPrivacy(true);
-                  setShowMenu(false);
-                }}
-              >
-                Privacy Policy
-              </button>
-
-              <hr className="hr" style={{ margin: "12px 0" }} />
-
-              <button
-                className="menuItem"
-                onClick={() => {
-                  logOut();
-                  setShowMenu(false);
-                }}
-              >
-                {t.logout}
-              </button>
-
-              <button
-                className="menuItem menuItemDanger"
-                onClick={() => {
-                  handleDeleteAccount();
-                  setShowMenu(false);
-                }}
-              >
-                Delete Account
-              </button>
-            </div>
-          </div>
-        </div>
       )}
     </main>
   );
