@@ -124,8 +124,8 @@ export default function PetsScreen({
       <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
         <h3 style={{ margin: 0 }}>{t.myPets}</h3>
         <button className="btn btnPrimary" onClick={startNew}>
-          + {t.savePet}
-        </button>
+  + {t.addPet}
+</button>
       </div>
 
       {pets.length === 0 && mode !== "edit" && (
