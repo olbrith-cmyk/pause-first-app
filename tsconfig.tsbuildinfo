@@ -1,0 +1,1 @@
+{"root":["./src/App.tsx","./src/auth.ts","./src/firebase.ts","./src/firestore.ts","./src/i18n.ts","./src/main.tsx","./src/ui/AuthScreen.tsx","./src/ui/Dashboard.tsx","./src/ui/Modals.tsx","./src/ui/PetsScreen.tsx","./src/ui/ViewOnlyNotes.tsx","./src/ui/ViewOnlyPet.tsx","./src/ui/ViewOnlyPrepare.tsx","./src/ui/VisitsScreen.tsx"],"version":"5.9.3"}
