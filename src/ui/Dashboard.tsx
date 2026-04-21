@@ -14,11 +14,13 @@ type Tab = "pets" | "myVisits" | "prepare" | "notes" | "document";
 export default function Dashboard({
   lang,
   userId,
-  email
+  email,
+  onLangChange
 }: {
   lang: Lang;
   userId: string;
   email: string;
+  onLangChange: (lang: Lang) => void;
 }) {
   const t = useTranslation(lang);
   const [tab, setTab] = useState<Tab>("pets");
@@ -63,33 +65,55 @@ export default function Dashboard({
     setTab("prepare");
   };
 
+  const isDa = lang === "da";
+
   return (
     <main className="card">
-      {/* Discreet top links (like your old app) */}
-      <div className="topLinks">
-        <button className="topLink" onClick={() => setShowEmergency(true)}>
-          {t.emergencyGuide}
-        </button>
-        <button className="topLink" onClick={() => setShowDisclaimer(true)}>
-          {t.medicalDisclaimer}
-        </button>
-        <button className="topLink" onClick={() => setShowPrivacy(true)}>
-          Privacy Policy
-        </button>
+      {/* Top bar: discreet links + language toggle */}
+      <div className="topBar">
+        <div className="topLinks">
+          <button className="topLink" onClick={() => setShowEmergency(true)}>
+            {t.emergencyGuide}
+          </button>
+          <button className="topLink" onClick={() => setShowDisclaimer(true)}>
+            {t.medicalDisclaimer}
+          </button>
+          <button className="topLink" onClick={() => setShowPrivacy(true)}>
+            Privacy Policy
+          </button>
+          <button className="topLink" onClick={() => logOut()}>
+            {t.logout}
+          </button>
+          <button className="topLink topLinkDanger" onClick={handleDeleteAccount}>
+            Delete Account
+          </button>
+        </div>
 
-        <span className="topLinksSpacer" />
+        {/* Small EN/DA slider toggle */}
+        <div className="langSwitchWrap" aria-label="Language">
+          <span className={`langLabel ${!isDa ? "langLabelActive" : ""}`}>EN</span>
 
-        <button className="topLink" onClick={() => logOut()}>
-          {t.logout}
-        </button>
-        <button className="topLink topLinkDanger" onClick={handleDeleteAccount}>
-          Delete Account
-        </button>
+          <button
+            type="button"
+            className={`langSwitch ${isDa ? "langSwitchOn" : ""}`}
+            role="switch"
+            aria-checked={isDa}
+            onClick={() => onLangChange(isDa ? "en" : "da")}
+            title={isDa ? "Switch to English" : "Skift til Dansk"}
+          >
+            <span className="langKnob" />
+          </button>
+
+          <span className={`langLabel ${isDa ? "langLabelActive" : ""}`}>DA</span>
+        </div>
       </div>
 
-      {/* Optional: keep signed-in text small and out of the way */}
-      <div className="muted" style={{ fontSize: 12, marginBottom: 10 }}>
-        Signed in as: {email}
+      {/* Title + subtitle */}
+      <div style={{ marginBottom: 16 }}>
+        <h1 style={{ margin: "0 0 4px 0", fontSize: "28px" }}>{t.appTitle}</h1>
+        <p style={{ margin: 0, fontSize: "14px", color: "var(--muted)" }}>
+          {t.appSubtitle}
+        </p>
       </div>
 
       <div className="tabs">
