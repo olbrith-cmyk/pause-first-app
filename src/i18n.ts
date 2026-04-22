@@ -52,6 +52,11 @@ export type Translations = {
   questionsVet: string;
   savePrep: string;
   clearForm: string;
+  selectPet: string;
+  update: string;
+  save: string;
+  delete: string;
+  yourVisits: string;
 
   // Visit Notes
   visitNotes: string;
@@ -125,6 +130,11 @@ const en: Translations = {
   questionsVet: "Questions for Your Veterinarian",
   savePrep: "Save Visit Preparation",
   clearForm: "Clear Form",
+  selectPet: "Select pet",
+  update: "Update",
+  save: "Save",
+  delete: "Delete",
+  yourVisits: "Your Visits",
 
   // Visit Notes
   visitNotes: "Visit Notes",
@@ -145,7 +155,6 @@ const en: Translations = {
   medicalDisclaimer: "Medical Disclaimer",
   close: "Close"
 };
-
 const da: Translations = {
   appTitle: "Pause First™",
   appSubtitle: "Et struktureret værktøj til dyrlægekonsultationer",
@@ -198,6 +207,11 @@ const da: Translations = {
   questionsVet: "Spørgsmål til dyrlægen",
   savePrep: "Gem besøgsforberedelse",
   clearForm: "Ryd formular",
+  selectPet: "Vælg kæledyr",
+  update: "Opdater",
+  save: "Gem",
+  delete: "Slet",
+  yourVisits: "Dine besøg",
 
   // Visit Notes
   visitNotes: "Besøgsnoter",
