@@ -76,6 +76,16 @@ export type Translations = {
   emergencyGuide: string;
   medicalDisclaimer: string;
   close: string;
+  
+    // AI Assistant
+  aiAssistant: string;
+  askAiAssistant: string;
+
+  // Hamburger Menu
+  emergencyGuide: string;
+  medicalDisclaimer: string;
+  logout: string;
+  deleteAccount: string;
 };
 
 const en: Translations = {
@@ -154,7 +164,18 @@ const en: Translations = {
   emergencyGuide: "Emergency Guide",
   medicalDisclaimer: "Medical Disclaimer",
   close: "Close"
+    
+    // AI Assistant
+  aiAssistant: "Pause First AI Assistant",
+  askAiAssistant: "Ask AI assistant?",
+
+  // Hamburger Menu
+  emergencyGuide: "Emergency Guide",
+  medicalDisclaimer: "Medical Disclaimer",
+  logout: "Logout",
+  deleteAccount: "Delete Account",
 };
+
 const da: Translations = {
   appTitle: "Pause First™",
   appSubtitle: "Et struktureret værktøj til dyrlægekonsultationer",
@@ -231,6 +252,16 @@ const da: Translations = {
   emergencyGuide: "Nødvejledning",
   medicalDisclaimer: "Medicinsk ansvarsfraskrivelse",
   close: "Luk"
+    
+    // AI Assistant
+  aiAssistant: "Pause First AI-assistent",
+  askAiAssistant: "Spørg AI-assistenten?",
+
+  // Hamburger Menu
+  emergencyGuide: "Nødvejledning",
+  medicalDisclaimer: "Medicinsk ansvarsfraskrivelse",
+  logout: "Log ud",
+  deleteAccount: "Slet konto",
 };
 
 export function useTranslation(lang: Lang): Translations {
