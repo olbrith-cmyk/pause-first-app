@@ -9,7 +9,7 @@ import PetsScreen from "./PetsScreen";
 import VisitsScreen from "./VisitsScreen";
 import type { Mode } from "./VisitsScreen";
 
-type Tab = "pets" | "myVisits" | "prepare" | "notes" | "document";
+type Tab = "prepare" | "myVisits" | "pets";
 
 export default function Dashboard({
   lang,
@@ -23,18 +23,16 @@ export default function Dashboard({
   onLangChange: (lang: Lang) => void;
 }) {
   const t = useTranslation(lang);
-  const [tab, setTab] = useState<Tab>("pets");
+  const [tab, setTab] = useState<Tab>("prepare");
   const [showEmergency, setShowEmergency] = useState(false);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
 
   const tabs = useMemo(
     () => [
-      { id: "pets" as const, label: t.myPets },
-      { id: "myVisits" as const, label: (t as any).myVisits ?? "My Visits" },
       { id: "prepare" as const, label: t.prepareVisit },
-      { id: "notes" as const, label: t.visitNotes },
-      { id: "document" as const, label: t.viewDocument }
+      { id: "myVisits" as const, label: (t as any).myVisits ?? "My Visits" },
+      { id: "pets" as const, label: t.myPets }
     ],
     [t]
   );
@@ -108,15 +106,8 @@ export default function Dashboard({
         </div>
       </div>
 
-      {/* Title + subtitle */}
-      <div style={{ marginBottom: 16 }}>
-        <h1 style={{ margin: "0 0 4px 0", fontSize: "28px" }}>{t.appTitle}</h1>
-        <p style={{ margin: 0, fontSize: "14px", color: "var(--muted)" }}>
-          {t.appSubtitle}
-        </p>
-      </div>
-
-      <div className="tabs">
+      {/* Top-level tabs */}
+      <div className="tabs" style={{ marginTop: 8 }}>
         {tabs.map((x) => (
           <button
             key={x.id}
@@ -137,15 +128,12 @@ export default function Dashboard({
           />
         )}
 
-        {(tab === "myVisits" ||
-          tab === "prepare" ||
-          tab === "notes" ||
-          tab === "document") && (
+        {(tab === "prepare" || tab === "myVisits") && (
           <VisitsScreen
             lang={lang}
             userId={userId}
-            mode={tab}
-            goToTab={(next: Mode) => setTab(next)}
+            mode={tab as Mode} // "prepare" | "myVisits"
+            goToTab={(next: Mode) => setTab(next === "myVisits" ? "myVisits" : "prepare")}
           />
         )}
       </div>
