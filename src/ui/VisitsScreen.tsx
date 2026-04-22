@@ -53,7 +53,7 @@ export default function VisitsScreen({
   lang: Lang;
   userId: string;
   mode: Mode;
-  goToTab?: (next: Mode) => void; // optional for backward compatibility
+  goToTab?: (next: Mode) => void; // optional (Dashboard may still pass it)
 }) {
   const t = useTranslation(lang);
 
@@ -65,11 +65,11 @@ export default function VisitsScreen({
   const [editingVisit, setEditingVisit] = useState<Visit>(emptyVisit(userId));
   const [prepViewId, setPrepViewId] = useState<string | null>(null);
 
-  // NOTES (selected visit)
+  // NOTES
   const [noteVisitId, setNoteVisitId] = useState<string | null>(null);
   const [editingNote, setEditingNote] = useState<VisitNote | null>(null);
 
-  // SUMMARY (selected visit)
+  // SUMMARY
   const [docVisitId, setDocVisitId] = useState<string | null>(null);
   const [docNote, setDocNote] = useState<VisitNote | null>(null);
 
@@ -279,7 +279,6 @@ export default function VisitsScreen({
     <div className="stack">
       <h3>{t.prepareVisit}</h3>
 
-      {/* Sub-tabs inside Prepare */}
       <div className="tabs" style={{ marginTop: 4 }}>
         <button
           className={`tab ${subTab === "prep" ? "tabActive" : ""}`}
@@ -301,222 +300,320 @@ export default function VisitsScreen({
         </button>
       </div>
 
-      {/* PREP */}
+      {/* Section 2 starts right after this line */}
       {subTab === "prep" && (
         <>
-          <label className="label">
-            {t.petName}
-            <select
-              className="input"
-              value={editingVisit.petId}
-              onChange={(e) => setEditingVisit({ ...editingVisit, petId: e.target.value })}
-            >
-              <option value="">-- {t.petName} --</option>
-              {pets.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name || "(Unnamed)"} — {p.species}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="label">
-            {t.visitDate}
-            <input
-              className="input"
-              type="date"
-              value={editingVisit.visitDate}
-              onChange={(e) => setEditingVisit({ ...editingVisit, visitDate: e.target.value })}
-            />
-          </label>
-
-          <label className="label">
-            {t.mainConcern}
-            <textarea
-              className="textarea"
-              value={editingVisit.mainConcern}
-              onChange={(e) => setEditingVisit({ ...editingVisit, mainConcern: e.target.value })}
-              placeholder="What is the main concern? What changed?"
-            />
-          </label>
-
-          <label className="label">
-            {t.whenStart}
-            <textarea
-              className="textarea"
-              value={editingVisit.whenStart}
-              onChange={(e) => setEditingVisit({ ...editingVisit, whenStart: e.target.value })}
-              placeholder="e.g., Started 3 days ago, noticed after the hike on Saturday, gradually over 2 weeks..."
-            />
-          </label>
-
-          <label className="label">
-            {t.howProgressing}
-            <textarea
-              className="textarea"
-              value={editingVisit.howProgressing}
-              onChange={(e) => setEditingVisit({ ...editingVisit, howProgressing: e.target.value })}
-              placeholder="Getting worse each day, seems to improve after rest, worst in the morning..."
-            />
-          </label>
-
-          <label className="label">
-            {t.patterns}
-            <textarea
-              className="textarea"
-              value={editingVisit.patterns}
-              onChange={(e) => setEditingVisit({ ...editingVisit, patterns: e.target.value })}
-              placeholder="Only after running, happens at night, happens after eating certain foods..."
-            />
-          </label>
-
-          <label className="label">
-            {t.associatedSigns}
-            <textarea
-              className="textarea"
-              value={editingVisit.associatedSigns}
-              onChange={(e) =>
-                setEditingVisit({ ...editingVisit, associatedSigns: e.target.value })
-              }
-              placeholder="Not eating as much, vomiting once, drinking more water, licking paws..."
-            />
-          </label>
-
-          <label className="label">
-            {t.previousTreatment}
-            <textarea
-              className="textarea"
-              value={editingVisit.previousTreatment}
-              onChange={(e) =>
-                setEditingVisit({ ...editingVisit, previousTreatment: e.target.value })
-              }
-              placeholder="Had this 6 months ago, tried antibiotics, didn't help much..."
-            />
-          </label>
-
-          <label className="label">
-            {t.questionsVet}
-            <textarea
-              className="textarea"
-              value={editingVisit.questionsVet}
-              onChange={(e) =>
-                setEditingVisit({ ...editingVisit, questionsVet: e.target.value })
-              }
-              placeholder="Is this serious? Will it get better? What can I do at home?"
-            />
-          </label>
-
-          <div className="row rowWrap">
-            <button className="btn btnPrimary" onClick={saveVisit}>
-              {t.savePrep}
-            </button>
-
-            {editingVisit.id && (
-              <button className="btn btnSecondary" onClick={() => setEditingVisit(emptyVisit(userId))}>
-                {t.clearForm}
-              </button>
-            )}
-          </div>
-
-          <hr className="hr" />
-
-          {selectedPrep && (
-            <div className="panel" id="prep-view-panel">
-              <div className="panelHeader">
-                <h4 style={{ margin: 0 }}>
-                  {selectedPrepPet?.name || "(Unnamed)"} — {selectedPrep.visitDate || "No date"}
-                </h4>
-              </div>
-
-              <ViewOnlyPrepare visit={selectedPrep} />
-
-              <div className="row rowWrap" style={{ marginTop: 12 }}>
-                <button className="btn btnSecondary" onClick={() => setEditingVisit(selectedPrep)}>
+          {prepViewId && selectedPrep && selectedPrepPet && (
+            <div className="panel" style={{ marginBottom: 16, backgroundColor: "#f9f9f9" }}>
+              <div className="row rowWrap" style={{ marginBottom: 12 }}>
+                <button
+                  className="btn btnSecondary"
+                  onClick={() => {
+                    setPrepViewId(null);
+                    setEditingVisit(emptyVisit(userId));
+                  }}
+                >
+                  ← Back to Form
+                </button>
+                <button
+                  className="btn btnPrimary"
+                  onClick={() => {
+                    setEditingVisit(selectedPrep);
+                    setPrepViewId(null);
+                  }}
+                >
                   Edit
                 </button>
-                <button className="btn btnSecondary" onClick={() => setPrepViewId(null)}>
-                  ← Back
-                </button>
               </div>
+              <ViewOnlyPrepare visit={selectedPrep} />
             </div>
           )}
 
-          <h4>Your Visits</h4>
-          {visitsSorted.length === 0 && <div className="muted">No visits yet.</div>}
+          {!prepViewId && (
+            <form
+              className="stack"
+              onSubmit={(e) => {
+                e.preventDefault();
+                saveVisit();
+              }}
+            >
+              <label>
+                <span className="label">{t.selectPet}</span>
+                <select
+                  value={editingVisit.petId}
+                  onChange={(e) => setEditingVisit({ ...editingVisit, petId: e.target.value })}
+                  required
+                >
+                  <option value="">— Choose a pet —</option>
+                  {pets.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
-          {visitsSorted.map((v) => {
-            const pet = pets.find((p) => p.id === v.petId);
-            return (
-              <div key={v.id} className="itemCard">
-                <div className="itemTitle">
-                  {pet?.name || "(Unnamed)"} — {v.visitDate || "No date"}
-                </div>
-                <div className="muted">{v.mainConcern}</div>
+              <label>
+                <span className="label">{t.visitDate}</span>
+                <input
+                  type="date"
+                  value={editingVisit.visitDate}
+                  onChange={(e) => setEditingVisit({ ...editingVisit, visitDate: e.target.value })}
+                  placeholder="Pick a date"
+                />
+              </label>
 
-                <div className="row rowWrap">
+              <label>
+                <span className="label">{t.mainConcern}</span>
+                <input
+                  type="text"
+                  value={editingVisit.mainConcern}
+                  onChange={(e) => setEditingVisit({ ...editingVisit, mainConcern: e.target.value })}
+                  placeholder="E.g., limping, not eating, vomiting"
+                />
+              </label>
+
+              <label>
+                <span className="label">{t.whenStart}</span>
+                <input
+                  type="text"
+                  value={editingVisit.whenStart}
+                  onChange={(e) => setEditingVisit({ ...editingVisit, whenStart: e.target.value })}
+                  placeholder="E.g., 3 days ago, this morning"
+                />
+              </label>
+
+              <label>
+                <span className="label">{t.howProgressing}</span>
+                <textarea
+                  value={editingVisit.howProgressing}
+                  onChange={(e) => setEditingVisit({ ...editingVisit, howProgressing: e.target.value })}
+                  placeholder="Is it getting worse, better, or staying the same?"
+                  rows={3}
+                />
+              </label>
+
+              <label>
+                <span className="label">{t.patterns}</span>
+                <textarea
+                  value={editingVisit.patterns}
+                  onChange={(e) => setEditingVisit({ ...editingVisit, patterns: e.target.value })}
+                  placeholder="Any patterns? Time of day, after eating, etc."
+                  rows={3}
+                />
+              </label>
+
+              <label>
+                <span className="label">{t.associatedSigns}</span>
+                <textarea
+                  value={editingVisit.associatedSigns}
+                  onChange={(e) => setEditingVisit({ ...editingVisit, associatedSigns: e.target.value })}
+                  placeholder="Any other symptoms? Behavior changes, appetite, energy?"
+                  rows={3}
+                />
+              </label>
+
+              <label>
+                <span className="label">{t.previousTreatment}</span>
+                <textarea
+                  value={editingVisit.previousTreatment}
+                  onChange={(e) => setEditingVisit({ ...editingVisit, previousTreatment: e.target.value })}
+                  placeholder="Any home remedies or treatments already tried?"
+                  rows={3}
+                />
+              </label>
+
+              <label>
+                <span className="label">{t.questionsVet}</span>
+                <textarea
+                  value={editingVisit.questionsVet}
+                  onChange={(e) => setEditingVisit({ ...editingVisit, questionsVet: e.target.value })}
+                  placeholder="What do you want to ask the vet?"
+                  rows={3}
+                />
+              </label>
+
+              <div className="row rowWrap" style={{ marginTop: 16 }}>
+                <button type="submit" className="btn btnPrimary">
+                  {editingVisit.id ? t.update : t.save}
+                </button>
+                <button
+                  type="button"
+                  className="btn btnSecondary"
+                  onClick={() => setEditingVisit(emptyVisit(userId))}
+                >
+                  {t.cancel}
+                </button>
+                {editingVisit.id && (
                   <button
-                    className="btn btnSecondary"
+                    type="button"
+                    className="btn btnDanger"
                     onClick={() => {
-                      setPrepViewId(v.id!);
-                      setTimeout(() => {
-                        document
-                          .getElementById("prep-view-panel")
-                          ?.scrollIntoView({ behavior: "smooth", block: "start" });
-                      }, 0);
+                      removeVisit(editingVisit.id!);
+                      setEditingVisit(emptyVisit(userId));
                     }}
                   >
-                    View
+                    {t.delete}
                   </button>
-
-                  <button className="btn btnSecondary" onClick={() => setEditingVisit(v)}>
-                    Edit
-                  </button>
-
-                  <button
-                    className="btn btnSecondary"
-                    onClick={async () => {
-                      await loadNoteForVisit(v.id!);
-                      setSubTab("notes");
-                    }}
-                  >
-                    {t.visitNotes}
-                  </button>
-
-                  <button
-                    className="btn btnSecondary"
-                    onClick={async () => {
-                      await loadDocForVisit(v.id!);
-                      setSubTab("summary");
-                    }}
-                  >
-                    Summary
-                  </button>
-
-                  {v.id && (
-                    <button className="btn btnDanger" onClick={() => removeVisit(v.id!)}>
-                      Delete
-                    </button>
-                  )}
-                </div>
+                )}
               </div>
-            );
-          })}
+            </form>
+          )}
+
+          {!prepViewId && visits.length > 0 && (
+            <>
+              <hr style={{ margin: "20px 0" }} />
+              <h4>{t.yourVisits}</h4>
+              {visitsSorted.map((v) => {
+                const pet = pets.find((p) => p.id === v.petId);
+                return (
+                  <button
+                    key={v.id}
+                    className="itemCard"
+                    onClick={() => setPrepViewId(v.id!)}
+                    style={{ cursor: "pointer", textAlign: "left" }}
+                  >
+                    <div className="itemTitle">
+                      {pet?.name || "(Unnamed)"} — {v.visitDate || "No date"}
+                    </div>
+                    <div className="muted">{v.mainConcern || "No main concern yet."}</div>
+                  </button>
+                );
+              })}
+            </>
+          )}
         </>
       )}
 
-      {/* NOTES */}
       {subTab === "notes" && (
         <>
-          {!noteVisitId && (
+          {noteVisitId && editingNote && selectedNoteVisit && (
             <>
-              <div className="muted">Select a visit to add notes:</div>
-
-              {visitsSorted.length === 0 && (
-                <div className="alert alertWarn">
-                  No visits yet. Create one in "Prepare Visit" first.
+              {!editingNote.id && (
+                <div className="panel" style={{ marginBottom: 16, backgroundColor: "#f9f9f9" }}>
+                  <div className="row rowWrap" style={{ marginBottom: 12 }}>
+                    <button
+                      className="btn btnSecondary"
+                      onClick={() => {
+                        setNoteVisitId(null);
+                        setEditingNote(null);
+                      }}
+                    >
+                      ← Back
+                    </button>
+                  </div>
+                  <p className="muted">No visit notes saved yet for this visit.</p>
                 </div>
               )}
 
+              {editingNote.id && (
+                <div className="panel" style={{ marginBottom: 16, backgroundColor: "#f9f9f9" }}>
+                  <div className="row rowWrap" style={{ marginBottom: 12 }}>
+                    <button
+                      className="btn btnSecondary"
+                      onClick={() => {
+                        setNoteVisitId(null);
+                        setEditingNote(null);
+                      }}
+                    >
+                      ← Back
+                    </button>
+                  </div>
+                  <ViewOnlyNotes note={editingNote} />
+                </div>
+              )}
+
+              <form
+                className="stack"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  saveNote();
+                }}
+              >
+                <h4>Edit Visit Notes</h4>
+
+                <label>
+                  <span className="label">{t.vetName}</span>
+                  <input
+                    type="text"
+                    value={editingNote.vetName}
+                    onChange={(e) => setEditingNote({ ...editingNote, vetName: e.target.value })}
+                    placeholder="Veterinarian's name"
+                  />
+                </label>
+
+                <label>
+                  <span className="label">{t.diagnosis}</span>
+                  <textarea
+                    value={editingNote.diagnosis}
+                    onChange={(e) => setEditingNote({ ...editingNote, diagnosis: e.target.value })}
+                    placeholder="What did the vet find?"
+                    rows={3}
+                  />
+                </label>
+
+                <label>
+                  <span className="label">{t.testsPerformed}</span>
+                  <textarea
+                    value={editingNote.testsPerformed}
+                    onChange={(e) => setEditingNote({ ...editingNote, testsPerformed: e.target.value })}
+                    placeholder="Blood tests, X-rays, ultrasound, etc."
+                    rows={3}
+                  />
+                </label>
+
+                <label>
+                  <span className="label">{t.treatmentMeds}</span>
+                  <textarea
+                    value={editingNote.treatmentMeds}
+                    onChange={(e) => setEditingNote({ ...editingNote, treatmentMeds: e.target.value })}
+                    placeholder="Medications, dosage, frequency"
+                    rows={3}
+                  />
+                </label>
+
+                <label>
+                  <span className="label">{t.homeInstructions}</span>
+                  <textarea
+                    value={editingNote.homeInstructions}
+                    onChange={(e) => setEditingNote({ ...editingNote, homeInstructions: e.target.value })}
+                    placeholder="Rest, diet changes, activity restrictions?"
+                    rows={3}
+                  />
+                </label>
+
+                <label>
+                  <span className="label">{t.followUp}</span>
+                  <input
+                    type="text"
+                    value={editingNote.followUp}
+                    onChange={(e) => setEditingNote({ ...editingNote, followUp: e.target.value })}
+                    placeholder="E.g., recheck in 2 weeks, call if symptoms worsen"
+                  />
+                </label>
+
+                <div className="row rowWrap" style={{ marginTop: 16 }}>
+                  <button type="submit" className="btn btnPrimary">
+                    {editingNote.id ? t.update : t.save}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btnSecondary"
+                    onClick={() => {
+                      setNoteVisitId(null);
+                      setEditingNote(null);
+                    }}
+                  >
+                    {t.cancel}
+                  </button>
+                </div>
+              </form>
+            </>
+          )}
+
+          {!noteVisitId && (
+            <>
+              <p className="muted">Select a visit to add or edit notes.</p>
               {visitsSorted.map((v) => {
                 const pet = pets.find((p) => p.id === v.petId);
                 return (
@@ -529,35 +626,61 @@ export default function VisitsScreen({
                     <div className="itemTitle">
                       {pet?.name || "(Unnamed)"} — {v.visitDate || "No date"}
                     </div>
-                    <div className="muted">{v.mainConcern}</div>
+                    <div className="muted">{v.mainConcern || "No main concern yet."}</div>
+                  </button>
+                );
+              })}
+            </>
+          )}
+        </>
+      )}
+
+      {subTab === "summary" && (
+        <>
+          {!docVisitId && (
+            <>
+              <p className="muted">Select a visit to view the summary.</p>
+              {visitsSorted.map((v) => {
+                const pet = pets.find((p) => p.id === v.petId);
+                return (
+                  <button
+                    key={v.id}
+                    className="itemCard"
+                    onClick={() => loadDocForVisit(v.id!)}
+                    style={{ cursor: "pointer", textAlign: "left" }}
+                  >
+                    <div className="itemTitle">
+                      {pet?.name || "(Unnamed)"} — {v.visitDate || "No date"}
+                    </div>
+                    <div className="muted">{v.mainConcern || "No main concern yet."}</div>
                   </button>
                 );
               })}
             </>
           )}
 
-          {noteVisitId && selectedNoteVisit && editingNote && (
+          {docVisitId && docVisit && docPet && (
             <>
-              <div className="row rowWrap" style={{ marginBottom: 12 }}>
-                <button
-                  className="btn btnSecondary"
-                  onClick={() => {
-                    setNoteVisitId(null);
-                    setEditingNote(null);
-                  }}
-                >
-                  ← Back
-                </button>
-
-                <button
-                  className="btn btnSecondary"
-                  onClick={async () => {
-                    await loadDocForVisit(noteVisitId);
-                    setSubTab("summary");
-                  }}
-                >
-                  Summary
-                </button>
-              </div>
-
-              <h4>
+              <button
+                className="btn btnSecondary"
+                onClick={() => {
+                  setDocVisitId(null);
+                  setDocNote(null);
+                }}
+                style={{ marginBottom: 16 }}
+              >
+                ← Back
+              </button>
+              <ViewDocument
+                lang={lang}
+                pet={docPet}
+                visit={docVisit}
+                note={docNote}
+              />
+            </>
+          )}
+        </>
+      )}
+    </div>
+  );
+                }
