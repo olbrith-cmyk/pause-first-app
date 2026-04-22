@@ -45,6 +45,29 @@ const emptyNote = (userId: string, visitId: string): VisitNote => ({
   followUp: ""
 });
 
+const AI_ASSISTANT_URL =
+  "https://chatgpt.com/g/g-695a7a9e17d08191bd88b76d39f9e54f-pause-firsttm";
+function AskAiLink({ label }: { label: string }) {
+  return (
+    <a
+      href={AI_ASSISTANT_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{
+        fontSize: 12,
+        marginLeft: 10,
+        color: "#0066cc",
+        textDecoration: "underline",
+        whiteSpace: "nowrap"
+      }}
+      aria-label={label}
+      title={label}
+    >
+      {label}
+    </a>
+  );
+}
+
 export default function VisitsScreen({
   lang,
   userId,
@@ -364,7 +387,10 @@ export default function VisitsScreen({
               </label>
 
               <label>
-                <span className="label">{t.mainConcern}</span>
+                <span className="label">
+  {t.mainConcern}
+  <AskAiLink label={t.askAiAssistant} />
+</span>
                 <input
                   type="text"
                   value={editingVisit.mainConcern}
@@ -374,7 +400,10 @@ export default function VisitsScreen({
               </label>
 
               <label>
-                <span className="label">{t.whenStart}</span>
+                <span className="label">
+  {t.whenStart}
+  <AskAiLink label={t.askAiAssistant} />
+</span>
                 <input
                   type="text"
                   value={editingVisit.whenStart}
@@ -384,7 +413,10 @@ export default function VisitsScreen({
               </label>
 
               <label>
-                <span className="label">{t.howProgressing}</span>
+                <span className="label">
+  {t.howProgressing}
+  <AskAiLink label={t.askAiAssistant} />
+</span>
                 <textarea
                   value={editingVisit.howProgressing}
                   onChange={(e) => setEditingVisit({ ...editingVisit, howProgressing: e.target.value })}
@@ -394,7 +426,10 @@ export default function VisitsScreen({
               </label>
 
               <label>
-                <span className="label">{t.patterns}</span>
+                <span className="label">
+  {t.patterns}
+  <AskAiLink label={t.askAiAssistant} />
+</span>
                 <textarea
                   value={editingVisit.patterns}
                   onChange={(e) => setEditingVisit({ ...editingVisit, patterns: e.target.value })}
@@ -404,7 +439,10 @@ export default function VisitsScreen({
               </label>
 
               <label>
-                <span className="label">{t.associatedSigns}</span>
+                <span className="label">
+  {t.associatedSigns}
+  <AskAiLink label={t.askAiAssistant} />
+</span>
                 <textarea
                   value={editingVisit.associatedSigns}
                   onChange={(e) => setEditingVisit({ ...editingVisit, associatedSigns: e.target.value })}
@@ -414,7 +452,10 @@ export default function VisitsScreen({
               </label>
 
               <label>
-                <span className="label">{t.previousTreatment}</span>
+                <span className="label">
+  {t.previousTreatment}
+  <AskAiLink label={t.askAiAssistant} />
+</span>
                 <textarea
                   value={editingVisit.previousTreatment}
                   onChange={(e) => setEditingVisit({ ...editingVisit, previousTreatment: e.target.value })}
@@ -424,7 +465,10 @@ export default function VisitsScreen({
               </label>
 
               <label>
-                <span className="label">{t.questionsVet}</span>
+                <span className="label">
+  {t.questionsVet}
+  <AskAiLink label={t.askAiAssistant} />
+</span>
                 <textarea
                   value={editingVisit.questionsVet}
                   onChange={(e) => setEditingVisit({ ...editingVisit, questionsVet: e.target.value })}
