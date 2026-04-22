@@ -19,7 +19,6 @@ import { ViewOnlyNotes } from "./ViewOnlyNotes";
 import ViewDocument from "./ViewDocument";
 
 export type Mode = "myVisits" | "prepare";
-
 type PrepareSubTab = "prep" | "notes" | "summary";
 
 const emptyVisit = (userId: string): Visit => ({
@@ -54,28 +53,27 @@ export default function VisitsScreen({
   lang: Lang;
   userId: string;
   mode: Mode;
-  goToTab?: (next: Mode) => void; // kept optional so Dashboard can still pass it without breaking
+  goToTab?: (next: Mode) => void; // optional for backward compatibility
 }) {
   const t = useTranslation(lang);
 
   const [pets, setPets] = useState<Pet[]>([]);
   const [visits, setVisits] = useState<Visit[]>([]);
 
-  // PREPARE state
+  // PREPARE
   const [subTab, setSubTab] = useState<PrepareSubTab>("prep");
-
   const [editingVisit, setEditingVisit] = useState<Visit>(emptyVisit(userId));
   const [prepViewId, setPrepViewId] = useState<string | null>(null);
 
-  // NOTES state (for selected visit)
+  // NOTES (selected visit)
   const [noteVisitId, setNoteVisitId] = useState<string | null>(null);
   const [editingNote, setEditingNote] = useState<VisitNote | null>(null);
 
-  // SUMMARY state
+  // SUMMARY (selected visit)
   const [docVisitId, setDocVisitId] = useState<string | null>(null);
   const [docNote, setDocNote] = useState<VisitNote | null>(null);
 
-  // MY VISITS state
+  // MY VISITS
   const [openVisitId, setOpenVisitId] = useState<string | null>(null);
   const [openNote, setOpenNote] = useState<VisitNote | null>(null);
 
@@ -98,10 +96,8 @@ export default function VisitsScreen({
     });
   }, [visits]);
 
-  const selectedPrep =
-    prepViewId ? visits.find((v) => v.id === prepViewId) ?? null : null;
-  const selectedPrepPet =
-    selectedPrep ? pets.find((p) => p.id === selectedPrep.petId) ?? null : null;
+  const selectedPrep = prepViewId ? visits.find((v) => v.id === prepViewId) ?? null : null;
+  const selectedPrepPet = selectedPrep ? pets.find((p) => p.id === selectedPrep.petId) ?? null : null;
 
   const saveVisit = async () => {
     if (!editingVisit.petId) return alert("Pick a pet first");
@@ -225,7 +221,6 @@ export default function VisitsScreen({
               <button
                 className="btn btnSecondary"
                 onClick={() => {
-                  // Jump into Prepare flow with this visit loaded
                   setEditingVisit(openVisit);
                   setPrepViewId(openVisit.id!);
                   setSubTab("prep");
@@ -265,11 +260,7 @@ export default function VisitsScreen({
             <ViewOnlyPrepare visit={openVisit} />
 
             <h4 style={{ marginTop: 16 }}>Visit Notes</h4>
-            {openNote ? (
-              <ViewOnlyNotes note={openNote} />
-            ) : (
-              <div className="muted">No visit notes yet.</div>
-            )}
+            {openNote ? <ViewOnlyNotes note={openNote} /> : <div className="muted">No visit notes yet.</div>}
           </div>
         )}
       </div>
@@ -279,13 +270,10 @@ export default function VisitsScreen({
   // =========================
   // PREPARE (primary workflow)
   // =========================
-  const selectedNoteVisit =
-    noteVisitId ? visits.find((v) => v.id === noteVisitId) ?? null : null;
+  const selectedNoteVisit = noteVisitId ? visits.find((v) => v.id === noteVisitId) ?? null : null;
 
-  const docVisit =
-    docVisitId ? visits.find((v) => v.id === docVisitId) ?? null : null;
-  const docPet =
-    docVisit ? pets.find((p) => p.id === docVisit.petId) ?? null : null;
+  const docVisit = docVisitId ? visits.find((v) => v.id === docVisitId) ?? null : null;
+  const docPet = docVisit ? pets.find((p) => p.id === docVisit.petId) ?? null : null;
 
   return (
     <div className="stack">
@@ -313,7 +301,7 @@ export default function VisitsScreen({
         </button>
       </div>
 
-      {/* PREP FORM */}
+      {/* PREP */}
       {subTab === "prep" && (
         <>
           <label className="label">
@@ -321,9 +309,7 @@ export default function VisitsScreen({
             <select
               className="input"
               value={editingVisit.petId}
-              onChange={(e) =>
-                setEditingVisit({ ...editingVisit, petId: e.target.value })
-              }
+              onChange={(e) => setEditingVisit({ ...editingVisit, petId: e.target.value })}
             >
               <option value="">-- {t.petName} --</option>
               {pets.map((p) => (
@@ -340,9 +326,7 @@ export default function VisitsScreen({
               className="input"
               type="date"
               value={editingVisit.visitDate}
-              onChange={(e) =>
-                setEditingVisit({ ...editingVisit, visitDate: e.target.value })
-              }
+              onChange={(e) => setEditingVisit({ ...editingVisit, visitDate: e.target.value })}
             />
           </label>
 
@@ -351,9 +335,7 @@ export default function VisitsScreen({
             <textarea
               className="textarea"
               value={editingVisit.mainConcern}
-              onChange={(e) =>
-                setEditingVisit({ ...editingVisit, mainConcern: e.target.value })
-              }
+              onChange={(e) => setEditingVisit({ ...editingVisit, mainConcern: e.target.value })}
               placeholder="What is the main concern? What changed?"
             />
           </label>
@@ -363,9 +345,7 @@ export default function VisitsScreen({
             <textarea
               className="textarea"
               value={editingVisit.whenStart}
-              onChange={(e) =>
-                setEditingVisit({ ...editingVisit, whenStart: e.target.value })
-              }
+              onChange={(e) => setEditingVisit({ ...editingVisit, whenStart: e.target.value })}
               placeholder="e.g., Started 3 days ago, noticed after the hike on Saturday, gradually over 2 weeks..."
             />
           </label>
@@ -375,12 +355,7 @@ export default function VisitsScreen({
             <textarea
               className="textarea"
               value={editingVisit.howProgressing}
-              onChange={(e) =>
-                setEditingVisit({
-                  ...editingVisit,
-                  howProgressing: e.target.value
-                })
-              }
+              onChange={(e) => setEditingVisit({ ...editingVisit, howProgressing: e.target.value })}
               placeholder="Getting worse each day, seems to improve after rest, worst in the morning..."
             />
           </label>
@@ -390,9 +365,7 @@ export default function VisitsScreen({
             <textarea
               className="textarea"
               value={editingVisit.patterns}
-              onChange={(e) =>
-                setEditingVisit({ ...editingVisit, patterns: e.target.value })
-              }
+              onChange={(e) => setEditingVisit({ ...editingVisit, patterns: e.target.value })}
               placeholder="Only after running, happens at night, happens after eating certain foods..."
             />
           </label>
@@ -403,10 +376,7 @@ export default function VisitsScreen({
               className="textarea"
               value={editingVisit.associatedSigns}
               onChange={(e) =>
-                setEditingVisit({
-                  ...editingVisit,
-                  associatedSigns: e.target.value
-                })
+                setEditingVisit({ ...editingVisit, associatedSigns: e.target.value })
               }
               placeholder="Not eating as much, vomiting once, drinking more water, licking paws..."
             />
@@ -418,10 +388,7 @@ export default function VisitsScreen({
               className="textarea"
               value={editingVisit.previousTreatment}
               onChange={(e) =>
-                setEditingVisit({
-                  ...editingVisit,
-                  previousTreatment: e.target.value
-                })
+                setEditingVisit({ ...editingVisit, previousTreatment: e.target.value })
               }
               placeholder="Had this 6 months ago, tried antibiotics, didn't help much..."
             />
@@ -433,10 +400,7 @@ export default function VisitsScreen({
               className="textarea"
               value={editingVisit.questionsVet}
               onChange={(e) =>
-                setEditingVisit({
-                  ...editingVisit,
-                  questionsVet: e.target.value
-                })
+                setEditingVisit({ ...editingVisit, questionsVet: e.target.value })
               }
               placeholder="Is this serious? Will it get better? What can I do at home?"
             />
@@ -448,10 +412,7 @@ export default function VisitsScreen({
             </button>
 
             {editingVisit.id && (
-              <button
-                className="btn btnSecondary"
-                onClick={() => setEditingVisit(emptyVisit(userId))}
-              >
+              <button className="btn btnSecondary" onClick={() => setEditingVisit(emptyVisit(userId))}>
                 {t.clearForm}
               </button>
             )}
@@ -459,34 +420,21 @@ export default function VisitsScreen({
 
           <hr className="hr" />
 
-          {/* View saved preparation */}
           {selectedPrep && (
             <div className="panel" id="prep-view-panel">
               <div className="panelHeader">
                 <h4 style={{ margin: 0 }}>
-                  {selectedPrepPet?.name || "(Unnamed)"} —{" "}
-                  {selectedPrep.visitDate || "No date"}
+                  {selectedPrepPet?.name || "(Unnamed)"} — {selectedPrep.visitDate || "No date"}
                 </h4>
               </div>
 
               <ViewOnlyPrepare visit={selectedPrep} />
 
               <div className="row rowWrap" style={{ marginTop: 12 }}>
-                <button
-                  className="btn btnSecondary"
-                  onClick={() => {
-                    setEditingVisit(selectedPrep);
-                  }}
-                >
+                <button className="btn btnSecondary" onClick={() => setEditingVisit(selectedPrep)}>
                   Edit
                 </button>
-
-                <button
-                  className="btn btnSecondary"
-                  onClick={() => {
-                    setPrepViewId(null);
-                  }}
-                >
+                <button className="btn btnSecondary" onClick={() => setPrepViewId(null)}>
                   ← Back
                 </button>
               </div>
@@ -520,10 +468,7 @@ export default function VisitsScreen({
                     View
                   </button>
 
-                  <button
-                    className="btn btnSecondary"
-                    onClick={() => setEditingVisit(v)}
-                  >
+                  <button className="btn btnSecondary" onClick={() => setEditingVisit(v)}>
                     Edit
                   </button>
 
@@ -579,3 +524,40 @@ export default function VisitsScreen({
                     key={v.id}
                     className="itemCard"
                     onClick={() => loadNoteForVisit(v.id!)}
+                    style={{ cursor: "pointer", textAlign: "left" }}
+                  >
+                    <div className="itemTitle">
+                      {pet?.name || "(Unnamed)"} — {v.visitDate || "No date"}
+                    </div>
+                    <div className="muted">{v.mainConcern}</div>
+                  </button>
+                );
+              })}
+            </>
+          )}
+
+          {noteVisitId && selectedNoteVisit && editingNote && (
+            <>
+              <div className="row rowWrap" style={{ marginBottom: 12 }}>
+                <button
+                  className="btn btnSecondary"
+                  onClick={() => {
+                    setNoteVisitId(null);
+                    setEditingNote(null);
+                  }}
+                >
+                  ← Back
+                </button>
+
+                <button
+                  className="btn btnSecondary"
+                  onClick={async () => {
+                    await loadDocForVisit(noteVisitId);
+                    setSubTab("summary");
+                  }}
+                >
+                  Summary
+                </button>
+              </div>
+
+              <h4>
