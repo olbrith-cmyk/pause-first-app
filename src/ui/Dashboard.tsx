@@ -1,152 +1,267 @@
-import { logOut } from "../auth";
-import { deleteUserAccount } from "../firestore";
-import { EmergencyGuide, MedicalDisclaimer, PrivacyPolicy } from "./Modals";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
-
 import PetsScreen from "./PetsScreen";
 import VisitsScreen from "./VisitsScreen";
-import type { Mode } from "./VisitsScreen";
+import HamburgerMenu from "./HamburgerMenu";
+import PrivacyPolicyModal from "./PrivacyPolicyModal";
 
-type Tab = "prepare" | "myVisits" | "pets";
+type DashboardMode = "visits" | "prepare" | "pets";
 
 export default function Dashboard({
   lang,
   userId,
-  email,
-  onLangChange
+  onLogout,
+  onDeleteAccount
 }: {
   lang: Lang;
   userId: string;
-  email: string;
-  onLangChange: (lang: Lang) => void;
+  onLogout: () => void;
+  onDeleteAccount: () => void;
 }) {
   const t = useTranslation(lang);
-  const [tab, setTab] = useState<Tab>("prepare");
-  const [showEmergency, setShowEmergency] = useState(false);
-  const [showDisclaimer, setShowDisclaimer] = useState(false);
-  const [showPrivacy, setShowPrivacy] = useState(false);
 
-  const tabs = useMemo(
-    () => [
-      { id: "prepare" as const, label: t.prepareVisit },
-      { id: "myVisits" as const, label: (t as any).myVisits ?? "My Visits" },
-      { id: "pets" as const, label: t.myPets }
-    ],
-    [t]
-  );
+  const [mode, setMode] = useState<DashboardMode>("prepare");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [showEmergencyGuide, setShowEmergencyGuide] = useState(false);
+  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
 
-  const handleDeleteAccount = async () => {
-    const ok = confirm(
-      "Are you sure? This will permanently delete your account and all your data."
-    );
-    if (!ok) return;
-
-    try {
-      await deleteUserAccount(userId);
-      alert("Account deleted successfully.");
-      await logOut();
-    } catch (error: any) {
-      const message = error?.message ?? String(error);
-      if (message.includes("requires-recent-login")) {
-        alert(
-          "For security, please log out and log in again, then try deleting your account."
-        );
-      } else {
-        alert("Error deleting account: " + message);
-      }
-    }
+  const goToTab = (nextMode: DashboardMode) => {
+    setMode(nextMode);
   };
-
-  const handleFirstPetSaved = () => {
-    setTab("prepare");
-  };
-
-  const isDa = lang === "da";
 
   return (
-    <main className="card">
-      {/* Top bar: discreet links + language toggle */}
-      <div className="topBar">
-        <div className="topLinks">
-          <button className="topLink" onClick={() => setShowEmergency(true)}>
-            {t.emergencyGuide}
-          </button>
-          <button className="topLink" onClick={() => setShowDisclaimer(true)}>
-            {t.medicalDisclaimer}
-          </button>
-          <button className="topLink" onClick={() => setShowPrivacy(true)}>
-            Privacy Policy
-          </button>
-          <button className="topLink" onClick={() => logOut()}>
-            {t.logout}
-          </button>
-          <button className="topLink topLinkDanger" onClick={handleDeleteAccount}>
-            Delete Account
-          </button>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        height: "100vh",
+        backgroundColor: "#f5f5f5"
+      }}
+    >
+      {/* TOP BAR */}
+      <div
+        style={{
+          backgroundColor: "#fff",
+          borderBottom: "1px solid #e0e0e0",
+          padding: "12px 16px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          zIndex: 100
+        }}
+      >
+        {/* Hamburger Menu Button */}
+        <button
+          onClick={() => setMenuOpen(!menuOpen)}
+          style={{
+            background: "none",
+            border: "none",
+            fontSize: "24px",
+            cursor: "pointer",
+            color: "#333"
+          }}
+        >
+          ☰
+        </button>
+
+        {/* Center: Pause First™ Header */}
+        <div style={{ textAlign: "center", flex: 1 }}>
+          <h1 style={{ margin: "0 0 4px 0", fontSize: "20px", fontWeight: "bold" }}>
+            {t.appTitle}
+          </h1>
+          <p style={{ margin: 0, fontSize: "12px", color: "#666" }}>
+            {t.appSubtitle}
+          </p>
         </div>
 
-        {/* Small EN/DA slider toggle */}
-        <div className="langSwitchWrap" aria-label="Language">
-          <span className={`langLabel ${!isDa ? "langLabelActive" : ""}`}>EN</span>
-
-          <button
-            type="button"
-            className={`langSwitch ${isDa ? "langSwitchOn" : ""}`}
-            role="switch"
-            aria-checked={isDa}
-            onClick={() => onLangChange(isDa ? "en" : "da")}
-            title={isDa ? "Switch to English" : "Skift til Dansk"}
-          >
-            <span className="langKnob" />
-          </button>
-
-          <span className={`langLabel ${isDa ? "langLabelActive" : ""}`}>DA</span>
-        </div>
+        {/* Language Toggle */}
+        <button
+          onClick={() => {
+            // This will be handled by parent (App.tsx)
+            // For now, just a placeholder
+          }}
+          style={{
+            background: "none",
+            border: "none",
+            fontSize: "14px",
+            cursor: "pointer",
+            color: "#0066cc",
+            fontWeight: "bold"
+          }}
+        >
+          {lang === "en" ? "DA" : "EN"}
+        </button>
       </div>
 
-      {/* Top-level tabs */}
-      <div className="tabs" style={{ marginTop: 8 }}>
-        {tabs.map((x) => (
-          <button
-            key={x.id}
-            className={`tab ${tab === x.id ? "tabActive" : ""}`}
-            onClick={() => setTab(x.id)}
-          >
-            {x.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="panel">
-        {tab === "pets" && (
-          <PetsScreen
-            lang={lang}
-            userId={userId}
-            onFirstPetSaved={handleFirstPetSaved}
-          />
-        )}
-
-        {(tab === "prepare" || tab === "myVisits") && (
+      {/* CONTENT AREA */}
+      <div
+        style={{
+          flex: 1,
+          overflowY: "auto",
+          padding: "16px",
+          paddingBottom: "100px"
+        }}
+      >
+        {mode === "visits" && (
           <VisitsScreen
             lang={lang}
             userId={userId}
-            mode={tab as Mode} // "prepare" | "myVisits"
-            goToTab={(next: Mode) => setTab(next === "myVisits" ? "myVisits" : "prepare")}
+            mode="myVisits"
+            goToTab={goToTab}
           />
+        )}
+
+        {mode === "prepare" && (
+          <VisitsScreen
+            lang={lang}
+            userId={userId}
+            mode="prepare"
+            goToTab={goToTab}
+          />
+        )}
+
+        {mode === "pets" && (
+          <PetsScreen lang={lang} userId={userId} />
         )}
       </div>
 
-      {showEmergency && (
-        <EmergencyGuide lang={lang} onClose={() => setShowEmergency(false)} />
+      {/* BOTTOM NAV */}
+      <div
+        style={{
+          position: "fixed",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          backgroundColor: "#e8f0f7",
+          borderTop: "1px solid #d0e0f0",
+          padding: "12px 16px",
+          display: "flex",
+          gap: "12px",
+          justifyContent: "space-between",
+          alignItems: "center",
+          zIndex: 50
+        }}
+      >
+        {/* Visits Button */}
+        <button
+          onClick={() => setMode("visits")}
+          className={`btn ${mode === "visits" ? "btnActive" : "btnSecondary"}`}
+          style={{
+            flex: 1,
+            padding: "12px 16px",
+            fontSize: "14px"
+          }}
+        >
+          {t.myVisits}
+        </button>
+
+        {/* Prepare for Vet Visit Button (LARGE PRIMARY) */}
+        <button
+          onClick={() => setMode("prepare")}
+          className="btn btnPrimary"
+          style={{
+            flex: 1.2,
+            padding: "16px 20px",
+            fontSize: "15px",
+            fontWeight: "bold",
+            minHeight: "50px"
+          }}
+        >
+          {t.prepareVisit}
+        </button>
+
+        {/* Pets Button */}
+        <button
+          onClick={() => setMode("pets")}
+          className={`btn ${mode === "pets" ? "btnActive" : "btnSecondary"}`}
+          style={{
+            flex: 1,
+            padding: "12px 16px",
+            fontSize: "14px"
+          }}
+        >
+          {t.myPets}
+        </button>
+      </div>
+
+      {/* HAMBURGER MENU */}
+      <HamburgerMenu
+        lang={lang}
+        isOpen={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        onLogout={onLogout}
+        onDeleteAccount={onDeleteAccount}
+        onEmergencyGuide={() => setShowEmergencyGuide(true)}
+        onMedicalDisclaimer={() => setShowPrivacyPolicy(true)}
+      />
+
+      {/* EMERGENCY GUIDE MODAL */}
+      {showEmergencyGuide && (
+        <div
+          className="modal"
+          onClick={() => setShowEmergencyGuide(false)}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 2000
+          }}
+        >
+          <div
+            className="modalContent"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: "#fff",
+              borderRadius: "8px",
+              padding: "24px",
+              maxWidth: "90%",
+              maxHeight: "80vh",
+              overflowY: "auto"
+            }}
+          >
+            <h2>{t.emergencyGuide}</h2>
+            <p>
+              <strong>This is not a substitute for professional veterinary care.</strong>
+            </p>
+            <p>
+              If your pet is experiencing a life-threatening emergency, contact your veterinarian or emergency vet clinic immediately.
+            </p>
+            <h3>Signs of Emergency:</h3>
+            <ul>
+              <li>Difficulty breathing or choking</li>
+              <li>Loss of consciousness or unresponsiveness</li>
+              <li>Severe bleeding</li>
+              <li>Inability to urinate or defecate</li>
+              <li>Severe trauma or injury</li>
+              <li>Seizures</li>
+              <li>Severe vomiting or diarrhea</li>
+              <li>Sudden paralysis</li>
+            </ul>
+            <button
+              onClick={() => setShowEmergencyGuide(false)}
+              className="btn btnPrimary"
+              style={{ marginTop: "16px" }}
+            >
+              {t.close}
+            </button>
+          </div>
+        </div>
       )}
-      {showDisclaimer && (
-        <MedicalDisclaimer lang={lang} onClose={() => setShowDisclaimer(false)} />
+
+      {/* PRIVACY POLICY MODAL */}
+      {showPrivacyPolicy && (
+        <PrivacyPolicyModal
+          lang={lang}
+          onClose={() => setShowPrivacyPolicy(false)}
+        />
       )}
-      {showPrivacy && (
-        <PrivacyPolicy lang={lang} onClose={() => setShowPrivacy(false)} />
-      )}
-    </main>
+    </div>
   );
 }
