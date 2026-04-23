@@ -9,7 +9,8 @@ export default function HamburgerMenu({
   onLogout,
   onDeleteAccount,
   onEmergencyGuide,
-  onMedicalDisclaimer
+  onMedicalDisclaimer,
+  onPrivacyPolicy
 }: {
   lang: Lang;
   isOpen: boolean;
@@ -51,6 +52,12 @@ export default function HamburgerMenu({
       color: "#1976d2"
     },
     {
+      icon: "📋",
+      label: "Privacy Policy",
+      onClick: onPrivacyPolicy,
+      color: "#1976d2"
+    },
+    {
       icon: "🤖",
       label: t.aiAssistant,
       onClick: () => {
@@ -77,12 +84,6 @@ export default function HamburgerMenu({
       onClick: onDeleteAccount,
       color: "#cc0000"
     }
-    {
-  icon: "📋",
-  label: "Privacy Policy",
-  onClick: onPrivacyPolicy,
-  color: "#1976d2"
-}
   ];
 
   return (
@@ -165,7 +166,7 @@ export default function HamburgerMenu({
                 padding: "14px 12px",
                 marginBottom: "8px",
                 borderRadius: "6px",
-                transition: "background-color 0.2s ease",
+                transition: "background-color 0.2s ease"
               }}
               onMouseEnter={(e) => {
                 (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(0, 0, 0, 0.05)";
@@ -207,7 +208,7 @@ export default function HamburgerMenu({
                 padding: "14px 12px",
                 marginBottom: idx === bottomItems.length - 1 ? 0 : "8px",
                 borderRadius: "6px",
-                transition: "background-color 0.2s ease",
+                transition: "background-color 0.2s ease"
               }}
               onMouseEnter={(e) => {
                 (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(0, 0, 0, 0.05)";
