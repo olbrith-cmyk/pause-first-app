@@ -18,6 +18,7 @@ export default function HamburgerMenu({
   onDeleteAccount: () => void;
   onEmergencyGuide: () => void;
   onMedicalDisclaimer: () => void;
+  onPrivacyPolicy: () => void;
 }) {
   const t = useTranslation(lang);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -76,6 +77,12 @@ export default function HamburgerMenu({
       onClick: onDeleteAccount,
       color: "#cc0000"
     }
+    {
+  icon: "📋",
+  label: "Privacy Policy",
+  onClick: onPrivacyPolicy,
+  color: "#1976d2"
+}
   ];
 
   return (
