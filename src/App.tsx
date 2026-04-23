@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Lang } from "./i18n";
 import { useTranslation } from "./i18n";
-import { onAuthChange } from "./auth";
+import { onAuthChange, logout, deleteAccount } from "./auth";
 import type { User } from "firebase/auth";
 
 import AuthScreen from "./ui/AuthScreen";
