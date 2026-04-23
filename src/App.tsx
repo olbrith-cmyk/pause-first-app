@@ -1,3 +1,4 @@
+import HamburgerMenu from "./ui/HamburgerMenu";
 import { useEffect, useState } from "react";
 import type { Lang } from "./i18n";
 import { useTranslation } from "./i18n";
@@ -13,6 +14,7 @@ export default function App() {
 
   const [user, setUser] = useState<User | null>(null);
   const [authReady, setAuthReady] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const unsub = onAuthChange((u) => {
@@ -32,11 +34,37 @@ export default function App() {
 
   return (
     <div className="page">
-      <header className="header">
+          <header className="header">
+        <button
+          onClick={() => setMenuOpen(!menuOpen)}
+          style={{
+            background: "none",
+            border: "none",
+            fontSize: "24px",
+            cursor: "pointer",
+            color: "#333",
+            marginRight: "16px"
+          }}
+        >
+          ☰
+        </button>
         <div>
           <h1 className="brand">{t.appTitle}</h1>
           <p className="subtitle">{t.appSubtitle}</p>
         </div>
+        <button
+          onClick={() => setLang(lang === "en" ? "da" : "en")}
+          style={{
+            background: "none",
+            border: "none",
+            fontSize: "14px",
+            cursor: "pointer",
+            color: "#0066cc",
+            fontWeight: "bold"
+          }}
+        >
+          {lang === "en" ? "DA" : "EN"}
+        </button>
       </header>
 
       {!user ? (
@@ -51,6 +79,15 @@ export default function App() {
   onDeleteAccount={deleteCurrentUser}
 />
       )}
+            <HamburgerMenu
+        lang={lang}
+        isOpen={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        onLogout={logOut}
+        onDeleteAccount={deleteCurrentUser}
+        onEmergencyGuide={() => alert(t.emergencyGuide)}
+        onMedicalDisclaimer={() => alert(t.medicalDisclaimer)}
+      />
     </div>
   );
 }
