@@ -4,18 +4,21 @@ import { useTranslation } from "../i18n";
 import PetsScreen from "./PetsScreen";
 import VisitsScreen from "./VisitsScreen";
 import HamburgerMenu from "./HamburgerMenu";
-import PrivacyPolicyModal from "./PrivacyPolicyModal";
 
 type DashboardMode = "visits" | "prepare" | "pets";
 
 export default function Dashboard({
   lang,
   userId,
+  email,
+  onLangChange,
   onLogout,
   onDeleteAccount
 }: {
   lang: Lang;
   userId: string;
+  email?: string;
+  onLangChange?: (next: Lang) => void;
   onLogout: () => void;
   onDeleteAccount: () => void;
 }) {
@@ -24,7 +27,6 @@ export default function Dashboard({
   const [mode, setMode] = useState<DashboardMode>("prepare");
   const [menuOpen, setMenuOpen] = useState(false);
   const [showEmergencyGuide, setShowEmergencyGuide] = useState(false);
-  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
 
   const goToTab = (nextMode: DashboardMode) => {
     setMode(nextMode);
@@ -78,9 +80,9 @@ export default function Dashboard({
         {/* Language Toggle */}
         <button
           onClick={() => {
-            // This will be handled by parent (App.tsx)
-            // For now, just a placeholder
-          }}
+  if (!onLangChange) return;
+  onLangChange(lang === "en" ? "da" : "en");
+}}
           style={{
             background: "none",
             border: "none",
@@ -108,7 +110,6 @@ export default function Dashboard({
             lang={lang}
             userId={userId}
             mode="myVisits"
-            goToTab={goToTab}
           />
         )}
 
@@ -117,7 +118,6 @@ export default function Dashboard({
             lang={lang}
             userId={userId}
             mode="prepare"
-            goToTab={goToTab}
           />
         )}
 
@@ -193,7 +193,7 @@ export default function Dashboard({
         onLogout={onLogout}
         onDeleteAccount={onDeleteAccount}
         onEmergencyGuide={() => setShowEmergencyGuide(true)}
-        onMedicalDisclaimer={() => setShowPrivacyPolicy(true)}
+        onMedicalDisclaimer={() => alert(t.medicalDisclaimer)}
       />
 
       {/* EMERGENCY GUIDE MODAL */}
@@ -256,12 +256,6 @@ export default function Dashboard({
       )}
 
       {/* PRIVACY POLICY MODAL */}
-      {showPrivacyPolicy && (
-        <PrivacyPolicyModal
-          lang={lang}
-          onClose={() => setShowPrivacyPolicy(false)}
-        />
-      )}
     </div>
   );
 }
