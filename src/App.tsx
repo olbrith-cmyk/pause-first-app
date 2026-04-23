@@ -83,13 +83,14 @@ const [showMedicalDisclaimer, setShowMedicalDisclaimer] = useState(false);
 />
       )}
             <HamburgerMenu
-        lang={lang}
-        isOpen={menuOpen}
-        onClose={() => setMenuOpen(false)}
-        onLogout={logOut}
-        onEmergencyGuide={() => setShowEmergencyGuide(true)}
-onMedicalDisclaimer={() => setShowMedicalDisclaimer(true)}
-      />
+  lang={lang}
+  isOpen={menuOpen}
+  onClose={() => setMenuOpen(false)}
+  onLogout={logOut}
+  onDeleteAccount={deleteCurrentUser}
+  onEmergencyGuide={() => setShowEmergencyGuide(true)}
+  onMedicalDisclaimer={() => setShowMedicalDisclaimer(true)}
+/>
             {showEmergencyGuide && (
         <EmergencyGuide lang={lang} onClose={() => setShowEmergencyGuide(false)} />
       )}
