@@ -1,3 +1,4 @@
+import { EmergencyGuide, MedicalDisclaimer } from "./ui/Modals";
 import HamburgerMenu from "./ui/HamburgerMenu";
 import { useEffect, useState } from "react";
 import type { Lang } from "./i18n";
@@ -15,6 +16,8 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showEmergencyGuide, setShowEmergencyGuide] = useState(false);
+const [showMedicalDisclaimer, setShowMedicalDisclaimer] = useState(false);
 
   useEffect(() => {
     const unsub = onAuthChange((u) => {
@@ -84,10 +87,16 @@ export default function App() {
         isOpen={menuOpen}
         onClose={() => setMenuOpen(false)}
         onLogout={logOut}
-        onDeleteAccount={deleteCurrentUser}
-        onEmergencyGuide={() => alert(t.emergencyGuide)}
-        onMedicalDisclaimer={() => alert(t.medicalDisclaimer)}
+        onEmergencyGuide={() => setShowEmergencyGuide(true)}
+onMedicalDisclaimer={() => setShowMedicalDisclaimer(true)}
       />
+            {showEmergencyGuide && (
+        <EmergencyGuide lang={lang} onClose={() => setShowEmergencyGuide(false)} />
+      )}
+
+      {showMedicalDisclaimer && (
+        <MedicalDisclaimer lang={lang} onClose={() => setShowMedicalDisclaimer(false)} />
+      )}
     </div>
   );
 }
