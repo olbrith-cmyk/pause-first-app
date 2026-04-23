@@ -140,6 +140,7 @@ export default function Dashboard({
         onDeleteAccount={onDeleteAccount}
         onEmergencyGuide={() => setShowEmergencyGuide(true)}
         onMedicalDisclaimer={() => alert(t.medicalDisclaimer)}
+        onPrivacyPolicy={() => {}}
       />
 
       {/* EMERGENCY GUIDE MODAL */}
