@@ -43,11 +43,13 @@ export default function App() {
         <AuthScreen lang={lang} />
       ) : (
         <Dashboard
-          lang={lang}
-          userId={user.uid}
-          email={user.email ?? ""}
-          onLangChange={setLang}
-        />
+  lang={lang}
+  userId={user.uid}
+  email={user.email ?? ""}
+  onLangChange={setLang}
+  onLogout={logout}
+  onDeleteAccount={deleteAccount}
+/>
       )}
     </div>
   );
