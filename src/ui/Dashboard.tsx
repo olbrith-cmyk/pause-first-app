@@ -41,60 +41,6 @@ export default function Dashboard({
         backgroundColor: "#f5f5f5"
       }}
     >
-      {/* TOP BAR */}
-      <div
-        style={{
-          backgroundColor: "#fff",
-          borderBottom: "1px solid #e0e0e0",
-          padding: "12px 16px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          zIndex: 100
-        }}
-      >
-        {/* Hamburger Menu Button */}
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          style={{
-            background: "none",
-            border: "none",
-            fontSize: "24px",
-            cursor: "pointer",
-            color: "#333"
-          }}
-        >
-          ☰
-        </button>
-
-        {/* Center: Pause First™ Header */}
-        <div style={{ textAlign: "center", flex: 1 }}>
-          <h1 style={{ margin: "0 0 4px 0", fontSize: "20px", fontWeight: "bold" }}>
-            {t.appTitle}
-          </h1>
-          <p style={{ margin: 0, fontSize: "12px", color: "#666" }}>
-            {t.appSubtitle}
-          </p>
-        </div>
-
-        {/* Language Toggle */}
-        <button
-          onClick={() => {
-  if (!onLangChange) return;
-  onLangChange(lang === "en" ? "da" : "en");
-}}
-          style={{
-            background: "none",
-            border: "none",
-            fontSize: "14px",
-            cursor: "pointer",
-            color: "#0066cc",
-            fontWeight: "bold"
-          }}
-        >
-          {lang === "en" ? "DA" : "EN"}
-        </button>
-      </div>
 
       {/* CONTENT AREA */}
       <div
