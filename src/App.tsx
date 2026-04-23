@@ -1,5 +1,4 @@
 import { EmergencyGuide, MedicalDisclaimer, PrivacyPolicy } from "./ui/Modals";
-import { EmergencyGuide, MedicalDisclaimer } from "./ui/Modals";
 import HamburgerMenu from "./ui/HamburgerMenu";
 import { useEffect, useState } from "react";
 import type { Lang } from "./i18n";
