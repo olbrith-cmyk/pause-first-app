@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Lang } from "./i18n";
 import { useTranslation } from "./i18n";
-import { onAuthChange, logOut } from "./auth";
+import { onAuthChange, logOut, deleteCurrentUser } from "./auth";
 import type { User } from "firebase/auth";
 
 import AuthScreen from "./ui/AuthScreen";
@@ -48,7 +48,7 @@ export default function App() {
   email={user.email ?? ""}
   onLangChange={setLang}
   onLogout={logOut}
-  onDeleteAccount={() => alert("Delete account feature coming soon")}
+  onDeleteAccount={deleteCurrentUser}
 />
       )}
     </div>
