@@ -7,7 +7,7 @@ export type Translations = {
   logout: string;
   error: string;
   saved: string;
-  
+
   // Auth
   welcome: string;
   accountInfo: string;
@@ -76,15 +76,12 @@ export type Translations = {
   emergencyGuide: string;
   medicalDisclaimer: string;
   close: string;
-  
-    // AI Assistant
+
+  // AI Assistant
   aiAssistant: string;
   askAiAssistant: string;
 
   // Hamburger Menu
-  emergencyGuide: string;
-  medicalDisclaimer: string;
-  logout: string;
   deleteAccount: string;
 };
 
@@ -95,7 +92,7 @@ const en: Translations = {
   logout: "Logout",
   error: "Error",
   saved: "Saved!",
-  
+
   // Auth
   welcome: "Welcome",
   accountInfo: "Create an account or log in to save your pets and visits.",
@@ -107,7 +104,7 @@ const en: Translations = {
   sendReset: "Send reset link",
   forgotPassword: "Forgot password?",
   backToLogin: "Back to login",
-  
+
   // Pets
   myPets: "My Pets",
   petName: "Pet's Name",
@@ -163,17 +160,14 @@ const en: Translations = {
   // Modals
   emergencyGuide: "Emergency Guide",
   medicalDisclaimer: "Medical Disclaimer",
-  close: "Close"
-    
-    // AI Assistant
+  close: "Close",
+
+  // AI Assistant
   aiAssistant: "Pause First AI Assistant",
   askAiAssistant: "Ask AI assistant?",
 
   // Hamburger Menu
-  emergencyGuide: "Emergency Guide",
-  medicalDisclaimer: "Medical Disclaimer",
-  logout: "Logout",
-  deleteAccount: "Delete Account",
+  deleteAccount: "Delete Account"
 };
 
 const da: Translations = {
@@ -195,7 +189,7 @@ const da: Translations = {
   sendReset: "Send nulstillingslink",
   forgotPassword: "Glemt adgangskode?",
   backToLogin: "Tilbage til login",
-  
+
   // Pets
   myPets: "Mine kæledyr",
   petName: "Kæledyrets navn",
@@ -251,17 +245,14 @@ const da: Translations = {
   // Modals
   emergencyGuide: "Nødvejledning",
   medicalDisclaimer: "Medicinsk ansvarsfraskrivelse",
-  close: "Luk"
-    
-    // AI Assistant
+  close: "Luk",
+
+  // AI Assistant
   aiAssistant: "Pause First AI-assistent",
   askAiAssistant: "Spørg AI-assistenten?",
 
   // Hamburger Menu
-  emergencyGuide: "Nødvejledning",
-  medicalDisclaimer: "Medicinsk ansvarsfraskrivelse",
-  logout: "Log ud",
-  deleteAccount: "Slet konto",
+  deleteAccount: "Slet konto"
 };
 
 export function useTranslation(lang: Lang): Translations {
