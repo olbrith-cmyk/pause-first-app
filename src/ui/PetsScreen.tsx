@@ -426,7 +426,7 @@ export default function PetsScreen({
           </div>
         )}
 
-        {!selected && mode !== "edit" && (
+                {!selected && mode !== "edit" && (
           <div className="stack">
             <h4>{t.myPets}</h4>
             {pets.length === 0 ? (
