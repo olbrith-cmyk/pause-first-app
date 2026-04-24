@@ -212,7 +212,8 @@ export default function PrepareWizard({ lang, userId, petId, petName: initialPet
   };
 
   return (
-    <div className="modal">
+    return (
+  <div className="modal" style={{ position: "fixed", inset: 0, zIndex: 9999 }}>
       <div className="modalOverlay" onClick={onClose} />
       <div className="modalContent">
         <div className="modalHeader">
