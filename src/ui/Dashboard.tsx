@@ -62,11 +62,10 @@ export default function Dashboard({
 
         {mode === "prepare" && (
   <VisitsScreen
-    lang={lang}
-    userId={userId}
-    mode="prepare"
-    prepareWizardTrigger={prepareWizardTrigger}
-  />
+  lang={lang}
+  userId={userId}
+  mode={mode}
+/>
 )}
 
         {mode === "pets" && (
