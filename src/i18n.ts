@@ -168,6 +168,7 @@ const en: Translations = {
 
   // Hamburger Menu
   deleteAccount: "Delete Account"
+  back: "Back",
 };
 
 const da: Translations = {
@@ -253,6 +254,7 @@ const da: Translations = {
 
   // Hamburger Menu
   deleteAccount: "Slet konto"
+  back: "Tilbage",
 };
 
 export function useTranslation(lang: Lang): Translations {
