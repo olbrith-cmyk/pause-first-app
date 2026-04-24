@@ -167,7 +167,7 @@ const en: Translations = {
   askAiAssistant: "Ask AI assistant?",
 
   // Hamburger Menu
-  deleteAccount: "Delete Account"
+  deleteAccount: "Delete Account",
   back: "Back",
 };
 
@@ -253,7 +253,7 @@ const da: Translations = {
   askAiAssistant: "Spørg AI-assistenten?",
 
   // Hamburger Menu
-  deleteAccount: "Slet konto"
+  deleteAccount: "Slet konto",
   back: "Tilbage",
 };
 
