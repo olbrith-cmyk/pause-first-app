@@ -83,6 +83,7 @@ export type Translations = {
 
   // Hamburger Menu
   deleteAccount: string;
+  back: string;
 };
 
 const en: Translations = {
