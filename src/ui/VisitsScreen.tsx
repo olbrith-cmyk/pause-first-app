@@ -330,7 +330,7 @@ export default function VisitsScreen({
           <PrepareWizard
             lang={lang}
             userId={userId}
-            onCancel={() => setShowWizard(false)}
+            onClose={() => setShowWizard(false)}
             onComplete={async () => {
               setShowWizard(false);
               await load();
