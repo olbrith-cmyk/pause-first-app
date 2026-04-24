@@ -115,33 +115,71 @@ export default function PrepareWizard({ lang, userId, onCancel, onComplete }: Pr
       </>
     );
   }
-
-  const renderStep = () => {
-    switch (step) {
-      case 0:
-        return (
-          <>
-            <label className="label">
-              Pet's name
-              <input className="input" value={petName} onChange={(e) => setPetName(e.target.value)} placeholder="e.g., Luna" />
-            </label>
-            <label className="label" style={{ marginTop: 12 }}>
-              Visit date
-              <input className="input" type="date" value={draft.visitDate} onChange={(e) => setDraft({ ...draft, visitDate: e.target.value })} />
-            </label>
-            <label className="label" style={{ marginTop: 12 }}>
-              Main concern
-              <input className="input" value={draft.mainConcern} onChange={(e) => setDraft({ ...draft, mainConcern: e.target.value })} placeholder="e.g., limping" />
-            </label>
-          </>
-        );
-      case 1:
-        return (
+ 
+        const steps = useMemo(
+  () => [
+    {
+      title: "Basics",
+      description: "Tell us about your pet and today's visit",
+      canContinue: true,
+      body: (
+        <>
           <label className="label">
-            When did it start?
-            <textarea className="textarea" value={draft.whenStart} onChange={(e) => setDraft({ ...draft, whenStart: e.target.value })} placeholder="e.g., 3 days ago" rows={4} />
+            Pet's name
+            <input
+              className="input"
+              value={petName}
+              onChange={(e) => setPetName(e.target.value)}
+              placeholder="e.g., Luna"
+            />
           </label>
-        );
+          <label className="label" style={{ marginTop: 12 }}>
+            Visit date
+            <input
+              className="input"
+              type="date"
+              value={draft.visitDate}
+              onChange={(e) => setDraft({ ...draft, visitDate: e.target.value })}
+            />
+          </label>
+        </>
+      )
+    },
+    {
+      title: "What's the main concern?",
+      description: "Tell us what brought you to the vet today",
+      canContinue: true,
+      body: (
+        <label className="label">
+          Main concern
+          <textarea
+            className="textarea"
+            value={draft.mainConcern}
+            onChange={(e) => setDraft({ ...draft, mainConcern: e.target.value })}
+            placeholder="e.g., limping, not eating, vomiting, behavior change"
+            rows={6}
+          />
+        </label>
+      )
+    },
+    {
+      title: "When did it start?",
+      description: "Help your vet understand the timeline",
+      canContinue: true,
+      body: (
+        <label className="label">
+          When did it start?
+          <textarea
+            className="textarea"
+            value={draft.whenStart}
+            onChange={(e) => setDraft({ ...draft, whenStart: e.target.value })}
+            placeholder="e.g., 3 days ago, this morning"
+            rows={4}
+          />
+        </label>
+      )
+    },
+    // ... rest of steps stay the same
       case 2:
         return (
           <label className="label">
