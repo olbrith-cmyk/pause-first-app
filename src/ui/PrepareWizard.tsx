@@ -76,7 +76,7 @@ export default function PrepareWizard({ lang, userId, onCancel, onComplete }: Pr
     return (
       <>
         <div onClick={onCancel} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.35)", zIndex: 1999 }} />
-        <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: "92%", maxWidth: 720, backgroundColor: "#fff", borderRadius: 12, boxShadow: "0 6px 18px rgba(0,0,0,0.2)", zIndex: 2000, padding: 16 }}>
+        <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: "92%", maxWidth: 800, backgroundColor: "#fff", borderRadius: 12, boxShadow: "0 6px 18px rgba(0,0,0,0.2)", zIndex: 2000, padding: 16 }}>
           <h3>Save visit for {petName}?</h3>
           <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 10 }}>
             <label style={{ display: "flex", gap: 10, alignItems: "center" }}>
