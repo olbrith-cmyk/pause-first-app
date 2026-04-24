@@ -326,6 +326,10 @@ export default function VisitsScreen({
           </div>
         </div>
 
+        <button className="btn btnPrimary" onClick={() => setShowWizard(true)}>
+  Start Prepare Wizard
+</button>
+
         {showWizard && (
           <PrepareWizard
             lang={lang}
