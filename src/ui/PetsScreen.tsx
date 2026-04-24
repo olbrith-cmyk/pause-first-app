@@ -119,8 +119,9 @@ export default function PetsScreen({
     cancel();
   };
 
-  return (
-    <div className="stack">
+    return (
+    <div className="pageContent">
+      <div className="stack">
       <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
         <h3 style={{ margin: 0 }}>{t.myPets}</h3>
         <button className="btn btnPrimary" onClick={startNew}>
