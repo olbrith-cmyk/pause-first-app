@@ -72,12 +72,14 @@ function AskAiLink({ label }: { label: string }) {
 export default function VisitsScreen({
   lang,
   userId,
-  mode
+  mode,
+  prepareWizardTrigger
 }: {
   lang: Lang;
   userId: string;
   mode: Mode;
-  goToTab?: (next: Mode) => void; // optional (Dashboard may still pass it)
+  prepareWizardTrigger?: number;
+  goToTab?: (next: Mode) => void;
 }) {
   const t = useTranslation(lang);
 
@@ -87,6 +89,11 @@ export default function VisitsScreen({
   // PREPARE
   const [subTab, setSubTab] = useState<PrepareSubTab>("prep");
   const [showWizard, setShowWizard] = useState(false);
+  useEffect(() => {
+  if (mode === "prepare" && prepareWizardTrigger) {
+    setShowWizard(true);
+  }
+}, [prepareWizardTrigger, mode]);
   const [editingVisit, setEditingVisit] = useState<Visit>(emptyVisit(userId));
   const [prepViewId, setPrepViewId] = useState<string | null>(null);
 
