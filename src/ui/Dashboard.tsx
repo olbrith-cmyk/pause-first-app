@@ -27,7 +27,7 @@ export default function Dashboard({
   const [mode, setMode] = useState<DashboardMode>("prepare");
   const [menuOpen, setMenuOpen] = useState(false);
   const [showEmergencyGuide, setShowEmergencyGuide] = useState(false);
-
+  const [prepareWizardTrigger, setPrepareWizardTrigger] = useState(0);
   const goToTab = (nextMode: DashboardMode) => {
     setMode(nextMode);
   };
@@ -105,7 +105,10 @@ export default function Dashboard({
 
         {/* Prepare for Vet Visit Button (LARGE PRIMARY) */}
         <button
-          onClick={() => setMode("prepare")}
+          onClick={() => {
+  setMode("prepare");
+  setPrepareWizardTrigger((n) => n + 1);
+}}
           className="btn btnPrimary"
           style={{
             flex: 1.2,
