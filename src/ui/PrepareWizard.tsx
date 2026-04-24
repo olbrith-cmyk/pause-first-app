@@ -7,27 +7,24 @@ import { addVisit, getUserPets } from "../firestore";
 type Props = {
   lang: Lang;
   userId: string;
-  defaultPetId?: string;
-  onCancel: () => void;
-  onComplete: () => void;
+  petId?: string;
+  petName?: string;
+  onClose: () => void;
 };
 
-export default function PrepareWizard({ lang, userId, defaultPetId, onCancel, onComplete }: Props) {
+export default function PrepareWizard({ lang, userId, petId, petName: initialPetName, onClose }: Props) {
   const t = useTranslation(lang);
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [pets, setPets] = useState<Pet[]>([]);
-  const [petName, setPetName] = useState("");
+  const [petName, setPetName] = useState(initialPetName ?? "");
   const [mode, setMode] = useState<"wizard" | "save">("wizard");
 
-  const [selectedPetId, setSelectedPetId] = useState(defaultPetId ?? "");
-  const [petMode, setPetMode] = useState<"new" | "existing" | "unassigned">(
-    defaultPetId ? "existing" : "existing"
-  );
+  const [selectedPetId, setSelectedPetId] = useState(petId ?? "");
 
   const [draft, setDraft] = useState<Visit>({
     userId,
-    petId: "",
+    petId: petId ?? "",
     visitDate: "",
     mainConcern: "",
     whenStart: "",
@@ -41,13 +38,6 @@ export default function PrepareWizard({ lang, userId, defaultPetId, onCancel, on
   useEffect(() => {
     getUserPets(userId).then(setPets);
   }, [userId]);
-
-  // If defaultPetId is provided, pre-fill pet name too (nice UX)
-  useEffect(() => {
-    if (!defaultPetId) return;
-    const p = pets.find((x) => x.id === defaultPetId);
-    if (p?.name) setPetName(p.name);
-  }, [defaultPetId, pets]);
 
   const stepData = [
     {
@@ -77,10 +67,10 @@ export default function PrepareWizard({ lang, userId, defaultPetId, onCancel, on
       const visit: Visit = {
         ...draft,
         userId,
-        petId: petMode === "existing" ? selectedPetId : ""
+        petId: selectedPetId
       };
       await addVisit(visit);
-      onComplete();
+      onClose();
     } catch (e: any) {
       alert(t.error + ": " + (e?.message ?? String(e)));
       setSaving(false);
@@ -146,4 +136,139 @@ export default function PrepareWizard({ lang, userId, defaultPetId, onCancel, on
             <textarea
               className="textarea"
               value={draft.howProgressing}
-              onChange={(e)
+              onChange={(e) => setDraft({ ...draft, howProgressing: e.target.value })}
+              placeholder="e.g., getting worse, staying the same, improving"
+              rows={4}
+            />
+          </label>
+        );
+
+      case 3:
+        return (
+          <label className="label">
+            Any patterns or triggers?
+            <textarea
+              className="textarea"
+              value={draft.patterns}
+              onChange={(e) => setDraft({ ...draft, patterns: e.target.value })}
+              placeholder="e.g., happens after meals, worse in the morning"
+              rows={4}
+            />
+          </label>
+        );
+
+      case 4:
+        return (
+          <label className="label">
+            What else is different?
+            <textarea
+              className="textarea"
+              value={draft.associatedSigns}
+              onChange={(e) => setDraft({ ...draft, associatedSigns: e.target.value })}
+              placeholder="e.g., appetite changes, behavior changes, energy level"
+              rows={4}
+            />
+          </label>
+        );
+
+      case 5:
+        return (
+          <label className="label">
+            Medications & home remedies
+            <textarea
+              className="textarea"
+              value={draft.previousTreatment}
+              onChange={(e) => setDraft({ ...draft, previousTreatment: e.target.value })}
+              placeholder="e.g., gave ibuprofen, tried rest, applied ice"
+              rows={4}
+            />
+          </label>
+        );
+
+      case 6:
+        return (
+          <label className="label">
+            Questions for the vet
+            <textarea
+              className="textarea"
+              value={draft.questionsVet}
+              onChange={(e) => setDraft({ ...draft, questionsVet: e.target.value })}
+              placeholder="e.g., Is surgery needed? How long will recovery take?"
+              rows={4}
+            />
+          </label>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="modal">
+      <div className="modalOverlay" onClick={onClose} />
+      <div className="modalContent">
+        <div className="modalHeader">
+          <h3 style={{ margin: 0 }}>Prepare for Visit</h3>
+          <button className="btnClose" onClick={onClose}>
+            ✕
+          </button>
+        </div>
+
+        <div className="modalBody">
+          {mode === "wizard" && (
+            <>
+              <div style={{ marginBottom: 16 }}>
+                <h4>{stepData[step].title}</h4>
+                <p style={{ color: "var(--textMuted)", fontSize: "14px" }}>{stepData[step].desc}</p>
+              </div>
+
+              {renderStep()}
+
+              <div className="row" style={{ marginTop: 20, gap: "8px" }}>
+                {step > 0 && (
+                  <button className="btn btnSecondary" onClick={() => setStep(step - 1)}>
+                    ← Back
+                  </button>
+                )}
+                <button
+                  className="btn btnPrimary"
+                  onClick={handleNext}
+                  disabled={!stepData[step].ok}
+                >
+                  {isLast ? "Review" : "Next →"}
+                </button>
+                <button className="btn btnSecondary" onClick={onClose}>
+                  Cancel
+                </button>
+              </div>
+            </>
+          )}
+
+          {mode === "save" && (
+            <>
+              <h4>Review & Save</h4>
+              <div style={{ backgroundColor: "var(--bgAlt)", padding: "12px", borderRadius: "8px", marginBottom: 16 }}>
+                <p><strong>Pet:</strong> {petName}</p>
+                <p><strong>Visit Date:</strong> {draft.visitDate}</p>
+                <p><strong>Main Concern:</strong> {draft.mainConcern}</p>
+              </div>
+
+              <div className="row" style={{ gap: "8px" }}>
+                <button className="btn btnPrimary" onClick={handleSave} disabled={saving}>
+                  {saving ? "Saving..." : "Save Visit"}
+                </button>
+                <button className="btn btnSecondary" onClick={() => setMode("wizard")}>
+                  Back to Edit
+                </button>
+                <button className="btn btnSecondary" onClick={onClose}>
+                  Cancel
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
