@@ -37,7 +37,7 @@ return (
       <div
         style={{
           padding: 16,
-          borderBottom: "1px solid var(--border)",
+          borderBottom: "1px solid #e0e0e0",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -77,7 +77,7 @@ return (
       <div
         style={{
           padding: 16,
-          borderTop: "1px solid var(--border)",
+          borderTop: "1px solid #e0e0e0",
           display: "flex",
           gap: 10
         }}
