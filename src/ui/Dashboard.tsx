@@ -89,17 +89,17 @@ export default function Dashboard({
           zIndex: 50
         }}
       >
-        {/* Visits Button */}
+     {/* Pets Button */}
         <button
-          onClick={() => setMode("visits")}
-          className={`btn ${mode === "visits" ? "btnActive" : "btnSecondary"}`}
+          onClick={() => setMode("pets")}
+          className={`btn ${mode === "pets" ? "btnActive" : "btnSecondary"}`}
           style={{
             flex: 1,
             padding: "12px 16px",
             fontSize: "14px"
           }}
         >
-          {t.myVisits}
+          {t.myPets}
         </button>
 
         {/* Prepare for Vet Visit Button (LARGE PRIMARY) */}
@@ -117,17 +117,17 @@ export default function Dashboard({
           {t.prepareVisit}
         </button>
 
-        {/* Pets Button */}
+      {/* Visits Button */}
         <button
-          onClick={() => setMode("pets")}
-          className={`btn ${mode === "pets" ? "btnActive" : "btnSecondary"}`}
+          onClick={() => setMode("visits")}
+          className={`btn ${mode === "visits" ? "btnActive" : "btnSecondary"}`}
           style={{
             flex: 1,
             padding: "12px 16px",
             fontSize: "14px"
           }}
         >
-          {t.myPets}
+          {t.myVisits}
         </button>
       </div>
 
