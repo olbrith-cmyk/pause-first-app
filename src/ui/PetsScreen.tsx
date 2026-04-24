@@ -260,10 +260,7 @@ export default function PetsScreen({
           </button>
         ))}
       </div>
+          </div>
     </div>
   );
-}
-    </div>
-  </div>
-);
 }
