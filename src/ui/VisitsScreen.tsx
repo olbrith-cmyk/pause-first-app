@@ -594,8 +594,21 @@ export default function VisitsScreen({
               />
             </>
           )}
-        </>
+                  </>
+      )}
+
+      {showWizard && (
+        <PrepareWizard
+          lang={lang}
+          userId={userId}
+          onCancel={() => setShowWizard(false)}
+          onComplete={async () => {
+            setShowWizard(false);
+            setSubTab("prep");
+            await load();
+          }}
+        />
       )}
     </div>
   );
-                }
+}
