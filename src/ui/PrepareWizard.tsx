@@ -10,9 +10,10 @@ type Props = {
   petId?: string;
   petName?: string;
   onClose: () => void;
+  onComplete?: () => void | Promise<void>;
 };
 
-export default function PrepareWizard({ lang, userId, petId, petName: initialPetName, onClose }: Props) {
+export default function PrepareWizard({ lang, userId, petId, petName: initialPetName, onClose, onComplete }: Props) {
   const t = useTranslation(lang);
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -70,6 +71,12 @@ export default function PrepareWizard({ lang, userId, petId, petName: initialPet
         petId: selectedPetId
       };
       await addVisit(visit);
+      
+      // Call onComplete if provided
+      if (onComplete) {
+        await onComplete();
+      }
+      
       onClose();
     } catch (e: any) {
       alert(t.error + ": " + (e?.message ?? String(e)));
