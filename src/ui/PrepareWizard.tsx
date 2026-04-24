@@ -186,11 +186,16 @@ export default function PrepareWizard({ lang, userId, onCancel, onComplete }: Pr
     <>
       <div onClick={onCancel} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.35)", zIndex: 1999 }} />
       <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: "92%", maxWidth: 520, maxHeight: "90vh", backgroundColor: "#fff", borderRadius: 12, boxShadow: "0 6px 18px rgba(0,0,0,0.2)", zIndex: 2000, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-        <div style={{ padding: 16, borderBottom: "1px solid #e0e0e0" }}>
-          <div style={{ fontWeight: 700 }}>{t.prepareVisit}</div>
-          <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>
-            Step {step + 1} of {stepData.length}
+      <div style={{ padding: 16, borderBottom: "1px solid #e0e0e0", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div>
+            <div style={{ fontWeight: 700 }}>{t.prepareVisit}</div>
+            <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>
+              Step {step + 1} of {stepData.length}
+            </div>
           </div>
+          <button className="btn btnSecondary" onClick={onCancel} disabled={saving} style={{ padding: "6px 12px" }}>
+            ✕
+          </button>
         </div>
         <div style={{ padding: 16, overflowY: "auto", flex: 1 }}>
           <div className="panel">
