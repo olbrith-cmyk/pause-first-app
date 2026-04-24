@@ -1,31 +1,27 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
-import type { Pet, Visit } from "../firestore";
-import { addVisit, getUserPets } from "../firestore";
+import type { Visit } from "../firestore";
+import { addVisit } from "../firestore";
 
 type Props = {
   lang: Lang;
   userId: string;
-  petId?: string;
-  petName?: string;
+  petId: string;
+  petName: string;
   onClose: () => void;
   onComplete?: () => void | Promise<void>;
 };
 
-export default function PrepareWizard({ lang, userId, petId, petName: initialPetName, onClose, onComplete }: Props) {
+export default function PrepareWizard({ lang, userId, petId, petName, onClose, onComplete }: Props) {
   const t = useTranslation(lang);
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
-  const [pets, setPets] = useState<Pet[]>([]);
-  const [petName, setPetName] = useState(initialPetName ?? "");
   const [mode, setMode] = useState<"wizard" | "save">("wizard");
-
-  const [selectedPetId, setSelectedPetId] = useState(petId ?? "");
 
   const [draft, setDraft] = useState<Visit>({
     userId,
-    petId: petId ?? "",
+    petId,
     visitDate: "",
     mainConcern: "",
     whenStart: "",
@@ -36,18 +32,10 @@ export default function PrepareWizard({ lang, userId, petId, petName: initialPet
     questionsVet: ""
   });
 
-  useEffect(() => {
-    getUserPets(userId).then(setPets);
-  }, [userId]);
-
   const stepData = [
-    {
-      title: "Basics",
-      desc: "Tell us about your pet and today's visit",
-      ok: petName.trim() && draft.visitDate && draft.mainConcern
-    },
+    { title: "Basics", desc: "Tell us about today's visit", ok: !!(draft.visitDate && draft.mainConcern) },
     { title: "When did it start?", desc: "Help your vet understand the timeline", ok: true },
-    { title: "How is it progressing?", desc: "Is it getting better, worse, or staying the same?", ok: true },
+    { title: "How is it progressing?", desc: "Better, worse, or the same?", ok: true },
     { title: "Any patterns or triggers?", desc: "Does it happen at certain times?", ok: true },
     { title: "What else is different?", desc: "Any other changes you've noticed", ok: true },
     { title: "Medications & home remedies", desc: "What have you already tried?", ok: true },
@@ -59,24 +47,14 @@ export default function PrepareWizard({ lang, userId, petId, petName: initialPet
   const handleNext = () => {
     if (!stepData[step].ok) return;
     if (isLast) setMode("save");
-    else setStep(step + 1);
+    else setStep((s) => s + 1);
   };
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      const visit: Visit = {
-        ...draft,
-        userId,
-        petId: selectedPetId
-      };
-      await addVisit(visit);
-      
-      // Call onComplete if provided
-      if (onComplete) {
-        await onComplete();
-      }
-      
+      await addVisit(draft);
+      if (onComplete) await onComplete();
       onClose();
     } catch (e: any) {
       alert(t.error + ": " + (e?.message ?? String(e)));
@@ -89,17 +67,11 @@ export default function PrepareWizard({ lang, userId, petId, petName: initialPet
       case 0:
         return (
           <>
-            <label className="label">
-              Pet's name
-              <input
-                className="input"
-                value={petName}
-                onChange={(e) => setPetName(e.target.value)}
-                placeholder="e.g., Luna"
-              />
-            </label>
+            <div className="muted" style={{ marginBottom: 8 }}>
+              Pet: <strong>{petName}</strong>
+            </div>
 
-            <label className="label" style={{ marginTop: 12 }}>
+            <label className="label">
               Visit date
               <input
                 className="input"
@@ -186,7 +158,7 @@ export default function PrepareWizard({ lang, userId, petId, petName: initialPet
               className="textarea"
               value={draft.previousTreatment}
               onChange={(e) => setDraft({ ...draft, previousTreatment: e.target.value })}
-              placeholder="e.g., gave ibuprofen, tried rest, applied ice"
+              placeholder="e.g., what you tried at home"
               rows={4}
             />
           </label>
@@ -212,8 +184,7 @@ export default function PrepareWizard({ lang, userId, petId, petName: initialPet
   };
 
   return (
-    return (
-  <div className="modal" style={{ position: "fixed", inset: 0, zIndex: 9999 }}>
+    <div className="modal">
       <div className="modalOverlay" onClick={onClose} />
       <div className="modalContent">
         <div className="modalHeader">
@@ -224,45 +195,45 @@ export default function PrepareWizard({ lang, userId, petId, petName: initialPet
         </div>
 
         <div className="modalBody">
-          {mode === "wizard" && (
+          {mode === "wizard" ? (
             <>
               <div style={{ marginBottom: 16 }}>
-                <h4>{stepData[step].title}</h4>
-                <p style={{ color: "var(--textMuted)", fontSize: "14px" }}>{stepData[step].desc}</p>
+                <h4 style={{ margin: "0 0 6px 0" }}>{stepData[step].title}</h4>
+                <p style={{ color: "var(--textMuted)", fontSize: 14, margin: 0 }}>{stepData[step].desc}</p>
               </div>
 
               {renderStep()}
 
-              <div className="row" style={{ marginTop: 20, gap: "8px" }}>
+              <div className="row" style={{ marginTop: 20, gap: 8 }}>
                 {step > 0 && (
-                  <button className="btn btnSecondary" onClick={() => setStep(step - 1)}>
+                  <button className="btn btnSecondary" onClick={() => setStep((s) => s - 1)}>
                     ← Back
                   </button>
                 )}
-                <button
-                  className="btn btnPrimary"
-                  onClick={handleNext}
-                  disabled={!stepData[step].ok}
-                >
+                <button className="btn btnPrimary" onClick={handleNext} disabled={!stepData[step].ok}>
                   {isLast ? "Review" : "Next →"}
                 </button>
                 <button className="btn btnSecondary" onClick={onClose}>
-                  Cancel
+                  {t.cancel}
                 </button>
               </div>
             </>
-          )}
-
-          {mode === "save" && (
+          ) : (
             <>
               <h4>Review & Save</h4>
-              <div style={{ backgroundColor: "var(--bgAlt)", padding: "12px", borderRadius: "8px", marginBottom: 16 }}>
-                <p><strong>Pet:</strong> {petName}</p>
-                <p><strong>Visit Date:</strong> {draft.visitDate}</p>
-                <p><strong>Main Concern:</strong> {draft.mainConcern}</p>
+              <div style={{ backgroundColor: "var(--bgAlt)", padding: 12, borderRadius: 8, marginBottom: 16 }}>
+                <p style={{ margin: "0 0 6px 0" }}>
+                  <strong>Pet:</strong> {petName}
+                </p>
+                <p style={{ margin: "0 0 6px 0" }}>
+                  <strong>Visit Date:</strong> {draft.visitDate}
+                </p>
+                <p style={{ margin: 0 }}>
+                  <strong>Main Concern:</strong> {draft.mainConcern}
+                </p>
               </div>
 
-              <div className="row" style={{ gap: "8px" }}>
+              <div className="row" style={{ gap: 8 }}>
                 <button className="btn btnPrimary" onClick={handleSave} disabled={saving}>
                   {saving ? "Saving..." : "Save Visit"}
                 </button>
@@ -270,7 +241,7 @@ export default function PrepareWizard({ lang, userId, petId, petName: initialPet
                   Back to Edit
                 </button>
                 <button className="btn btnSecondary" onClick={onClose}>
-                  Cancel
+                  {t.cancel}
                 </button>
               </div>
             </>
