@@ -42,13 +42,14 @@ export default function Dashboard({
       }}
     >
 
-      {/* CONTENT AREA */}
+            {/* CONTENT AREA */}
       <div
         style={{
           flex: 1,
           overflowY: "auto",
-          padding: "16px",
-          paddingBottom: "100px"
+          padding: "0",
+          paddingBottom: "100px",
+          width: "100%"
         }}
       >
         {mode === "visits" && (
