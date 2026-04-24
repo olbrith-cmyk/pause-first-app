@@ -16,24 +16,8 @@ import {
 
 import { ViewOnlyPrepare } from "./ViewOnlyPrepare";
 import { ViewOnlyNotes } from "./ViewOnlyNotes";
-import ViewDocument from "./ViewDocument";
-import PrepareWizard from "./PrepareWizard";
 
 export type Mode = "myVisits" | "prepare";
-type PrepareSubTab = "prep" | "notes" | "summary";
-
-const emptyVisit = (userId: string): Visit => ({
-  userId,
-  petId: "",
-  visitDate: "",
-  mainConcern: "",
-  whenStart: "",
-  howProgressing: "",
-  patterns: "",
-  associatedSigns: "",
-  previousTreatment: "",
-  questionsVet: ""
-});
 
 const emptyNote = (userId: string, visitId: string): VisitNote => ({
   userId,
@@ -48,6 +32,7 @@ const emptyNote = (userId: string, visitId: string): VisitNote => ({
 
 const AI_ASSISTANT_URL =
   "https://chatgpt.com/g/g-695a7a9e17d08191bd88b76d39f9e54f-pause-firsttm";
+
 function AskAiLink({ label }: { label: string }) {
   return (
     <a
@@ -72,42 +57,20 @@ function AskAiLink({ label }: { label: string }) {
 export default function VisitsScreen({
   lang,
   userId,
-  mode,
-  prepareWizardTrigger
+  mode
 }: {
   lang: Lang;
   userId: string;
   mode: Mode;
-  prepareWizardTrigger?: number;
-  goToTab?: (next: Mode) => void;
 }) {
   const t = useTranslation(lang);
 
   const [pets, setPets] = useState<Pet[]>([]);
   const [visits, setVisits] = useState<Visit[]>([]);
-
-  // PREPARE
-  const [subTab, setSubTab] = useState<PrepareSubTab>("prep");
-  const [showWizard, setShowWizard] = useState(false);
-  useEffect(() => {
-  if (mode === "prepare" && prepareWizardTrigger) {
-    setShowWizard(true);
-  }
-}, [prepareWizardTrigger, mode]);
-  const [editingVisit, setEditingVisit] = useState<Visit>(emptyVisit(userId));
-  const [prepViewId, setPrepViewId] = useState<string | null>(null);
-
-  // NOTES
-  const [noteVisitId, setNoteVisitId] = useState<string | null>(null);
-  const [editingNote, setEditingNote] = useState<VisitNote | null>(null);
-
-  // SUMMARY
-  const [docVisitId, setDocVisitId] = useState<string | null>(null);
-  const [docNote, setDocNote] = useState<VisitNote | null>(null);
-
-  // MY VISITS
   const [openVisitId, setOpenVisitId] = useState<string | null>(null);
   const [openNote, setOpenNote] = useState<VisitNote | null>(null);
+  const [editingNote, setEditingNote] = useState<VisitNote | null>(null);
+  const [noteVisitId, setNoteVisitId] = useState<string | null>(null);
 
   const load = async () => {
     const [p, v] = await Promise.all([getUserPets(userId), getUserVisits(userId)]);
@@ -117,7 +80,6 @@ export default function VisitsScreen({
 
   useEffect(() => {
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   const visitsSorted = useMemo(() => {
@@ -127,32 +89,6 @@ export default function VisitsScreen({
       return bd.localeCompare(ad);
     });
   }, [visits]);
-
-  const selectedPrep = prepViewId ? visits.find((v) => v.id === prepViewId) ?? null : null;
-  const selectedPrepPet = selectedPrep ? pets.find((p) => p.id === selectedPrep.petId) ?? null : null;
-
-  const saveVisit = async () => {
-    if (!editingVisit.petId) return alert("Pick a pet first");
-    try {
-      if (editingVisit.id) {
-        const { id, ...rest } = editingVisit;
-        await updateVisit(id, rest);
-      } else {
-        await addVisit(editingVisit);
-      }
-      alert(t.saved);
-      setEditingVisit(emptyVisit(userId));
-      await load();
-    } catch (e: any) {
-      alert(t.error + ": " + (e?.message ?? String(e)));
-    }
-  };
-
-  const removeVisit = async (visitId: string) => {
-    if (!confirm("Delete visit?")) return;
-    await deleteVisit(visitId);
-    await load();
-  };
 
   const loadNoteForVisit = async (visitId: string) => {
     setNoteVisitId(visitId);
@@ -176,178 +112,12 @@ export default function VisitsScreen({
       }
       alert(t.saved);
       await load();
+      setEditingNote(null);
+      setNoteVisitId(null);
     } catch (e: any) {
       alert(t.error + ": " + (e?.message ?? String(e)));
     }
   };
-
-  const loadDocForVisit = async (visitId: string) => {
-    setDocVisitId(visitId);
-    try {
-      const note = await getVisitNote(userId, visitId);
-      setDocNote(note ?? null);
-    } catch (e) {
-      console.error("Error loading note:", e);
-      setDocNote(null);
-    }
-  };
-
-  // =========================
-  // MY VISITS (archive)
-  // =========================
-  if (mode === "myVisits") {
-    const openVisit = openVisitId ? visits.find((v) => v.id === openVisitId) ?? null : null;
-    const openPet = openVisit ? pets.find((p) => p.id === openVisit.petId) ?? null : null;
-
-    const openVisitCard = async (visitId: string) => {
-      setOpenVisitId(visitId);
-      try {
-        const note = await getVisitNote(userId, visitId);
-        setOpenNote(note ?? null);
-      } catch (e) {
-        console.error("Error loading note:", e);
-        setOpenNote(null);
-      }
-    };
-
-    return (
-      <div className="stack">
-        <h3>{(t as any).myVisits ?? "My Visits"}</h3>
-
-        {visitsSorted.length === 0 && <div className="muted">No visits yet.</div>}
-
-        {!openVisit && (
-          <>
-            {visitsSorted.map((v) => {
-              const pet = pets.find((p) => p.id === v.petId);
-              return (
-                <button
-                  key={v.id}
-                  className="itemCard"
-                  onClick={() => openVisitCard(v.id!)}
-                  style={{ cursor: "pointer", textAlign: "left" }}
-                >
-                  <div className="itemTitle">
-                    {pet?.name || "(Unnamed)"} — {v.visitDate || "No date"}
-                  </div>
-                  <div className="muted">{v.mainConcern || "No main concern yet."}</div>
-                </button>
-              );
-            })}
-          </>
-        )}
-
-        {openVisit && (
-          <div className="panel">
-            <div className="row rowWrap" style={{ marginBottom: 12 }}>
-              <button
-                className="btn btnSecondary"
-                onClick={() => {
-                  setOpenVisitId(null);
-                  setOpenNote(null);
-                }}
-              >
-                ← Back
-              </button>
-
-              <button
-                className="btn btnSecondary"
-                onClick={() => {
-                  setEditingVisit(openVisit);
-                  setPrepViewId(openVisit.id!);
-                  setSubTab("prep");
-                }}
-              >
-                Edit Preparation
-              </button>
-
-              <button
-                className="btn btnSecondary"
-                onClick={async () => {
-                  await loadNoteForVisit(openVisit.id!);
-                  setSubTab("notes");
-                }}
-              >
-                Edit Visit Notes
-              </button>
-
-              <button
-                className="btn btnSecondary"
-                onClick={async () => {
-                  await loadDocForVisit(openVisit.id!);
-                  setSubTab("summary");
-                }}
-              >
-                Summary
-              </button>
-            </div>
-
-            <div className="panelHeader">
-              <h4 style={{ margin: 0 }}>
-                {openPet?.name || "(Unnamed)"} — {openVisit.visitDate || "No date"}
-              </h4>
-            </div>
-
-            <h4 style={{ marginTop: 12 }}>Preparation</h4>
-            <ViewOnlyPrepare visit={openVisit} />
-
-            <h4 style={{ marginTop: 16 }}>Visit Notes</h4>
-            {openNote ? <ViewOnlyNotes note={openNote} /> : <div className="muted">No visit notes yet.</div>}
-          </div>
-        )}
-      </div>
-    );
-  }
-
-    // =========================
-  // PREPARE (primary workflow)
-  // =========================
-  if (mode === "prepare") {
-    return (
-      <div className="pageContent">
-        <div style={{ 
-          display: "flex", 
-          flexDirection: "column", 
-          alignItems: "center", 
-          justifyContent: "center", 
-          minHeight: "60vh",
-          gap: 24,
-          textAlign: "center",
-          padding: "40px 20px"
-        }}>
-          <div style={{ fontSize: 64 }}>🐾</div>
-          <div>
-            <h2 style={{ margin: "0 0 12px 0", color: "var(--blue)", fontSize: 28 }}>
-              Walk in Prepared
-            </h2>
-            <p style={{ color: "var(--muted)", margin: 0, fontSize: 16, lineHeight: 1.6, maxWidth: 450 }}>
-              Partner with your vet by gathering your pet's observations at home. Our guided wizard helps you prepare clear, organized notes for your visit.
-            </p>
-          </div>
-        </div>
-
-        <button className="btn btnPrimary" onClick={() => setShowWizard(true)}>
-  Start Prepare Wizard
-</button>
-
-        {showWizard && (
-          <PrepareWizard
-            lang={lang}
-            userId={userId}
-            onClose={() => setShowWizard(false)}
-            onComplete={async () => {
-              setShowWizard(false);
-              await load();
-            }}
-          />
-        )}
-      </div>
-    );
-  }
-
-  // MY VISITS stays as-is (already wrapped in pageContent from earlier)
-  const openVisit = openVisitId ? visits.find((v) => v.id === openVisitId) ?? null : null;
-  const openPet = openVisit ? pets.find((p) => p.id === openVisit.petId) ?? null : null;
 
   const openVisitCard = async (visitId: string) => {
     setOpenVisitId(visitId);
@@ -360,79 +130,193 @@ export default function VisitsScreen({
     }
   };
 
+  // MY VISITS
+  if (mode === "myVisits") {
+    const openVisit = openVisitId ? visits.find((v) => v.id === openVisitId) ?? null : null;
+    const openPet = openVisit ? pets.find((p) => p.id === openVisit.petId) ?? null : null;
+
+    return (
+      <div className="pageContent">
+        <div className="stack">
+          <h3>{t.myVisits}</h3>
+
+          {visitsSorted.length === 0 && <div className="muted">No visits yet.</div>}
+
+          {!openVisit && (
+            <>
+              {visitsSorted.map((v) => {
+                const pet = pets.find((p) => p.id === v.petId);
+                return (
+                  <button
+                    key={v.id}
+                    className="itemCard"
+                    onClick={() => openVisitCard(v.id!)}
+                    style={{ cursor: "pointer", textAlign: "left" }}
+                  >
+                    <div className="itemTitle">
+                      {pet?.name || "(Unnamed)"} — {v.visitDate || "No date"}
+                    </div>
+                    <div className="muted">{v.mainConcern || "No main concern yet."}</div>
+                  </button>
+                );
+              })}
+            </>
+          )}
+
+          {openVisit && (
+            <div className="panel">
+              <div className="row rowWrap" style={{ marginBottom: 12 }}>
+                <button
+                  className="btn btnSecondary"
+                  onClick={() => {
+                    setOpenVisitId(null);
+                    setOpenNote(null);
+                  }}
+                >
+                  ← {t.back}
+                </button>
+
+                <button
+                  className="btn btnSecondary"
+                  onClick={async () => {
+                    await loadNoteForVisit(openVisit.id!);
+                  }}
+                >
+                  Edit Visit Notes
+                </button>
+              </div>
+
+              <div className="panelHeader">
+                <h4 style={{ margin: 0 }}>
+                  {openPet?.name || "(Unnamed)"} — {openVisit.visitDate || "No date"}
+                </h4>
+              </div>
+
+              <h4 style={{ marginTop: 12 }}>Preparation</h4>
+              <ViewOnlyPrepare visit={openVisit} />
+
+              <h4 style={{ marginTop: 16 }}>Visit Notes</h4>
+              {openNote ? <ViewOnlyNotes note={openNote} /> : <div className="muted">No visit notes yet.</div>}
+            </div>
+          )}
+
+          {editingNote && noteVisitId && (
+            <div className="panel" style={{ marginTop: 16 }}>
+              <div className="panelHeader">
+                <h4 style={{ margin: 0 }}>Edit Visit Notes</h4>
+              </div>
+
+              <label className="label">
+                {t.vetName}
+                <input
+                  className="input"
+                  value={editingNote.vetName}
+                  onChange={(e) => setEditingNote({ ...editingNote, vetName: e.target.value })}
+                  placeholder="Vet's name"
+                />
+              </label>
+
+              <label className="label">
+                {t.diagnosis}
+                <textarea
+                  className="textarea"
+                  value={editingNote.diagnosis}
+                  onChange={(e) => setEditingNote({ ...editingNote, diagnosis: e.target.value })}
+                  placeholder="What did the vet find?"
+                  rows={4}
+                />
+              </label>
+
+              <label className="label">
+                {t.testsPerformed}
+                <textarea
+                  className="textarea"
+                  value={editingNote.testsPerformed}
+                  onChange={(e) => setEditingNote({ ...editingNote, testsPerformed: e.target.value })}
+                  placeholder="Any tests done?"
+                  rows={3}
+                />
+              </label>
+
+              <label className="label">
+                {t.treatmentMeds}
+                <textarea
+                  className="textarea"
+                  value={editingNote.treatmentMeds}
+                  onChange={(e) => setEditingNote({ ...editingNote, treatmentMeds: e.target.value })}
+                  placeholder="Medications or treatment prescribed"
+                  rows={3}
+                />
+              </label>
+
+              <label className="label">
+                {t.homeInstructions}
+                <textarea
+                  className="textarea"
+                  value={editingNote.homeInstructions}
+                  onChange={(e) => setEditingNote({ ...editingNote, homeInstructions: e.target.value })}
+                  placeholder="What to do at home?"
+                  rows={3}
+                />
+              </label>
+
+              <label className="label">
+                {t.followUp}
+                <textarea
+                  className="textarea"
+                  value={editingNote.followUp}
+                  onChange={(e) => setEditingNote({ ...editingNote, followUp: e.target.value })}
+                  placeholder="Follow-up plan?"
+                  rows={3}
+                />
+              </label>
+
+              <div className="row" style={{ marginTop: 16, gap: 8 }}>
+                <button className="btn btnPrimary" onClick={saveNote}>
+                  {t.saveNote}
+                </button>
+                <button
+                  className="btn btnSecondary"
+                  onClick={() => {
+                    setEditingNote(null);
+                    setNoteVisitId(null);
+                  }}
+                >
+                  {t.cancel}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // PREPARE (just show info, wizard opens from PetsScreen)
   return (
     <div className="pageContent">
-      <div className="stack">
-        <h3>{(t as any).myVisits ?? "My Visits"}</h3>
-
-        {visitsSorted.length === 0 && <div className="muted">No visits yet.</div>}
-
-        {!openVisit && (
-          <>
-            {visitsSorted.map((v) => {
-              const pet = pets.find((p) => p.id === v.petId);
-              return (
-                <button
-                  key={v.id}
-                  className="itemCard"
-                  onClick={() => openVisitCard(v.id!)}
-                  style={{ cursor: "pointer", textAlign: "left" }}
-                >
-                  <div className="itemTitle">
-                    {pet?.name || "(Unnamed)"} — {v.visitDate || "No date"}
-                  </div>
-                  <div className="muted">{v.mainConcern || "No main concern yet."}</div>
-                </button>
-              );
-            })}
-          </>
-        )}
-
-        {openVisit && (
-          <div className="panel">
-            <div className="row rowWrap" style={{ marginBottom: 12 }}>
-              <button
-                className="btn btnSecondary"
-                onClick={() => {
-                  setOpenVisitId(null);
-                  setOpenNote(null);
-                }}
-              >
-                ← Back
-              </button>
-
-              <button
-                className="btn btnSecondary"
-                onClick={async () => {
-                  await loadNoteForVisit(openVisit.id!);
-                }}
-              >
-                Edit Visit Notes
-              </button>
-
-              <button
-                className="btn btnSecondary"
-                onClick={async () => {
-                  await loadDocForVisit(openVisit.id!);
-                }}
-              >
-                Summary
-              </button>
-            </div>
-
-            <div className="panelHeader">
-              <h4 style={{ margin: 0 }}>
-                {openPet?.name || "(Unnamed)"} — {openVisit.visitDate || "No date"}
-              </h4>
-            </div>
-
-            <h4 style={{ marginTop: 12 }}>Preparation</h4>
-            <ViewOnlyPrepare visit={openVisit} />
-
-            <h4 style={{ marginTop: 16 }}>Visit Notes</h4>
-            {openNote ? <ViewOnlyNotes note={openNote} /> : <div className="muted">No visit notes yet.</div>}
-          </div>
-        )}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "60vh",
+          gap: 24,
+          textAlign: "center",
+          padding: "40px 20px"
+        }}
+      >
+        <div style={{ fontSize: 64 }}>🐾</div>
+        <div>
+          <h2 style={{ margin: "0 0 12px 0", color: "var(--blue)", fontSize: 28 }}>
+            Walk in Prepared
+          </h2>
+          <p style={{ color: "var(--textMuted)", margin: 0, fontSize: 16, lineHeight: 1.6, maxWidth: 450 }}>
+            Partner with your vet by gathering your pet's observations at home. Go to <strong>My Pets</strong> and
+            click a pet to start preparing for a visit.
+          </p>
+        </div>
       </div>
     </div>
   );
