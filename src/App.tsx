@@ -36,9 +36,9 @@ const [showMedicalDisclaimer, setShowMedicalDisclaimer] = useState(false);
     );
   }
 
-  return (
-    <div className="page">
-          <header className="header">
+    return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100vh", width: "100vw", overflow: "hidden", backgroundColor: "#fff" }}>
+      <header className="header">
         <button
           onClick={() => setMenuOpen(!menuOpen)}
           style={{
