@@ -17,6 +17,7 @@ import {
 import { ViewOnlyPrepare } from "./ViewOnlyPrepare";
 import { ViewOnlyNotes } from "./ViewOnlyNotes";
 import ViewDocument from "./ViewDocument";
+import PrepareWizard from "./PrepareWizard";
 
 export type Mode = "myVisits" | "prepare";
 type PrepareSubTab = "prep" | "notes" | "summary";
@@ -85,6 +86,7 @@ export default function VisitsScreen({
 
   // PREPARE
   const [subTab, setSubTab] = useState<PrepareSubTab>("prep");
+  const [showWizard, setShowWizard] = useState(false);
   const [editingVisit, setEditingVisit] = useState<Visit>(emptyVisit(userId));
   const [prepViewId, setPrepViewId] = useState<string | null>(null);
 
@@ -353,156 +355,25 @@ export default function VisitsScreen({
           )}
 
           {!prepViewId && (
-            <form
-              className="stack"
-              onSubmit={(e) => {
-                e.preventDefault();
-                saveVisit();
-              }}
-            >
-              <label>
-                <span className="label">{t.selectPet}</span>
-                <select
-                  value={editingVisit.petId}
-                  onChange={(e) => setEditingVisit({ ...editingVisit, petId: e.target.value })}
-                  required
-                >
-                  <option value="">— Choose a pet —</option>
-                  {pets.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
+  <div className="panel">
+    <div className="panelHeader">
+      <h4 style={{ margin: 0 }}>{t.prepareVisit}</h4>
+    </div>
 
-              <label>
-                <span className="label">{t.visitDate}</span>
-                <input
-                  type="date"
-                  value={editingVisit.visitDate}
-                  onChange={(e) => setEditingVisit({ ...editingVisit, visitDate: e.target.value })}
-                  placeholder="Pick a date"
-                />
-              </label>
+    <p className="muted" style={{ marginTop: 8 }}>
+      Use the guided wizard to prepare your visit step-by-step.
+    </p>
 
-              <label>
-                <span className="label">
-  {t.mainConcern}
-  <AskAiLink label={t.askAiAssistant} />
-</span>
-                <input
-                  type="text"
-                  value={editingVisit.mainConcern}
-                  onChange={(e) => setEditingVisit({ ...editingVisit, mainConcern: e.target.value })}
-                  placeholder="E.g., limping, not eating, vomiting"
-                />
-              </label>
-
-              <label>
-                <span className="label">
-  {t.whenStart}
-  <AskAiLink label={t.askAiAssistant} />
-</span>
-                <input
-                  type="text"
-                  value={editingVisit.whenStart}
-                  onChange={(e) => setEditingVisit({ ...editingVisit, whenStart: e.target.value })}
-                  placeholder="E.g., 3 days ago, this morning"
-                />
-              </label>
-
-              <label>
-                <span className="label">
-  {t.howProgressing}
-  <AskAiLink label={t.askAiAssistant} />
-</span>
-                <textarea
-                  value={editingVisit.howProgressing}
-                  onChange={(e) => setEditingVisit({ ...editingVisit, howProgressing: e.target.value })}
-                  placeholder="Is it getting worse, better, or staying the same?"
-                  rows={3}
-                />
-              </label>
-
-              <label>
-                <span className="label">
-  {t.patterns}
-  <AskAiLink label={t.askAiAssistant} />
-</span>
-                <textarea
-                  value={editingVisit.patterns}
-                  onChange={(e) => setEditingVisit({ ...editingVisit, patterns: e.target.value })}
-                  placeholder="Any patterns? Time of day, after eating, etc."
-                  rows={3}
-                />
-              </label>
-
-              <label>
-                <span className="label">
-  {t.associatedSigns}
-  <AskAiLink label={t.askAiAssistant} />
-</span>
-                <textarea
-                  value={editingVisit.associatedSigns}
-                  onChange={(e) => setEditingVisit({ ...editingVisit, associatedSigns: e.target.value })}
-                  placeholder="Any other symptoms? Behavior changes, appetite, energy?"
-                  rows={3}
-                />
-              </label>
-
-              <label>
-                <span className="label">
-  {t.previousTreatment}
-  <AskAiLink label={t.askAiAssistant} />
-</span>
-                <textarea
-                  value={editingVisit.previousTreatment}
-                  onChange={(e) => setEditingVisit({ ...editingVisit, previousTreatment: e.target.value })}
-                  placeholder="Any home remedies or treatments already tried?"
-                  rows={3}
-                />
-              </label>
-
-              <label>
-                <span className="label">
-  {t.questionsVet}
-  <AskAiLink label={t.askAiAssistant} />
-</span>
-                <textarea
-                  value={editingVisit.questionsVet}
-                  onChange={(e) => setEditingVisit({ ...editingVisit, questionsVet: e.target.value })}
-                  placeholder="What do you want to ask the vet?"
-                  rows={3}
-                />
-              </label>
-
-              <div className="row rowWrap" style={{ marginTop: 16 }}>
-                <button type="submit" className="btn btnPrimary">
-                  {editingVisit.id ? t.update : t.save}
-                </button>
-                <button
-                  type="button"
-                  className="btn btnSecondary"
-                  onClick={() => setEditingVisit(emptyVisit(userId))}
-                >
-                  {t.cancel}
-                </button>
-                {editingVisit.id && (
-                  <button
-                    type="button"
-                    className="btn btnDanger"
-                    onClick={() => {
-                      removeVisit(editingVisit.id!);
-                      setEditingVisit(emptyVisit(userId));
-                    }}
-                  >
-                    {t.delete}
-                  </button>
-                )}
-              </div>
-            </form>
-          )}
+    <button
+      className="btn btnPrimary"
+      onClick={() => setShowWizard(true)}
+      type="button"
+      style={{ width: "100%", marginTop: 12 }}
+    >
+      Start
+    </button>
+  </div>
+)}
 
           {!prepViewId && visits.length > 0 && (
             <>
