@@ -263,3 +263,7 @@ export default function PetsScreen({
     </div>
   );
 }
+    </div>
+  </div>
+);
+}
