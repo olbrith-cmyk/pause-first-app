@@ -91,7 +91,11 @@ const [showMedicalDisclaimer, setShowMedicalDisclaimer] = useState(false);
   onDeleteAccount={deleteCurrentUser}
   onEmergencyGuide={() => setShowEmergencyGuide(true)}
   onMedicalDisclaimer={() => setShowMedicalDisclaimer(true)}
-  onPrivacyPolicy={() => setShowPrivacyPolicy(true)}       
+  onPrivacyPolicy={() => setShowPrivacyPolicy(true)}  
+  onMyPets={() => {
+  setMode("pets");
+  setMenuOpen(false);
+}}
 />
             {showEmergencyGuide && (
         <EmergencyGuide lang={lang} onClose={() => setShowEmergencyGuide(false)} />
