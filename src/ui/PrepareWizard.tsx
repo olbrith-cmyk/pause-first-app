@@ -186,7 +186,7 @@ export default function PrepareWizard({ lang, userId, petId, petName, onClose, o
   return (
     <div className="modal" style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div className="modalOverlay" onClick={onClose} style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.5)" }} />
-      <div className="modalContent" style={{ position: "relative", zIndex: 10000, backgroundColor: "white", borderRadius: "8px", maxWidth: "500px", maxHeight: "90vh", overflow: "auto", boxShadow: "0 4px 6px rgba(0,0,0,0.1)" }}>
+      <div className="modalContent" style={{ position: "relative", zIndex: 10000, backgroundColor: "white", borderRadius: "8px", width: "90%", maxWidth: "500px", maxHeight: "90vh", overflow: "auto", boxShadow: "0 4px 6px rgba(0,0,0,0.1)" }}>
         <div className="modalHeader" style={{ padding: "16px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <h3 style={{ margin: 0 }}>Prepare for Visit</h3>
           <button className="btnClose" onClick={onClose} style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer" }}>
