@@ -10,7 +10,8 @@ export default function HamburgerMenu({
   onDeleteAccount,
   onEmergencyGuide,
   onMedicalDisclaimer,
-  onPrivacyPolicy
+  onPrivacyPolicy,
+  onMyPets
 }: {
   lang: Lang;
   isOpen: boolean;
@@ -20,6 +21,7 @@ export default function HamburgerMenu({
   onEmergencyGuide: () => void;
   onMedicalDisclaimer: () => void;
   onPrivacyPolicy: () => void;
+  onMyPets: () => void;
 }) {
   const t = useTranslation(lang);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -40,6 +42,24 @@ export default function HamburgerMenu({
 
   const menuItems = [
     {
+      icon: "🐾",
+      label: t.myPets,
+      onClick: onMyPets,
+      color: "#0066cc"
+    },
+    {
+      icon: "🤖",
+      label: t.aiAssistant,
+      onClick: () => {
+        window.open(
+          "https://chatgpt.com/g/g-695a7a9e17d08191bd88b76d39f9e54f-pause-firsttm",
+          "_blank"
+        );
+        onClose();
+      },
+      color: "#388e3c"
+    },
+    {
       icon: "🚨",
       label: t.emergencyGuide,
       onClick: onEmergencyGuide,
@@ -56,18 +76,6 @@ export default function HamburgerMenu({
       label: "Privacy Policy",
       onClick: onPrivacyPolicy,
       color: "#1976d2"
-    },
-    {
-      icon: "🤖",
-      label: t.aiAssistant,
-      onClick: () => {
-        window.open(
-          "https://chatgpt.com/g/g-695a7a9e17d08191bd88b76d39f9e54f-pause-firsttm",
-          "_blank"
-        );
-        onClose();
-      },
-      color: "#388e3c"
     }
   ];
 
