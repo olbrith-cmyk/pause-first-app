@@ -347,17 +347,17 @@ export default function PetsScreen({
       </div>
 
       {showWizard && selected && (
-        <PrepareWizard
-          lang={lang}
-          userId={userId}
-          petId={selected.id!}
-          petName={selected.name || "Your pet"}
-          onClose={() => {
-            setShowWizard(false);
-            load();
-          }}
-        />
-      )}
+  <PrepareWizard
+    lang={lang}
+    userId={userId}
+    petId={selected.id!}
+    petName={selected.name || "Your pet"}
+    onClose={async () => {
+      setShowWizard(false);
+      await load();
+    }}
+  />
+)}
     </div>
   );
 }
