@@ -28,6 +28,7 @@ export default function Dashboard({
   const [menuOpen, setMenuOpen] = useState(false);
   const [showEmergencyGuide, setShowEmergencyGuide] = useState(false);
   const [prepareWizardTrigger, setPrepareWizardTrigger] = useState(0);
+
   const goToTab = (nextMode: DashboardMode) => {
     setMode(nextMode);
   };
@@ -41,8 +42,7 @@ export default function Dashboard({
         backgroundColor: "#f5f5f5"
       }}
     >
-
-            {/* CONTENT AREA */}
+      {/* CONTENT AREA */}
       <div
         style={{
           flex: 1,
@@ -53,24 +53,12 @@ export default function Dashboard({
         }}
       >
         {mode === "visits" && (
-          <VisitsScreen
-            lang={lang}
-            userId={userId}
-            mode="myVisits"
-          />
+          <VisitsScreen lang={lang} userId={userId} mode="myVisits" />
         )}
 
-        {mode === "prepare" && (
-  <VisitsScreen
-  lang={lang}
-  userId={userId}
-  mode={mode}
-/>
-)}
+        {mode === "prepare" && <VisitsScreen lang={lang} userId={userId} mode={mode} />}
 
-        {mode === "pets" && (
-          <PetsScreen lang={lang} userId={userId} />
-        )}
+        {mode === "pets" && <PetsScreen lang={lang} userId={userId} />}
       </div>
 
       {/* BOTTOM NAV */}
@@ -85,33 +73,21 @@ export default function Dashboard({
           padding: "12px 16px",
           display: "flex",
           gap: "12px",
-          justifyContent: "space-between",
+          justifyContent: "center",
           alignItems: "center",
           zIndex: 50
         }}
       >
-     {/* Pets Button */}
-        <button
-          onClick={() => setMode("pets")}
-          className={`btn ${mode === "pets" ? "btnActive" : "btnSecondary"}`}
-          style={{
-            flex: 1,
-            padding: "12px 16px",
-            fontSize: "14px"
-          }}
-        >
-          {t.myPets}
-        </button>
-
-        {/* Prepare for Vet Visit Button (LARGE PRIMARY) */}
+        {/* Prepare for Vet Visit Button (LARGE PRIMARY, CENTERED) */}
         <button
           onClick={() => {
-  setMode("prepare");
-  setPrepareWizardTrigger((n) => n + 1);
-}}
+            setMode("prepare");
+            setPrepareWizardTrigger((n) => n + 1);
+          }}
           className="btn btnPrimary"
           style={{
-            flex: 1.2,
+            flex: 1,
+            maxWidth: "300px",
             padding: "16px 20px",
             fontSize: "15px",
             fontWeight: "bold",
@@ -119,19 +95,6 @@ export default function Dashboard({
           }}
         >
           {t.prepareVisit}
-        </button>
-
-      {/* Visits Button */}
-        <button
-          onClick={() => setMode("visits")}
-          className={`btn ${mode === "visits" ? "btnActive" : "btnSecondary"}`}
-          style={{
-            flex: 1,
-            padding: "12px 16px",
-            fontSize: "14px"
-          }}
-        >
-          {t.myVisits}
         </button>
       </div>
 
@@ -145,6 +108,10 @@ export default function Dashboard({
         onEmergencyGuide={() => setShowEmergencyGuide(true)}
         onMedicalDisclaimer={() => alert(t.medicalDisclaimer)}
         onPrivacyPolicy={() => {}}
+        onMyPets={() => {
+          setMode("pets");
+          setMenuOpen(false);
+        }}
       />
 
       {/* EMERGENCY GUIDE MODAL */}
@@ -205,8 +172,6 @@ export default function Dashboard({
           </div>
         </div>
       )}
-
-      {/* PRIVACY POLICY MODAL */}
     </div>
   );
 }
