@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
 import type { Pet, Visit, VisitNote } from "../firestore";
@@ -38,27 +38,37 @@ export default function PetsScreen({
   const [pets, setPets] = useState<Pet[]>([]);
   const [visits, setVisits] = useState<Visit[]>([]);
   const [selected, setSelected] = useState<Pet | null>(null);
+
   const [mode, setMode] = useState<"view" | "edit">("view");
   const [editing, setEditing] = useState<Pet>(emptyPet(userId));
+
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
   const [isFirstPet, setIsFirstPet] = useState(false);
+
+  // Wizard + visit viewing
   const [showWizard, setShowWizard] = useState(false);
   const [viewingVisit, setViewingVisit] = useState<Visit | null>(null);
   const [viewingVisitNote, setViewingVisitNote] = useState<VisitNote | null>(null);
 
   const load = async () => {
-    const [petList, visitList] = await Promise.all([
-      getUserPets(userId),
-      getUserVisits(userId)
-    ]);
+    const [petList, visitList] = await Promise.all([getUserPets(userId), getUserVisits(userId)]);
     setPets(petList);
     setVisits(visitList);
   };
 
   useEffect(() => {
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
+
+  const selectedPetVisits = useMemo(() => {
+    if (!selected?.id) return [];
+    return visits
+      .filter((v) => v.petId === selected.id)
+      .sort((a, b) => (b.visitDate || "").localeCompare(a.visitDate || ""));
+  }, [visits, selected]);
 
   const openView = (pet: Pet) => {
     setSelected(pet);
@@ -66,10 +76,8 @@ export default function PetsScreen({
     setMode("view");
     setViewingVisit(null);
     setViewingVisitNote(null);
-  };
-
-  const openEdit = () => {
-    setMode("edit");
+    setStatus(null);
+    setError(null);
   };
 
   const startNew = () => {
@@ -79,6 +87,8 @@ export default function PetsScreen({
     setStatus(null);
     setError(null);
     setIsFirstPet(pets.length === 0);
+    setViewingVisit(null);
+    setViewingVisitNote(null);
   };
 
   const cancel = () => {
@@ -92,6 +102,14 @@ export default function PetsScreen({
     setViewingVisitNote(null);
   };
 
+  const openEdit = () => {
+    if (!selected) return;
+    setEditing(selected);
+    setMode("edit");
+    setStatus(null);
+    setError(null);
+  };
+
   const save = async () => {
     setError(null);
     setStatus(null);
@@ -102,23 +120,23 @@ export default function PetsScreen({
       } else {
         await addPet(editing);
       }
-      setStatus(t.saved);
-      setMode("view");
-      await load();
 
+      setStatus(t.saved);
+      await load();
+      setMode("view");
+
+      // If it was the first pet, optionally notify parent
       if (isFirstPet && !editing.id && onFirstPetSaved) {
-        setTimeout(() => {
-          onFirstPetSaved();
-        }, 500);
+        setTimeout(() => onFirstPetSaved(), 300);
       }
 
+      // Re-select updated pet if editing existing
       if (editing.id) {
-        const updated = (await getUserPets(userId)).find((p) => p.id === editing.id);
-        if (updated) {
-          setSelected(updated);
-          setEditing(updated);
-        }
+        const updated = (await getUserPets(userId)).find((p) => p.id === editing.id) ?? null;
+        setSelected(updated);
+        if (updated) setEditing(updated);
       } else {
+        // New pet: go back to list
         cancel();
       }
     } catch (e: any) {
@@ -144,20 +162,6 @@ export default function PetsScreen({
     }
   };
 
-  const downloadPDF = (visit: Visit, note: VisitNote | null) => {
-    alert("PDF download coming soon!");
-  };
-
-  const shareWithVet = (visit: Visit) => {
-    alert("Share with vet coming soon!");
-  };
-
-  const selectedPetVisits = selected?.id
-    ? visits.filter((v) => v.petId === selected.id).sort((a, b) => (b.visitDate || "").localeCompare(a.visitDate || ""))
-    : [];
-
-  const unassignedVisits = visits.filter((v) => !v.petId).sort((a, b) => (b.visitDate || "").localeCompare(a.visitDate || ""));
-
   return (
     <div className="pageContent">
       <div className="stack">
@@ -168,15 +172,28 @@ export default function PetsScreen({
           </button>
         </div>
 
-        {pets.length === 0 && mode !== "edit" && (
-          <div className="alert alertInfo" style={{ backgroundColor: "var(--bgAlt)", border: "1px solid var(--border)", padding: "16px", borderRadius: "8px" }}>
-            <strong>Welcome to Pause First! 👋</strong>
-            <p style={{ margin: "8px 0 0 0", fontSize: "14px" }}>
-              Start by adding your pet's information. This helps you prepare better for vet visits.
-            </p>
+        {/* List of pets (when nothing selected and not editing) */}
+        {!selected && mode !== "edit" && (
+          <div className="stack">
+            {pets.length === 0 ? (
+              <div className="muted">No pets yet. Click “+ {t.addPet}” to get started.</div>
+            ) : (
+              pets.map((pet) => (
+                <button
+                  key={pet.id}
+                  className="itemCard"
+                  onClick={() => openView(pet)}
+                  style={{ cursor: "pointer", textAlign: "left" }}
+                >
+                  <div className="itemTitle">{pet.name || "(Unnamed)"}</div>
+                  <div className="muted">{pet.species || "Unknown species"}</div>
+                </button>
+              ))
+            )}
           </div>
         )}
 
+        {/* Main panel (selected pet or editing) */}
         {(selected || mode === "edit") && (
           <div className="panel">
             <div className="panelHeader">
@@ -185,84 +202,11 @@ export default function PetsScreen({
               </h4>
             </div>
 
-            {isFirstPet && !selected && mode === "edit" && (
-              <p style={{ fontSize: "14px", color: "var(--textMuted)", marginBottom: "16px" }}>
-                Tell us about your pet. You can always edit this later.
-              </p>
-            )}
-
-            {mode === "view" && selected && !viewingVisit && <ViewOnlyPet pet={selected} />}
-
-            {mode === "edit" && (
+            {/* VIEW MODE */}
+            {mode === "view" && selected && !viewingVisit && (
               <>
-                <div className="grid2">
-                  <label className="label">
-                    {t.petName}
-                    <input className="input" value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} placeholder="e.g., Max" />
-                  </label>
-                  <label className="label">
-                    {t.species}
-                    <input className="input" value={editing.species} onChange={(e) => setEditing({ ...editing, species: e.target.value })} placeholder="e.g., Dog" />
-                  </label>
+                <ViewOnlyPet pet={selected} />
 
-                  <label className="label">
-                    {t.age}
-                    <input className="input" value={editing.age} onChange={(e) => setEditing({ ...editing, age: e.target.value })} placeholder="e.g., 3 years" />
-                  </label>
-                  <label className="label">
-                    {t.sex}
-                    <input className="input" value={editing.sex} onChange={(e) => setEditing({ ...editing, sex: e.target.value })} placeholder="e.g., Male" />
-                  </label>
-
-                  <label className="label">
-                    {t.weight}
-                    <input className="input" value={editing.weight} onChange={(e) => setEditing({ ...editing, weight: e.target.value })} placeholder="e.g., 25 kg" />
-                  </label>
-                  <label className="label">
-                    {t.microchip}
-                    <input className="input" value={editing.microchip} onChange={(e) => setEditing({ ...editing, microchip: e.target.value })} placeholder="Optional" />
-                  </label>
-
-                  <label className="label">
-                    {t.allergies}
-                    <textarea className="textarea" value={editing.allergies} onChange={(e) => setEditing({ ...editing, allergies: e.target.value })} placeholder="Any known allergies?" />
-                  </label>
-                  <label className="label">
-                    {t.medications}
-                    <textarea className="textarea" value={editing.medications} onChange={(e) => setEditing({ ...editing, medications: e.target.value })} placeholder="Current medications?" />
-                  </label>
-
-                  <label className="label">
-                    {t.diet}
-                    <textarea className="textarea" value={editing.diet} onChange={(e) => setEditing({ ...editing, diet: e.target.value })} placeholder="Diet or feeding notes?" />
-                  </label>
-                  <label className="label">
-                    {t.clinic}
-                    <input className="input" value={editing.clinic} onChange={(e) => setEditing({ ...editing, clinic: e.target.value })} placeholder="Your vet clinic name" />
-                  </label>
-
-                  <label className="label">
-                    {t.emergencyContact}
-                    <input className="input" value={editing.emergencyContact} onChange={(e) => setEditing({ ...editing, emergencyContact: e.target.value })} placeholder="Emergency contact" />
-                  </label>
-                  <label className="label">
-                    {t.notes}
-                    <textarea className="textarea" value={editing.notes} onChange={(e) => setEditing({ ...editing, notes: e.target.value })} placeholder="Any other notes?" />
-                  </label>
-                </div>
-
-                {error && <div className="alert alertError">{t.error}: {error}</div>}
-                {status && <div className="alert alertOk">{status}</div>}
-
-                <div className="row">
-                  <button className="btn btnPrimary" onClick={save}>
-                    {t.savePet}
-                  </button>
-                </div>
-              </>
-            )}
-                       {mode === "view" && selected && !viewingVisit && (
-              <>
                 <div className="row" style={{ marginTop: 12 }}>
                   <button className="btn btnPrimary" onClick={() => setShowWizard(true)}>
                     + Add visit for {selected.name || "this pet"}
@@ -290,7 +234,7 @@ export default function PetsScreen({
                   )}
                 </div>
 
-                <div className="row" style={{ marginTop: 16, gap: "8px" }}>
+                <div className="row" style={{ marginTop: 16, gap: 8 }}>
                   <button className="btn btnPrimary" onClick={openEdit}>
                     {t.editPet}
                   </button>
@@ -304,345 +248,115 @@ export default function PetsScreen({
               </>
             )}
 
+            {/* VIEWING A VISIT */}
             {mode === "view" && viewingVisit && (
               <>
-                <ViewOnlyPrepare visit={viewingVisit} />
-                {viewingVisitNote && <ViewOnlyNotes note={viewingVisitNote} />}
-
-                <div className="row" style={{ marginTop: 16, gap: "8px" }}>
-                  <button className="btn btnPrimary" onClick={() => downloadPDF(viewingVisit, viewingVisitNote)}>
-                    📄 Download PDF
-                  </button>
-                  <button className="btn btnSecondary" onClick={() => shareWithVet(viewingVisit)}>
-                    📧 Share with Vet
-                  </button>
-                  <button className="btn btnSecondary" onClick={() => setViewingVisit(null)}>
-                    {t.back}
+                <div className="row" style={{ marginBottom: 12 }}>
+                  <button
+                    className="btn btnSecondary"
+                    onClick={() => {
+                      setViewingVisit(null);
+                      setViewingVisitNote(null);
+                    }}
+                  >
+                    ← {t.back}
                   </button>
                 </div>
+
+                <ViewOnlyPrepare visit={viewingVisit} />
+                {viewingVisitNote ? <ViewOnlyNotes note={viewingVisitNote} /> : <div className="muted">No visit notes yet.</div>}
               </>
             )}
-          </div>
-        )}
-        {!selected && mode !== "edit" && (
-          <div className="stack">
-            <h4>{t.myPets}</h4>
-            {pets.length === 0 ? (
-              <div className="muted">No pets yet. Click "+ Add Pet" to get started!</div>
-            ) : (
-              pets.map((pet) => (
-                <button
-                  key={pet.id}
-                  className="itemCard"
-                  onClick={() => openView(pet)}
-                  style={{ cursor: "pointer", textAlign: "left" }}
-                >
-                  <div className="itemTitle">{pet.name || "(Unnamed)"}</div>
-                  <div className="muted">{pet.species || "Unknown species"}</div>
-                </button>
-              ))
-            )}
-          </div>
-        )}
-      </div>
-import { useEffect, useState } from "react";
-import type { Lang } from "../i18n";
-import { useTranslation } from "../i18n";
-import type { Pet, Visit, VisitNote } from "../firestore";
-import { addPet, deletePet, getUserPets, updatePet, getUserVisits, getVisitNote } from "../firestore";
-import { ViewOnlyPet } from "./ViewOnlyPet";
-import { ViewOnlyPrepare } from "./ViewOnlyPrepare";
-import { ViewOnlyNotes } from "./ViewOnlyNotes";
-import PrepareWizard from "./PrepareWizard";
 
-const emptyPet = (userId: string): Pet => ({
-  userId,
-  name: "",
-  species: "",
-  age: "",
-  sex: "",
-  weight: "",
-  microchip: "",
-  allergies: "",
-  medications: "",
-  diet: "",
-  clinic: "",
-  emergencyContact: "",
-  notes: ""
-});
-
-export default function PetsScreen({
-  lang,
-  userId,
-  onFirstPetSaved
-}: {
-  lang: Lang;
-  userId: string;
-  onFirstPetSaved?: () => void;
-}) {
-  const t = useTranslation(lang);
-
-  const [pets, setPets] = useState<Pet[]>([]);
-  const [visits, setVisits] = useState<Visit[]>([]);
-  const [selected, setSelected] = useState<Pet | null>(null);
-  const [mode, setMode] = useState<"view" | "edit">("view");
-  const [editing, setEditing] = useState<Pet>(emptyPet(userId));
-  const [status, setStatus] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [isFirstPet, setIsFirstPet] = useState(false);
-  const [showWizard, setShowWizard] = useState(false);
-  const [viewingVisit, setViewingVisit] = useState<Visit | null>(null);
-  const [viewingVisitNote, setViewingVisitNote] = useState<VisitNote | null>(null);
-
-  const load = async () => {
-    const [petList, visitList] = await Promise.all([
-      getUserPets(userId),
-      getUserVisits(userId)
-    ]);
-    setPets(petList);
-    setVisits(visitList);
-  };
-
-  useEffect(() => {
-    load();
-  }, [userId]);
-
-  const openView = (pet: Pet) => {
-    setSelected(pet);
-    setEditing(pet);
-    setMode("view");
-    setViewingVisit(null);
-    setViewingVisitNote(null);
-  };
-
-  const openEdit = () => {
-    setMode("edit");
-  };
-
-  const startNew = () => {
-    setSelected(null);
-    setEditing(emptyPet(userId));
-    setMode("edit");
-    setStatus(null);
-    setError(null);
-    setIsFirstPet(pets.length === 0);
-  };
-
-  const cancel = () => {
-    setSelected(null);
-    setEditing(emptyPet(userId));
-    setMode("view");
-    setStatus(null);
-    setError(null);
-    setIsFirstPet(false);
-    setViewingVisit(null);
-    setViewingVisitNote(null);
-  };
-
-  const save = async () => {
-    setError(null);
-    setStatus(null);
-    try {
-      if (editing.id) {
-        const { id, ...rest } = editing;
-        await updatePet(id, rest);
-      } else {
-        await addPet(editing);
-      }
-      setStatus(t.saved);
-      setMode("view");
-      await load();
-
-      if (isFirstPet && !editing.id && onFirstPetSaved) {
-        setTimeout(() => {
-          onFirstPetSaved();
-        }, 500);
-      }
-
-      if (editing.id) {
-        const updated = (await getUserPets(userId)).find((p) => p.id === editing.id);
-        if (updated) {
-          setSelected(updated);
-          setEditing(updated);
-        }
-      } else {
-        cancel();
-      }
-    } catch (e: any) {
-      setError(e?.message ?? String(e));
-    }
-  };
-
-  const remove = async (petId: string) => {
-    if (!confirm("Delete pet?")) return;
-    await deletePet(petId);
-    await load();
-    cancel();
-  };
-
-  const openVisitView = async (visit: Visit) => {
-    setViewingVisit(visit);
-    try {
-      const note = await getVisitNote(userId, visit.id!);
-      setViewingVisitNote(note ?? null);
-    } catch (e) {
-      console.error("Error loading visit note:", e);
-      setViewingVisitNote(null);
-    }
-  };
-
-  const downloadPDF = (visit: Visit, note: VisitNote | null) => {
-    alert("PDF download coming soon!");
-  };
-
-  const shareWithVet = (visit: Visit) => {
-    alert("Share with vet coming soon!");
-  };
-
-  const selectedPetVisits = selected?.id
-    ? visits.filter((v) => v.petId === selected.id).sort((a, b) => (b.visitDate || "").localeCompare(a.visitDate || ""))
-    : [];
-
-  const unassignedVisits = visits.filter((v) => !v.petId).sort((a, b) => (b.visitDate || "").localeCompare(a.visitDate || ""));
-
-  return (
-    <div className="pageContent">
-      <div className="stack">
-        <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
-          <h3 style={{ margin: 0 }}>{t.myPets}</h3>
-          <button className="btn btnPrimary" onClick={startNew}>
-            + {t.addPet}
-          </button>
-        </div>
-
-        {pets.length === 0 && mode !== "edit" && (
-          <div className="alert alertInfo" style={{ backgroundColor: "var(--bgAlt)", border: "1px solid var(--border)", padding: "16px", borderRadius: "8px" }}>
-            <strong>Welcome to Pause First! 👋</strong>
-            <p style={{ margin: "8px 0 0 0", fontSize: "14px" }}>
-              Start by adding your pet's information. This helps you prepare better for vet visits.
-            </p>
-          </div>
-        )}
-
-        {(selected || mode === "edit") && (
-          <div className="panel">
-            <div className="panelHeader">
-              <h4 style={{ margin: 0 }}>
-                {isFirstPet && !selected ? "🐾 Add Your First Pet" : selected ? selected.name || "(Unnamed)" : "New Pet"}
-              </h4>
-            </div>
-
-            {isFirstPet && !selected && mode === "edit" && (
-              <p style={{ fontSize: "14px", color: "var(--textMuted)", marginBottom: "16px" }}>
-                Tell us about your pet. You can always edit this later.
-              </p>
-            )}
-
-            {mode === "view" && selected && !viewingVisit && <ViewOnlyPet pet={selected} />}
-
+            {/* EDIT MODE */}
             {mode === "edit" && (
               <>
+                {isFirstPet && !selected && (
+                  <p style={{ fontSize: 14, color: "var(--textMuted)", marginBottom: 16 }}>
+                    Tell us about your pet. You can always edit this later.
+                  </p>
+                )}
+
                 <div className="grid2">
                   <label className="label">
                     {t.petName}
-                    <input className="input" value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} placeholder="e.g., Max" />
+                    <input className="input" value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} />
                   </label>
+
                   <label className="label">
                     {t.species}
-                    <input className="input" value={editing.species} onChange={(e) => setEditing({ ...editing, species: e.target.value })} placeholder="e.g., Dog" />
+                    <input className="input" value={editing.species} onChange={(e) => setEditing({ ...editing, species: e.target.value })} />
                   </label>
 
                   <label className="label">
                     {t.age}
-                    <input className="input" value={editing.age} onChange={(e) => setEditing({ ...editing, age: e.target.value })} placeholder="e.g., 3 years" />
+                    <input className="input" value={editing.age} onChange={(e) => setEditing({ ...editing, age: e.target.value })} />
                   </label>
+
                   <label className="label">
                     {t.sex}
-                    <input className="input" value={editing.sex} onChange={(e) => setEditing({ ...editing, sex: e.target.value })} placeholder="e.g., Male" />
+                    <input className="input" value={editing.sex} onChange={(e) => setEditing({ ...editing, sex: e.target.value })} />
                   </label>
 
                   <label className="label">
                     {t.weight}
-                    <input className="input" value={editing.weight} onChange={(e) => setEditing({ ...editing, weight: e.target.value })} placeholder="e.g., 25 kg" />
+                    <input className="input" value={editing.weight} onChange={(e) => setEditing({ ...editing, weight: e.target.value })} />
                   </label>
+
                   <label className="label">
                     {t.microchip}
-                    <input className="input" value={editing.microchip} onChange={(e) => setEditing({ ...editing, microchip: e.target.value })} placeholder="Optional" />
+                    <input className="input" value={editing.microchip} onChange={(e) => setEditing({ ...editing, microchip: e.target.value })} />
                   </label>
 
                   <label className="label">
                     {t.allergies}
-                    <textarea className="textarea" value={editing.allergies} onChange={(e) => setEditing({ ...editing, allergies: e.target.value })} placeholder="Any known allergies?" />
+                    <textarea className="textarea" value={editing.allergies} onChange={(e) => setEditing({ ...editing, allergies: e.target.value })} rows={3} />
                   </label>
+
                   <label className="label">
                     {t.medications}
-                    <textarea className="textarea" value={editing.medications} onChange={(e) => setEditing({ ...editing, medications: e.target.value })} placeholder="Current medications?" />
+                    <textarea className="textarea" value={editing.medications} onChange={(e) => setEditing({ ...editing, medications: e.target.value })} rows={3} />
                   </label>
 
                   <label className="label">
                     {t.diet}
-                    <textarea className="textarea" value={editing.diet} onChange={(e) => setEditing({ ...editing, diet: e.target.value })} placeholder="Diet or feeding notes?" />
+                    <textarea className="textarea" value={editing.diet} onChange={(e) => setEditing({ ...editing, diet: e.target.value })} rows={3} />
                   </label>
+
                   <label className="label">
                     {t.clinic}
-                    <input className="input" value={editing.clinic} onChange={(e) => setEditing({ ...editing, clinic: e.target.value })} placeholder="Your vet clinic name" />
+                    <input className="input" value={editing.clinic} onChange={(e) => setEditing({ ...editing, clinic: e.target.value })} />
                   </label>
 
                   <label className="label">
                     {t.emergencyContact}
-                    <input className="input" value={editing.emergencyContact} onChange={(e) => setEditing({ ...editing, emergencyContact: e.target.value })} placeholder="Emergency contact" />
+                    <input
+                      className="input"
+                      value={editing.emergencyContact}
+                      onChange={(e) => setEditing({ ...editing, emergencyContact: e.target.value })}
+                    />
                   </label>
+
                   <label className="label">
                     {t.notes}
-                    <textarea className="textarea" value={editing.notes} onChange={(e) => setEditing({ ...editing, notes: e.target.value })} placeholder="Any other notes?" />
+                    <textarea className="textarea" value={editing.notes} onChange={(e) => setEditing({ ...editing, notes: e.target.value })} rows={3} />
                   </label>
                 </div>
 
-                {error && <div className="alert alertError">{t.error}: {error}</div>}
-                {status && <div className="alert alertOk">{status}</div>}
+                {error && (
+                  <div className="alert alertError" style={{ marginTop: 12 }}>
+                    {t.error}: {error}
+                  </div>
+                )}
+                {status && (
+                  <div className="alert alertOk" style={{ marginTop: 12 }}>
+                    {status}
+                  </div>
+                )}
 
-                <div className="row">
+                <div className="row" style={{ marginTop: 16, gap: 8 }}>
                   <button className="btn btnPrimary" onClick={save}>
                     {t.savePet}
-                  </button>
-                </div>
-              </>
-            )}
-                       {mode === "view" && selected && !viewingVisit && (
-              <>
-                <div className="row" style={{ marginTop: 12 }}>
-                  <button className="btn btnPrimary" onClick={() => setShowWizard(true)}>
-                    + Add visit for {selected.name || "this pet"}
-                  </button>
-                </div>
-
-                <div style={{ marginTop: 12 }}>
-                  <h4 style={{ margin: "8px 0" }}>Visits</h4>
-                  {selectedPetVisits.length === 0 ? (
-                    <div className="muted">No visits yet for this pet.</div>
-                  ) : (
-                    <div className="stack">
-                      {selectedPetVisits.map((v) => (
-                        <button
-                          key={v.id}
-                          className="itemCard"
-                          onClick={() => openVisitView(v)}
-                          style={{ cursor: "pointer", textAlign: "left" }}
-                        >
-                          <div className="itemTitle">{v.visitDate || "No date"}</div>
-                          <div className="muted">{v.mainConcern || "No main concern yet."}</div>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="row" style={{ marginTop: 16, gap: "8px" }}>
-                  <button className="btn btnPrimary" onClick={openEdit}>
-                    {t.editPet}
-                  </button>
-                  <button className="btn btnSecondary" onClick={() => remove(selected.id!)}>
-                    {t.deletePet}
                   </button>
                   <button className="btn btnSecondary" onClick={cancel}>
                     {t.cancel}
@@ -650,61 +364,23 @@ export default function PetsScreen({
                 </div>
               </>
             )}
-
-            {mode === "view" && viewingVisit && (
-              <>
-                <ViewOnlyPrepare visit={viewingVisit} />
-                {viewingVisitNote && <ViewOnlyNotes note={viewingVisitNote} />}
-
-                <div className="row" style={{ marginTop: 16, gap: "8px" }}>
-                  <button className="btn btnPrimary" onClick={() => downloadPDF(viewingVisit, viewingVisitNote)}>
-                    📄 Download PDF
-                  </button>
-                  <button className="btn btnSecondary" onClick={() => shareWithVet(viewingVisit)}>
-                    📧 Share with Vet
-                  </button>
-                  <button className="btn btnSecondary" onClick={() => setViewingVisit(null)}>
-                    {t.back}
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        )}
-        {!selected && mode !== "edit" && (
-          <div className="stack">
-            <h4>{t.myPets}</h4>
-            {pets.length === 0 ? (
-              <div className="muted">No pets yet. Click "+ Add Pet" to get started!</div>
-            ) : (
-              pets.map((pet) => (
-                <button
-                  key={pet.id}
-                  className="itemCard"
-                  onClick={() => openView(pet)}
-                  style={{ cursor: "pointer", textAlign: "left" }}
-                >
-                  <div className="itemTitle">{pet.name || "(Unnamed)"}</div>
-                  <div className="muted">{pet.species || "Unknown species"}</div>
-                </button>
-              ))
-            )}
           </div>
         )}
       </div>
 
+      {/* Wizard Modal */}
       {showWizard && selected && (
-  <PrepareWizard
-    lang={lang}
-    userId={userId}
-    petId={selected.id!}
-    petName={selected.name || "Your pet"}
-    onClose={async () => {
-      setShowWizard(false);
-      await load();
-    }}
-  />
-)}
+        <PrepareWizard
+          lang={lang}
+          userId={userId}
+          petId={selected.id!}
+          petName={selected.name || "Your pet"}
+          onClose={async () => {
+            setShowWizard(false);
+            await load();
+          }}
+        />
+      )}
     </div>
   );
 }
