@@ -39,37 +39,39 @@ const [showMedicalDisclaimer, setShowMedicalDisclaimer] = useState(false);
     return (
     <div style={{ display: "flex", flexDirection: "column", height: "100vh", width: "100vw", overflow: "hidden", backgroundColor: "#fff" }}>
       <header className="header">
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          style={{
-            background: "none",
-            border: "none",
-            fontSize: "24px",
-            cursor: "pointer",
-            color: "#333",
-            marginRight: "16px"
-          }}
-        >
-          ☰
-        </button>
-        <div>
-          <h1 className="brand">{t.appTitle}</h1>
-          <p className="subtitle">{t.appSubtitle}</p>
-        </div>
-        <button
-          onClick={() => setLang(lang === "en" ? "da" : "en")}
-          style={{
-            background: "none",
-            border: "none",
-            fontSize: "14px",
-            cursor: "pointer",
-            color: "#0066cc",
-            fontWeight: "bold"
-          }}
-        >
-          {lang === "en" ? "DA" : "EN"}
-        </button>
-      </header>
+  {user && (
+    <button
+      onClick={() => setMenuOpen(!menuOpen)}
+      style={{
+        background: "none",
+        border: "none",
+        fontSize: "24px",
+        cursor: "pointer",
+        color: "#333",
+        marginRight: "16px"
+      }}
+    >
+      ☰
+    </button>
+  )}
+  <div>
+    <h1 className="brand">{t.appTitle}</h1>
+    <p className="subtitle">{t.appSubtitle}</p>
+  </div>
+  <button
+    onClick={() => setLang(lang === "en" ? "da" : "en")}
+    style={{
+      background: "none",
+      border: "none",
+      fontSize: "14px",
+      cursor: "pointer",
+      color: "#0066cc",
+      fontWeight: "bold"
+    }}
+  >
+    {lang === "en" ? "DA" : "EN"}
+  </button>
+</header>
 
       {!user ? (
         <AuthScreen lang={lang} />
