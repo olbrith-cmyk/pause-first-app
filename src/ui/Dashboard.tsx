@@ -62,41 +62,37 @@ export default function Dashboard({
       </div>
 
       {/* BOTTOM NAV */}
-      <div
-        style={{
-          position: "fixed",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          backgroundColor: "#e8f0f7",
-          borderTop: "1px solid #d0e0f0",
-          padding: "12px 16px",
-          display: "flex",
-          gap: "12px",
-          justifyContent: "center",
-          alignItems: "center",
-          zIndex: 50
-        }}
-      >
-        {/* Prepare for Vet Visit Button (LARGE PRIMARY, CENTERED) */}
-        <button
-          onClick={() => {
-            setMode("prepare");
-            setPrepareWizardTrigger((n) => n + 1);
-          }}
-          className="btn btnPrimary"
-          style={{
-            flex: 1,
-            maxWidth: "300px",
-            padding: "16px 20px",
-            fontSize: "15px",
-            fontWeight: "bold",
-            minHeight: "50px"
-          }}
-        >
-          {t.prepareVisit}
-        </button>
-      </div>
+<div
+  style={{
+    position: "fixed",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "#e8f0f7",
+    borderTop: "1px solid #d0e0f0",
+    padding: "12px 16px",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 50
+  }}
+>
+  {/* Single Center Button */}
+  <button
+    onClick={() => setMode("pets")}
+    className="btn btnPrimary"
+    style={{
+      width: "100%",
+      maxWidth: "320px",
+      padding: "16px 20px",
+      fontSize: "15px",
+      fontWeight: "bold",
+      minHeight: "50px"
+    }}
+  >
+    {t.myPets}
+  </button>
+</div>
 
       {/* HAMBURGER MENU */}
       <HamburgerMenu
