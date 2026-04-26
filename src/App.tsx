@@ -93,7 +93,6 @@ const [showMedicalDisclaimer, setShowMedicalDisclaimer] = useState(false);
   onMedicalDisclaimer={() => setShowMedicalDisclaimer(true)}
   onPrivacyPolicy={() => setShowPrivacyPolicy(true)}  
   onMyPets={() => {
-  setMode("pets");
   setMenuOpen(false);
 }}
 />
