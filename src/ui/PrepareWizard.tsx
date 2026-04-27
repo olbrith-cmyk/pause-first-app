@@ -183,6 +183,21 @@ export default function PrepareWizard({ lang, userId, petId, petName, onClose, o
     }
   };
 
+  // Helper to render review line (only if filled)
+  const ReviewLine = ({ label, value }: { label: string; value: string }) => {
+    if (!value || value.trim() === "") return null;
+    return (
+      <div style={{ marginBottom: 12 }}>
+        <p style={{ margin: "0 0 4px 0", fontWeight: "bold", fontSize: 14 }}>
+          {label}
+        </p>
+        <p style={{ margin: 0, whiteSpace: "pre-wrap", fontSize: 14, lineHeight: 1.5 }}>
+          {value}
+        </p>
+      </div>
+    );
+  };
+
   return (
     <div className="modal" style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div className="modalOverlay" onClick={onClose} style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.5)" }} />
@@ -220,7 +235,9 @@ export default function PrepareWizard({ lang, userId, petId, petName, onClose, o
             </>
           ) : (
             <>
-              <h4>Review & Save</h4>
+              <h4 style={{ marginBottom: 16 }}>Review & Save</h4>
+
+              {/* Header info */}
               <div style={{ backgroundColor: "var(--bgAlt)", padding: 12, borderRadius: 8, marginBottom: 16 }}>
                 <p style={{ margin: "0 0 6px 0" }}>
                   <strong>Pet:</strong> {petName}
@@ -228,9 +245,17 @@ export default function PrepareWizard({ lang, userId, petId, petName, onClose, o
                 <p style={{ margin: "0 0 6px 0" }}>
                   <strong>Visit Date:</strong> {draft.visitDate}
                 </p>
-                <p style={{ margin: 0 }}>
-                  <strong>Main Concern:</strong> {draft.mainConcern}
-                </p>
+              </div>
+
+              {/* Full prep details */}
+              <div style={{ backgroundColor: "var(--bgAlt)", padding: 12, borderRadius: 8, marginBottom: 16 }}>
+                <ReviewLine label="Main Concern" value={draft.mainConcern} />
+                <ReviewLine label="When did it start?" value={draft.whenStart} />
+                <ReviewLine label="How is it progressing?" value={draft.howProgressing} />
+                <ReviewLine label="Any patterns or triggers?" value={draft.patterns} />
+                <ReviewLine label="What else is different?" value={draft.associatedSigns} />
+                <ReviewLine label="Medications & home remedies" value={draft.previousTreatment} />
+                <ReviewLine label="Questions for the vet" value={draft.questionsVet} />
               </div>
 
               <div className="row" style={{ gap: 8 }}>
