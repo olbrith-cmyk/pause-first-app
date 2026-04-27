@@ -167,19 +167,19 @@ export default function PrepareWizard({
         );
 
       case 5:
-        return (
-          <label className="label">
-            Medications & home remedies
-            <textarea
-              className="textarea"
-              value={draft.previousTreatment}
-              onChange={(e) => setDraft({ ...draft, previousTreatment: e.target.value })}
-              placeholder="e.g., what you tried at home"
-              rows={4}
-            />
-          </label>
-        );
-
+  return (
+    <label className="label">
+      Medications & home remedies
+      <textarea
+        className="textarea"
+        value={draft.previousTreatment}
+        onChange={(e) => setDraft({ ...draft, previousTreatment: e.target.value })}
+        placeholder="e.g., what you tried at home and if your pet is getting ANY medication at all?"
+        rows={4}
+      />
+    </label>
+  );
+          
       case 6:
         return (
           <label className="label">
