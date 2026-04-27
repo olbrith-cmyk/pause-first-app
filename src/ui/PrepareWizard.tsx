@@ -1,279 +1,254 @@
-import { useState } from "react";
-import type { Lang } from "../i18n";
-import { useTranslation } from "../i18n";
-import type { Visit } from "../firestore";
-import { addVisit } from "../firestore";
+import React, { useState } from 'react';
+import { ChevronLeft, Mail, FileText, Check } from 'lucide-react';
+import '../styles/PrepareWizard.css';
 
-type Props = {
-  lang: Lang;
-  userId: string;
+interface PrepareWizardProps {
   petId: string;
-  petName: string;
+  visitId: string;
   onClose: () => void;
-  onComplete?: () => void | Promise<void>;
-};
+  onSave: (data: PrepareData) => Promise<void>;
+  initialData?: PrepareData;
+}
 
-export default function PrepareWizard({ lang, userId, petId, petName, onClose, onComplete }: Props) {
-  const t = useTranslation(lang);
-  const [step, setStep] = useState(0);
-  const [saving, setSaving] = useState(false);
-  const [mode, setMode] = useState<"wizard" | "save" | "done">("wizard");
+interface PrepareData {
+  petId: string;
+  visitId: string;
+  reasonForVisit: string;
+  currentSymptoms: string;
+  recentChanges: string;
+  medications: string;
+  allergies: string;
+  questions: string;
+}
 
-  const [draft, setDraft] = useState<Visit>({
-    userId,
-    petId,
-    visitDate: "",
-    mainConcern: "",
-    whenStart: "",
-    howProgressing: "",
-    patterns: "",
-    associatedSigns: "",
-    previousTreatment: "",
-    questionsVet: ""
-  });
+type WizardStep = 'wizard' | 'review' | 'done';
 
-  const stepData = [
-    { title: "Basics", desc: "Tell us about today's visit", ok: !!(draft.visitDate && draft.mainConcern) },
-    { title: "When did it start?", desc: "Help your vet understand the timeline", ok: true },
-    { title: "How is it progressing?", desc: "Better, worse, or the same?", ok: true },
-    { title: "Any patterns or triggers?", desc: "Does it happen at certain times?", ok: true },
-    { title: "What else is different?", desc: "Any other changes you've noticed", ok: true },
-    { title: "Medications & home remedies", desc: "What have you already tried?", ok: true },
-    { title: "Questions for the vet", desc: "What do you want to ask?", ok: true }
-  ];
+export const PrepareWizard: React.FC<PrepareWizardProps> = ({
+  petId,
+  visitId,
+  onClose,
+  onSave,
+  initialData,
+}) => {
+  const [step, setStep] = useState<WizardStep>('wizard');
+  const [isSaving, setIsSaving] = useState(false);
+  const [formData, setFormData] = useState<PrepareData>(
+    initialData || {
+      petId,
+      visitId,
+      reasonForVisit: '',
+      currentSymptoms: '',
+      recentChanges: '',
+      medications: '',
+      allergies: '',
+      questions: '',
+    }
+  );
 
-  const isLast = step === stepData.length - 1;
+  const handleInputChange = (field: keyof PrepareData, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
   const handleNext = () => {
-    if (!stepData[step].ok) return;
-    if (isLast) setMode("save");
-    else setStep((s) => s + 1);
+    setStep('review');
+  };
+
+  const handleBack = () => {
+    if (step === 'review') {
+      setStep('wizard');
+    } else if (step === 'done') {
+      setStep('review');
+    }
   };
 
   const handleSave = async () => {
-    setSaving(true);
+    setIsSaving(true);
     try {
-      await addVisit(draft);
-if (onComplete) await onComplete();
-setMode("done");
-setSaving(false);
-    } catch (e: any) {
-      alert(t.error + ": " + (e?.message ?? String(e)));
-      setSaving(false);
+      await onSave(formData);
+      setStep('done');
+    } catch (error) {
+      console.error('Error saving preparation:', error);
+      alert('Failed to save. Please try again.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const renderStep = () => {
-    switch (step) {
-      case 0:
-        return (
-          <>
-            <div className="muted" style={{ marginBottom: 8 }}>
-              Pet: <strong>{petName}</strong>
-            </div>
-
-            <label className="label">
-              Visit date
-              <input
-                className="input"
-                type="date"
-                value={draft.visitDate}
-                onChange={(e) => setDraft({ ...draft, visitDate: e.target.value })}
-              />
-            </label>
-
-            <label className="label" style={{ marginTop: 12 }}>
-              Main concern
-              <textarea
-                className="textarea"
-                value={draft.mainConcern}
-                onChange={(e) => setDraft({ ...draft, mainConcern: e.target.value })}
-                placeholder="e.g., limping, not eating, vomiting, behavior change"
-                rows={4}
-              />
-            </label>
-          </>
-        );
-
-      case 1:
-        return (
-          <label className="label">
-            When did it start?
-            <textarea
-              className="textarea"
-              value={draft.whenStart}
-              onChange={(e) => setDraft({ ...draft, whenStart: e.target.value })}
-              placeholder="e.g., 3 days ago, this morning"
-              rows={4}
-            />
-          </label>
-        );
-
-      case 2:
-        return (
-          <label className="label">
-            How is it progressing?
-            <textarea
-              className="textarea"
-              value={draft.howProgressing}
-              onChange={(e) => setDraft({ ...draft, howProgressing: e.target.value })}
-              placeholder="e.g., getting worse, staying the same, improving"
-              rows={4}
-            />
-          </label>
-        );
-
-      case 3:
-        return (
-          <label className="label">
-            Any patterns or triggers?
-            <textarea
-              className="textarea"
-              value={draft.patterns}
-              onChange={(e) => setDraft({ ...draft, patterns: e.target.value })}
-              placeholder="e.g., happens after meals, worse in the morning"
-              rows={4}
-            />
-          </label>
-        );
-
-      case 4:
-        return (
-          <label className="label">
-            What else is different?
-            <textarea
-              className="textarea"
-              value={draft.associatedSigns}
-              onChange={(e) => setDraft({ ...draft, associatedSigns: e.target.value })}
-              placeholder="e.g., appetite changes, behavior changes, energy level"
-              rows={4}
-            />
-          </label>
-        );
-
-      case 5:
-        return (
-          <label className="label">
-            Medications & home remedies
-            <textarea
-              className="textarea"
-              value={draft.previousTreatment}
-              onChange={(e) => setDraft({ ...draft, previousTreatment: e.target.value })}
-              placeholder="e.g., what you tried at home"
-              rows={4}
-            />
-          </label>
-        );
-
-      case 6:
-        return (
-          <label className="label">
-            Questions for the vet
-            <textarea
-              className="textarea"
-              value={draft.questionsVet}
-              onChange={(e) => setDraft({ ...draft, questionsVet: e.target.value })}
-              placeholder="e.g., Is surgery needed? How long will recovery take?"
-              rows={4}
-            />
-          </label>
-        );
-
-      default:
-        return null;
-    }
+  const handleDone = () => {
+    onClose();
   };
 
-  // Helper to render review line (only if filled)
-  const ReviewLine = ({ label, value }: { label: string; value: string }) => {
-    if (!value || value.trim() === "") return null;
-    return (
-      <div style={{ marginBottom: 12 }}>
-        <p style={{ margin: "0 0 4px 0", fontWeight: "bold", fontSize: 14 }}>
-          {label}
-        </p>
-        <p style={{ margin: 0, whiteSpace: "pre-wrap", fontSize: 14, lineHeight: 1.5 }}>
-          {value}
-        </p>
-      </div>
-    );
+  const handleEmailPDF = () => {
+    alert('Email feature coming soon!');
+  };
+
+  const handleDownloadPDF = () => {
+    alert('PDF download feature coming soon!');
   };
 
   return (
-    <div className="modal" style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div className="modalOverlay" onClick={onClose} style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.5)" }} />
-      <div className="modalContent" style={{ position: "relative", zIndex: 10000, backgroundColor: "white", borderRadius: "8px", width: "90%", maxWidth: "500px", maxHeight: "90vh", overflow: "auto", boxShadow: "0 4px 6px rgba(0,0,0,0.1)" }}>
-        <div className="modalHeader" style={{ padding: "16px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h3 style={{ margin: 0 }}>Prepare for Visit</h3>
-          <button className="btnClose" onClick={onClose} style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer" }}>
+    <div className="prepare-wizard-overlay">
+      <div className="prepare-wizard-modal">
+        {/* Header */}
+        <div className="wizard-header">
+          <button className="back-btn" onClick={handleBack} disabled={step === 'wizard'}>
+            <ChevronLeft size={20} />
+          </button>
+          <h2>
+            {step === 'wizard' && 'Prepare Your Visit'}
+            {step === 'review' && 'Review Your Prep'}
+            {step === 'done' && 'Your Prep is Ready!'}
+          </h2>
+          <button className="close-btn" onClick={onClose}>
             ✕
           </button>
         </div>
 
-        <div className="modalBody" style={{ padding: "16px", overflowY: "auto", maxHeight: "calc(90vh - 80px)" }}>
-          {mode === "wizard" ? (
-            <>
-              <div style={{ marginBottom: 16 }}>
-                <h4 style={{ margin: "0 0 6px 0" }}>{stepData[step].title}</h4>
-                <p style={{ color: "var(--textMuted)", fontSize: 14, margin: 0 }}>{stepData[step].desc}</p>
+        {/* Content */}
+        <div className="wizard-content">
+          {/* WIZARD STEP */}
+          {step === 'wizard' && (
+            <div className="wizard-form">
+              <div className="form-group">
+                <label>Reason for Visit</label>
+                <textarea
+                  placeholder="What's the main reason for this visit?"
+                  value={formData.reasonForVisit}
+                  onChange={(e) => handleInputChange('reasonForVisit', e.target.value)}
+                />
               </div>
 
-              {renderStep()}
-
-              <div className="row" style={{ marginTop: 20, gap: 8 }}>
-                {step > 0 && (
-                  <button className="btn btnSecondary" onClick={() => setStep((s) => s - 1)}>
-                    ← Back
-                  </button>
-                )}
-                <button className="btn btnPrimary" onClick={handleNext} disabled={!stepData[step].ok}>
-                  {isLast ? "Review" : "Next →"}
-                </button>
-                <button className="btn btnSecondary" onClick={onClose}>
-                  {t.cancel}
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              <h4 style={{ marginBottom: 16 }}>Review & Save</h4>
-
-              {/* Header info */}
-              <div style={{ backgroundColor: "var(--bgAlt)", padding: 12, borderRadius: 8, marginBottom: 16 }}>
-                <p style={{ margin: "0 0 6px 0" }}>
-                  <strong>Pet:</strong> {petName}
-                </p>
-                <p style={{ margin: "0 0 6px 0" }}>
-                  <strong>Visit Date:</strong> {draft.visitDate}
-                </p>
+              <div className="form-group">
+                <label>Current Symptoms</label>
+                <textarea
+                  placeholder="Describe any symptoms you've noticed..."
+                  value={formData.currentSymptoms}
+                  onChange={(e) => handleInputChange('currentSymptoms', e.target.value)}
+                />
               </div>
 
-              {/* Full prep details */}
-              <div style={{ backgroundColor: "var(--bgAlt)", padding: 12, borderRadius: 8, marginBottom: 16 }}>
-                <ReviewLine label="Main Concern" value={draft.mainConcern} />
-                <ReviewLine label="When did it start?" value={draft.whenStart} />
-                <ReviewLine label="How is it progressing?" value={draft.howProgressing} />
-                <ReviewLine label="Any patterns or triggers?" value={draft.patterns} />
-                <ReviewLine label="What else is different?" value={draft.associatedSigns} />
-                <ReviewLine label="Medications & home remedies" value={draft.previousTreatment} />
-                <ReviewLine label="Questions for the vet" value={draft.questionsVet} />
+              <div className="form-group">
+                <label>Recent Changes</label>
+                <textarea
+                  placeholder="Any changes in behavior, appetite, or activity?"
+                  value={formData.recentChanges}
+                  onChange={(e) => handleInputChange('recentChanges', e.target.value)}
+                />
               </div>
 
-              <div className="row" style={{ gap: 8 }}>
-                <button className="btn btnPrimary" onClick={handleSave} disabled={saving}>
-                  {saving ? "Saving..." : "Save Visit"}
+              <div className="form-group">
+                <label>Current Medications</label>
+                <textarea
+                  placeholder="List any medications your pet is taking..."
+                  value={formData.medications}
+                  onChange={(e) => handleInputChange('medications', e.target.value)}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Allergies or Sensitivities</label>
+                <textarea
+                  placeholder="Any known allergies or sensitivities?"
+                  value={formData.allergies}
+                  onChange={(e) => handleInputChange('allergies', e.target.value)}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Questions for Your Vet</label>
+                <textarea
+                  placeholder="What do you want to ask your vet?"
+                  value={formData.questions}
+                  onChange={(e) => handleInputChange('questions', e.target.value)}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* REVIEW STEP */}
+          {step === 'review' && (
+            <div className="review-content">
+              <div className="review-section">
+                <h3>Reason for Visit</h3>
+                <p>{formData.reasonForVisit || '(Not provided)'}</p>
+              </div>
+
+              <div className="review-section">
+                <h3>Current Symptoms</h3>
+                <p>{formData.currentSymptoms || '(Not provided)'}</p>
+              </div>
+
+              <div className="review-section">
+                <h3>Recent Changes</h3>
+                <p>{formData.recentChanges || '(Not provided)'}</p>
+              </div>
+
+              <div className="review-section">
+                <h3>Current Medications</h3>
+                <p>{formData.medications || '(Not provided)'}</p>
+              </div>
+
+              <div className="review-section">
+                <h3>Allergies or Sensitivities</h3>
+                <p>{formData.allergies || '(Not provided)'}</p>
+              </div>
+
+              <div className="review-section">
+                <h3>Questions for Your Vet</h3>
+                <p>{formData.questions || '(Not provided)'}</p>
+              </div>
+            </div>
+          )}
+
+          {/* DONE STEP */}
+          {step === 'done' && (
+            <div className="done-content">
+              <div className="done-icon">
+                <Check size={48} />
+              </div>
+              <h3>Your prep is ready!</h3>
+              <p>You're all set for your vet visit. Walk in prepared and partner in your pet's care.</p>
+
+              <div className="done-options">
+                <button className="option-btn primary" onClick={handleDone}>
+                  Done (Saved in app)
                 </button>
-                <button className="btn btnSecondary" onClick={() => setMode("wizard")}>
-                  Back to Edit
+
+                <button className="option-btn secondary" onClick={handleEmailPDF}>
+                  <Mail size={18} />
+                  Email to Myself
                 </button>
-                <button className="btn btnSecondary" onClick={onClose}>
-                  {t.cancel}
+
+                <button className="option-btn secondary" onClick={handleDownloadPDF}>
+                  <FileText size={18} />
+                  Download as PDF
                 </button>
               </div>
-            </>
+            </div>
+          )}
+        </div>
+
+        {/* Footer / Actions */}
+        <div className="wizard-footer">
+          {step === 'wizard' && (
+            <button className="btn-primary" onClick={handleNext}>
+              Review
+            </button>
+          )}
+
+          {step === 'review' && (
+            <button className="btn-primary" onClick={handleSave} disabled={isSaving}>
+              {isSaving ? 'Saving...' : 'Save Visit'}
+            </button>
+          )}
+
+          {step === 'done' && (
+            <button className="btn-primary" onClick={handleDone}>
+              Close
+            </button>
           )}
         </div>
       </div>
     </div>
   );
-}
+};
