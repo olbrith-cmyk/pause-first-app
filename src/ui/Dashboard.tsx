@@ -24,13 +24,24 @@ export default function Dashboard({
 }) {
   const t = useTranslation(lang);
 
+  // Default to PREPARE (main purpose of the app)
   const [mode, setMode] = useState<DashboardMode>("prepare");
   const [menuOpen, setMenuOpen] = useState(false);
   const [showEmergencyGuide, setShowEmergencyGuide] = useState(false);
+
+  // If later you want a “force open prepare wizard” trigger, we can wire this into VisitsScreen
   const [prepareWizardTrigger, setPrepareWizardTrigger] = useState(0);
 
   const goToTab = (nextMode: DashboardMode) => {
     setMode(nextMode);
+  };
+
+  const handlePrepareClick = () => {
+    // Option A behavior will be implemented inside VisitsScreen:
+    // - if no pets: guide user to add pet, then continue
+    // - if pets exist: choose pet and start preparing
+    setMode("prepare");
+    setPrepareWizardTrigger((n) => n + 1);
   };
 
   return (
@@ -48,51 +59,73 @@ export default function Dashboard({
           flex: 1,
           overflowY: "auto",
           padding: "0",
-          paddingBottom: "100px",
+          paddingBottom: "120px",
           width: "100%"
         }}
       >
-        {mode === "visits" && (
-          <VisitsScreen lang={lang} userId={userId} mode="myVisits" />
-        )}
+        {mode === "visits" && <VisitsScreen lang={lang} userId={userId} mode="myVisits" />}
 
-        {mode === "prepare" && <VisitsScreen lang={lang} userId={userId} mode={mode} />}
+        {mode === "prepare" && (
+          <VisitsScreen
+            lang={lang}
+            userId={userId}
+            mode="prepare"
+            // If VisitsScreen supports it later, we can use this to auto-open the wizard
+            // prepareWizardTrigger={prepareWizardTrigger}
+          />
+        )}
 
         {mode === "pets" && <PetsScreen lang={lang} userId={userId} />}
       </div>
 
-      {/* BOTTOM NAV */}
-<div
-  style={{
-    position: "fixed",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: "#e8f0f7",
-    borderTop: "1px solid #d0e0f0",
-    padding: "12px 16px",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 50
-  }}
->
-  {/* Single Center Button */}
-  <button
-    onClick={() => setMode("pets")}
-    className="btn btnPrimary"
-    style={{
-      width: "100%",
-      maxWidth: "320px",
-      padding: "16px 20px",
-      fontSize: "15px",
-      fontWeight: "bold",
-      minHeight: "50px"
-    }}
-  >
-    {t.myPets}
-  </button>
-</div>
+      {/* BOTTOM NAV (Primary = Prepare Visit, Secondary = My Pets) */}
+      <div
+        style={{
+          position: "fixed",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          backgroundColor: "#e8f0f7",
+          borderTop: "1px solid #d0e0f0",
+          padding: "12px 16px",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          zIndex: 50
+        }}
+      >
+        <div style={{ width: "100%", maxWidth: "360px", display: "flex", flexDirection: "column", gap: 10 }}>
+          {/* Big primary CTA */}
+          <button
+            onClick={handlePrepareClick}
+            className="btn btnPrimary"
+            style={{
+              width: "100%",
+              padding: "16px 20px",
+              fontSize: "15px",
+              fontWeight: "bold",
+              minHeight: "52px"
+            }}
+          >
+            {lang === "da" ? "Forbered besøg" : "Prepare Visit"}
+          </button>
+
+          {/* Smaller secondary */}
+          <button
+            onClick={() => setMode("pets")}
+            className="btn btnSecondary"
+            style={{
+              width: "100%",
+              padding: "12px 20px",
+              fontSize: "14px",
+              fontWeight: 600,
+              minHeight: "46px"
+            }}
+          >
+            {t.myPets}
+          </button>
+        </div>
+      </div>
 
       {/* HAMBURGER MENU */}
       <HamburgerMenu
@@ -158,11 +191,7 @@ export default function Dashboard({
               <li>Severe vomiting or diarrhea</li>
               <li>Sudden paralysis</li>
             </ul>
-            <button
-              onClick={() => setShowEmergencyGuide(false)}
-              className="btn btnPrimary"
-              style={{ marginTop: "16px" }}
-            >
+            <button onClick={() => setShowEmergencyGuide(false)} className="btn btnPrimary" style={{ marginTop: "16px" }}>
               {t.close}
             </button>
           </div>
