@@ -255,11 +255,18 @@ export default function PrepareWizard({
             alignItems: "center"
           }}
         >
-          <h3 style={{ margin: 0 }}>
-            {mode === "wizard" && "Prepare for Visit"}
-            {mode === "save" && "Review & Save"}
-            {mode === "done" && "Your prep is ready!"}
-          </h3>
+          <div style={{ flex: 1 }}>
+            <h3 style={{ margin: 0 }}>
+              {mode === "wizard" && "Prepare for Visit"}
+              {mode === "save" && "Review & Save"}
+              {mode === "done" && "Your prep is ready!"}
+            </h3>
+            {mode === "wizard" && (
+              <p style={{ margin: "6px 0 0 0", fontSize: 12, color: "var(--textMuted)" }}>
+                Step {step + 1} of {stepData.length}
+              </p>
+            )}
+          </div>
           <button
             className="btnClose"
             onClick={onClose}
@@ -271,7 +278,7 @@ export default function PrepareWizard({
 
         <div
           className="modalBody"
-          style={{ padding: "16px", overflowY: "auto", maxHeight: "calc(90vh - 80px)" }}
+          style={{ padding: "16px", overflowY: "auto", maxHeight: "calc(90vh - 120px)" }}
         >
           {/* MODE 1: WIZARD */}
           {mode === "wizard" && (
@@ -284,20 +291,6 @@ export default function PrepareWizard({
               </div>
 
               {renderStep()}
-
-              <div className="row" style={{ marginTop: 20, gap: 8 }}>
-                {step > 0 && (
-                  <button className="btn btnSecondary" onClick={() => setStep((s) => s - 1)}>
-                    ← Back
-                  </button>
-                )}
-                <button className="btn btnPrimary" onClick={handleNext} disabled={!stepData[step].ok}>
-                  {isLast ? "Review" : "Next →"}
-                </button>
-                <button className="btn btnSecondary" onClick={onClose}>
-                  {t.cancel}
-                </button>
-              </div>
             </>
           )}
 
@@ -338,18 +331,6 @@ export default function PrepareWizard({
                 <ReviewLine label="Medications & home remedies" value={draft.previousTreatment} />
                 <ReviewLine label="Questions for the vet" value={draft.questionsVet} />
               </div>
-
-              <div className="row" style={{ gap: 8 }}>
-                <button className="btn btnPrimary" onClick={handleSave} disabled={saving}>
-                  {saving ? "Saving..." : "Save Visit"}
-                </button>
-                <button className="btn btnSecondary" onClick={() => setMode("wizard")}>
-                  Back to Edit
-                </button>
-                <button className="btn btnSecondary" onClick={onClose}>
-                  {t.cancel}
-                </button>
-              </div>
             </>
           )}
 
@@ -368,7 +349,7 @@ export default function PrepareWizard({
                   <strong>Saved!</strong> Your visit prep has been saved in the app.
                 </p>
                 <p style={{ margin: 0, color: "var(--textMuted)", fontSize: 14 }}>
-                  Walk in prepared. Partner in your pet’s care.
+                  Walk in prepared. Partner in your pet's care.
                 </p>
               </div>
 
@@ -386,6 +367,61 @@ export default function PrepareWizard({
                 </button>
               </div>
             </>
+          )}
+        </div>
+
+        {/* FOOTER: Only show action buttons here */}
+        <div
+          style={{
+            padding: "12px 16px",
+            borderTop: "1px solid var(--border)",
+            display: "flex",
+            gap: 8,
+            justifyContent: "space-between",
+            alignItems: "center"
+          }}
+        >
+          {/* Left: Back button (only in wizard, only if not first step) */}
+          {mode === "wizard" && step > 0 && (
+            <button
+              className="btn btnSecondary"
+              onClick={() => setStep((s) => s - 1)}
+              style={{ flex: 0, minWidth: 80 }}
+            >
+              ← Back
+            </button>
+          )}
+
+          {/* Center spacer if no back button */}
+          {(mode !== "wizard" || step === 0) && <div style={{ flex: 0, minWidth: 80 }} />}
+
+          {/* Right: Primary action (big) */}
+          {mode === "wizard" && (
+            <button
+              className="btn btnPrimary"
+              onClick={handleNext}
+              disabled={!stepData[step].ok}
+              style={{ flex: 1 }}
+            >
+              {isLast ? "Review" : "Next →"}
+            </button>
+          )}
+
+          {mode === "save" && (
+            <button
+              className="btn btnPrimary"
+              onClick={handleSave}
+              disabled={saving}
+              style={{ flex: 1 }}
+            >
+              {saving ? "Saving..." : "Save Visit"}
+            </button>
+          )}
+
+          {mode === "done" && (
+            <button className="btn btnPrimary" onClick={onClose} style={{ flex: 1 }}>
+              Close
+            </button>
           )}
         </div>
       </div>
