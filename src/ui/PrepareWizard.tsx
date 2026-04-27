@@ -17,7 +17,7 @@ export default function PrepareWizard({ lang, userId, petId, petName, onClose, o
   const t = useTranslation(lang);
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
-  const [mode, setMode] = useState<"wizard" | "save">("wizard");
+  const [mode, setMode] = useState<"wizard" | "save" | "done">("wizard");
 
   const [draft, setDraft] = useState<Visit>({
     userId,
