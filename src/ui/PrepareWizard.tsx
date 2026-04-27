@@ -54,8 +54,9 @@ export default function PrepareWizard({ lang, userId, petId, petName, onClose, o
     setSaving(true);
     try {
       await addVisit(draft);
-      if (onComplete) await onComplete();
-      onClose();
+if (onComplete) await onComplete();
+setMode("done");
+setSaving(false);
     } catch (e: any) {
       alert(t.error + ": " + (e?.message ?? String(e)));
       setSaving(false);
