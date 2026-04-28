@@ -219,6 +219,10 @@ export default function Dashboard({
           setMode("pets");
           setMenuOpen(false);
         }}
+        onMyVisits={() => {
+          setMode("myVisits");
+          setMenuOpen(false);
+        }}
       />
 
       {/* EMERGENCY GUIDE MODAL */}
