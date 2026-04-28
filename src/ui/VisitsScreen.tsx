@@ -374,7 +374,7 @@ export default function VisitsScreen({
   // -------------------------
   return (
     <div className="pageContent">
-      {/* Choose Pet Modal */}
+            {/* Choose Pet Modal */}
       {showChoosePetModal && !showAddPetForm && (
         <div
           className="modal"
@@ -392,6 +392,7 @@ export default function VisitsScreen({
             onClick={() => setShowChoosePetModal(false)}
             style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.5)" }}
           />
+
           <div
             className="modalContent"
             style={{
@@ -456,26 +457,19 @@ export default function VisitsScreen({
                     setShowChoosePetModal(false);
                     setShowAddPetForm(true);
                   }}
-                                  >
-                    {lang === "da" ? "Tilføj en kæledyrsprofil" : "Add a pet profile"}
-                  </button>
+                >
+                  {lang === "da" ? "Tilføj en kæledyrsprofil" : "Add a pet profile"}
+                </button>
 
-                  <button
-                    className="btn btnSecondary"
-                    onClick={handleContinueWithoutProfile}
-                  >
-                    {lang === "da"
-                      ? "Fortsæt uden kæledyrsprofil"
-                      : "Continue without pet profile"}
-                  </button>
+                <button className="btn btnSecondary" onClick={handleContinueWithoutProfile}>
+                  {lang === "da"
+                    ? "Fortsæt uden kæledyrsprofil"
+                    : "Continue without pet profile"}
+                </button>
 
-                  <button
-                    className="btn btnSecondary"
-                    onClick={() => setShowChoosePetModal(false)}
-                  >
-                    {t.cancel}
-                  </button>
-                </div>
+                <button className="btn btnSecondary" onClick={() => setShowChoosePetModal(false)}>
+                  {t.cancel}
+                </button>
               </div>
             </div>
           </div>
