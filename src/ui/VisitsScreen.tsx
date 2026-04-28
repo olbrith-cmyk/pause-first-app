@@ -48,30 +48,6 @@ const emptyPet = (userId: string): Pet => ({
   notes: ""
 });
 
-const AI_ASSISTANT_URL =
-  "https://chatgpt.com/g/g-695a7a9e17d08191bd88b76d39f9e54f-pause-firsttm";
-
-function AskAiLink({ label }: { label: string }) {
-  return (
-    <a
-      href={AI_ASSISTANT_URL}
-      target="_blank"
-      rel="noopener noreferrer"
-      style={{
-        fontSize: 12,
-        marginLeft: 10,
-        color: "#0066cc",
-        textDecoration: "underline",
-        whiteSpace: "nowrap"
-      }}
-      aria-label={label}
-      title={label}
-    >
-      {label}
-    </a>
-  );
-}
-
 export default function VisitsScreen({
   lang,
   userId,
@@ -170,26 +146,51 @@ export default function VisitsScreen({
     setShowWizard(true);
   };
 
-  const handleContinueWithoutProfile = () => {
-    // Create a temporary unnamed pet object
-    const unnamedPet: Pet = {
-      userId,
-      name: "(Unnamed pet)",
-      species: "",
-      age: "",
-      sex: "",
-      weight: "",
-      microchip: "",
-      allergies: "",
-      medications: "",
-      diet: "",
-      clinic: "",
-      emergencyContact: "",
-      notes: ""
-    };
-    setSelectedPetForWizard(unnamedPet);
-    setShowChoosePetModal(false);
-    setShowWizard(true);
+  /**
+   * IMPORTANT FIX:
+   * Previously this used a temporary petId ("temp") which means visits can't be
+   * reliably saved/accessed later.
+   *
+   * New behavior:
+   * - Create a minimal pet in Firestore (name "(Unnamed pet)")
+   * - Then open the wizard using the real pet.id
+   */
+  const handleContinueWithoutProfile = async () => {
+    try {
+      const minimalPet: Pet = {
+        userId,
+        name: "(Unnamed pet)",
+        species: "",
+        age: "",
+        sex: "",
+        weight: "",
+        microchip: "",
+        allergies: "",
+        medications: "",
+        diet: "",
+        clinic: "",
+        emergencyContact: "",
+        notes: ""
+      };
+
+      await addPet(minimalPet);
+      await load();
+
+      const updated = await getUserPets(userId);
+      const createdPet =
+        [...updated].reverse().find((p) => p.name === "(Unnamed pet)") ?? null;
+
+      if (!createdPet) {
+        alert("Could not create pet. Please try again.");
+        return;
+      }
+
+      setSelectedPetForWizard(createdPet);
+      setShowChoosePetModal(false);
+      setShowWizard(true);
+    } catch (e: any) {
+      alert(t.error + ": " + (e?.message ?? String(e)));
+    }
   };
 
   const handleSaveNewPet = async () => {
@@ -201,11 +202,11 @@ export default function VisitsScreen({
       }
       await addPet(editingNewPet);
       await load();
-      
+
       // Get the newly created pet
       const updated = await getUserPets(userId);
       const newPet = updated.find((p) => p.name === editingNewPet.name);
-      
+
       if (newPet) {
         setSelectedPetForWizard(newPet);
         setShowAddPetForm(false);
@@ -465,13 +466,10 @@ export default function VisitsScreen({
                     setShowAddPetForm(true);
                   }}
                 >
-                  + Add Your First Pet
+                  {pets.length === 0 ? "+ Add Your First Pet" : "+ Add Another Pet"}
                 </button>
 
-                <button
-                  className="btn btnSecondary"
-                  onClick={handleContinueWithoutProfile}
-                >
+                <button className="btn btnSecondary" onClick={handleContinueWithoutProfile}>
                   Continue without pet profile
                 </button>
               </div>
@@ -522,7 +520,9 @@ export default function VisitsScreen({
                 alignItems: "center"
               }}
             >
-              <h3 style={{ margin: 0 }}>Add Your First Pet</h3>
+              <h3 style={{ margin: 0 }}>
+                {pets.length === 0 ? "Add Your First Pet" : "Add Another Pet"}
+              </h3>
               <button
                 className="btnClose"
                 onClick={() => {
@@ -541,126 +541,4 @@ export default function VisitsScreen({
               style={{ padding: "16px", overflowY: "auto", maxHeight: "calc(90vh - 80px)" }}
             >
               <p style={{ fontSize: 14, color: "var(--textMuted)", marginBottom: 16 }}>
-                Tell us about your pet. You can always edit this later.
-              </p>
-
-              <label className="label">
-                {t.petName}
-                <input
-                  className="input"
-                  value={editingNewPet.name}
-                  onChange={(e) => setEditingNewPet({ ...editingNewPet, name: e.target.value })}
-                  placeholder="Pet's name"
-                />
-              </label>
-
-              <label className="label">
-                {t.species}
-                <input
-                  className="input"
-                  value={editingNewPet.species}
-                  onChange={(e) => setEditingNewPet({ ...editingNewPet, species: e.target.value })}
-                  placeholder="e.g., Dog, Cat"
-                />
-              </label>
-
-              <label className="label">
-                {t.age}
-                <input
-                  className="input"
-                  value={editingNewPet.age}
-                  onChange={(e) => setEditingNewPet({ ...editingNewPet, age: e.target.value })}
-                  placeholder="e.g., 3 years"
-                />
-              </label>
-
-              <label className="label">
-                {t.sex}
-                <input
-                  className="input"
-                  value={editingNewPet.sex}
-                  onChange={(e) => setEditingNewPet({ ...editingNewPet, sex: e.target.value })}
-                  placeholder="e.g., Male, Female"
-                />
-              </label>
-
-              <label className="label">
-                {t.weight}
-                <input
-                  className="input"
-                  value={editingNewPet.weight}
-                  onChange={(e) => setEditingNewPet({ ...editingNewPet, weight: e.target.value })}
-                  placeholder="e.g., 25 kg"
-                />
-              </label>
-
-              {petFormError && (
-                <div className="alert alertError" style={{ marginTop: 12 }}>
-                  {t.error}: {petFormError}
-                </div>
-              )}
-
-              <div className="row" style={{ marginTop: 16, gap: 8 }}>
-                <button className="btn btnPrimary" onClick={handleSaveNewPet}>
-                  {t.savePet}
-                </button>
-                <button
-                  className="btn btnSecondary"
-                  onClick={() => {
-                    setShowAddPetForm(false);
-                    setEditingNewPet(emptyPet(userId));
-                    setPetFormError(null);
-                  }}
-                >
-                  {t.cancel}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Wizard */}
-      {showWizard && selectedPetForWizard && (
-        <PrepareWizard
-          lang={lang}
-          userId={userId}
-          petId={selectedPetForWizard.id || "temp"}
-          petName={selectedPetForWizard.name || "Your pet"}
-          onClose={async () => {
-            setShowWizard(false);
-            setSelectedPetForWizard(null);
-            setShowChoosePetModal(false);
-            await load();
-          }}
-        />
-      )}
-
-      {/* Default home screen (if modals not showing) */}
-      {!showChoosePetModal && !showAddPetForm && !showWizard && (
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            minHeight: "60vh",
-            gap: 24,
-            textAlign: "center",
-            padding: "40px 20px"
-          }}
-        >
-          <div style={{ fontSize: 64 }}>🐾</div>
-          <div>
-            <h2 style={{ margin: "0 0 12px 0", color: "var(--blue)", fontSize: 28 }}>
-              Walk in Prepared
-            </h2>
-            <p style={{ color: "var(--textMuted)", margin: 0, fontSize: 16, lineHeight: 1.6, maxWidth: 450 }}>
-              Choose a pet (or add one) and start gathering your observations. Partner with your vet by preparing for the visit.
-            </p>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+                Tell us about your pet. You can always edit
