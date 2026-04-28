@@ -1,16 +1,13 @@
-import { useEffect, useMemo, useState } from "react";
+    import { useEffect, useMemo, useState } from "react";
 import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
 
 import type { Pet, Visit, VisitNote } from "../firestore";
 import {
-  addVisit,
   addVisitNote,
-  deleteVisit,
   getUserPets,
   getUserVisits,
   getVisitNote,
-  updateVisit,
   updateVisitNote,
   addPet
 } from "../firestore";
@@ -66,7 +63,7 @@ export default function VisitsScreen({
   const [editingNote, setEditingNote] = useState<VisitNote | null>(null);
   const [noteVisitId, setNoteVisitId] = useState<string | null>(null);
 
-  // For PREPARE mode: choose pet or add new
+  // Prepare flow
   const [showChoosePetModal, setShowChoosePetModal] = useState(false);
   const [showAddPetForm, setShowAddPetForm] = useState(false);
   const [editingNewPet, setEditingNewPet] = useState<Pet>(emptyPet(userId));
@@ -84,7 +81,6 @@ export default function VisitsScreen({
     load();
   }, [userId]);
 
-  // Show "Choose Pet" modal when in PREPARE mode
   useEffect(() => {
     if (mode === "prepare") {
       setShowChoosePetModal(true);
@@ -98,6 +94,17 @@ export default function VisitsScreen({
       return bd.localeCompare(ad);
     });
   }, [visits]);
+
+  const openVisitCard = async (visitId: string) => {
+    setOpenVisitId(visitId);
+    try {
+      const note = await getVisitNote(userId, visitId);
+      setOpenNote(note ?? null);
+    } catch (e) {
+      console.error("Error loading note:", e);
+      setOpenNote(null);
+    }
+  };
 
   const loadNoteForVisit = async (visitId: string) => {
     setNoteVisitId(visitId);
@@ -128,33 +135,13 @@ export default function VisitsScreen({
     }
   };
 
-  const openVisitCard = async (visitId: string) => {
-    setOpenVisitId(visitId);
-    try {
-      const note = await getVisitNote(userId, visitId);
-      setOpenNote(note ?? null);
-    } catch (e) {
-      console.error("Error loading note:", e);
-      setOpenNote(null);
-    }
-  };
-
-  // PREPARE MODE: Handle pet selection
   const handleSelectPetForWizard = (pet: Pet) => {
     setSelectedPetForWizard(pet);
     setShowChoosePetModal(false);
     setShowWizard(true);
   };
 
-  /**
-   * IMPORTANT FIX:
-   * Previously this used a temporary petId ("temp") which means visits can't be
-   * reliably saved/accessed later.
-   *
-   * New behavior:
-   * - Create a minimal pet in Firestore (name "(Unnamed pet)")
-   * - Then open the wizard using the real pet.id
-   */
+  // Critical fix: create a real minimal pet so visits are saved & accessible later
   const handleContinueWithoutProfile = async () => {
     try {
       const minimalPet: Pet = {
@@ -180,7 +167,7 @@ export default function VisitsScreen({
       const createdPet =
         [...updated].reverse().find((p) => p.name === "(Unnamed pet)") ?? null;
 
-      if (!createdPet) {
+      if (!createdPet?.id) {
         alert("Could not create pet. Please try again.");
         return;
       }
@@ -200,14 +187,14 @@ export default function VisitsScreen({
         setPetFormError("Pet name is required");
         return;
       }
+
       await addPet(editingNewPet);
       await load();
 
-      // Get the newly created pet
       const updated = await getUserPets(userId);
-      const newPet = updated.find((p) => p.name === editingNewPet.name);
+      const newPet = updated.find((p) => p.name === editingNewPet.name) ?? null;
 
-      if (newPet) {
+      if (newPet?.id) {
         setSelectedPetForWizard(newPet);
         setShowAddPetForm(false);
         setEditingNewPet(emptyPet(userId));
@@ -218,7 +205,9 @@ export default function VisitsScreen({
     }
   };
 
+  // -------------------------
   // MY VISITS
+  // -------------------------
   if (mode === "myVisits") {
     const openVisit = openVisitId ? visits.find((v) => v.id === openVisitId) ?? null : null;
     const openPet = openVisit ? pets.find((p) => p.id === openVisit.petId) ?? null : null;
@@ -380,7 +369,9 @@ export default function VisitsScreen({
     );
   }
 
+  // -------------------------
   // PREPARE MODE
+  // -------------------------
   return (
     <div className="pageContent">
       {/* Choose Pet Modal */}
@@ -465,80 +456,4 @@ export default function VisitsScreen({
                     setShowChoosePetModal(false);
                     setShowAddPetForm(true);
                   }}
-                >
-                  {pets.length === 0 ? "+ Add Your First Pet" : "+ Add Another Pet"}
-                </button>
-
-                <button className="btn btnSecondary" onClick={handleContinueWithoutProfile}>
-                  Continue without pet profile
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Add Pet Form Modal */}
-      {showAddPetForm && (
-        <div
-          className="modal"
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 9999,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center"
-          }}
-        >
-          <div
-            className="modalOverlay"
-            onClick={() => setShowAddPetForm(false)}
-            style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.5)" }}
-          />
-          <div
-            className="modalContent"
-            style={{
-              position: "relative",
-              zIndex: 10000,
-              backgroundColor: "white",
-              borderRadius: "8px",
-              width: "90%",
-              maxWidth: "500px",
-              maxHeight: "90vh",
-              overflow: "auto",
-              boxShadow: "0 4px 6px rgba(0,0,0,0.1)"
-            }}
-          >
-            <div
-              className="modalHeader"
-              style={{
-                padding: "16px",
-                borderBottom: "1px solid var(--border)",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center"
-              }}
-            >
-              <h3 style={{ margin: 0 }}>
-                {pets.length === 0 ? "Add Your First Pet" : "Add Another Pet"}
-              </h3>
-              <button
-                className="btnClose"
-                onClick={() => {
-                  setShowAddPetForm(false);
-                  setEditingNewPet(emptyPet(userId));
-                  setPetFormError(null);
-                }}
-                style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer" }}
-              >
-                ✕
-              </button>
-            </div>
-
-            <div
-              className="modalBody"
-              style={{ padding: "16px", overflowY: "auto", maxHeight: "calc(90vh - 80px)" }}
-            >
-              <p style={{ fontSize: 14, color: "var(--textMuted)", marginBottom: 16 }}>
-                Tell us about your pet. You can always edit
+                >        
