@@ -29,10 +29,6 @@ export default function Dashboard({
   const [menuOpen, setMenuOpen] = useState(false);
   const [showEmergencyGuide, setShowEmergencyGuide] = useState(false);
 
-  const goToTab = (nextMode: DashboardMode) => {
-    setMode(nextMode);
-  };
-
   const handlePrepareClick = () => {
     setMode("prepare");
   };
@@ -52,7 +48,7 @@ export default function Dashboard({
           flex: 1,
           overflowY: "auto",
           padding: "0",
-          paddingBottom: "120px",
+          paddingBottom: mode === "home" ? "40px" : "96px",
           width: "100%"
         }}
       >
@@ -66,7 +62,7 @@ export default function Dashboard({
               </h2>
               <p
                 style={{
-                  margin: "0 0 32px 0",
+                  margin: "0 0 24px 0",
                   color: "var(--textMuted)",
                   fontSize: "16px",
                   lineHeight: "1.6"
@@ -75,16 +71,16 @@ export default function Dashboard({
                 Choose a pet (or add one) and start gathering your observations. Partner with your vet by preparing for the visit.
               </p>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 <button
                   onClick={handlePrepareClick}
                   className="btn btnPrimary"
                   style={{
                     width: "100%",
-                    padding: "16px 20px",
-                    fontSize: "15px",
-                    fontWeight: "bold",
-                    minHeight: "52px"
+                    padding: "12px 16px",
+                    fontSize: "14px",
+                    fontWeight: 800,
+                    minHeight: "44px"
                   }}
                 >
                   {lang === "da" ? "Forbered besøg" : "Prepare Visit"}
@@ -95,10 +91,10 @@ export default function Dashboard({
                   className="btn btnSecondary"
                   style={{
                     width: "100%",
-                    padding: "12px 20px",
-                    fontSize: "14px",
-                    fontWeight: 600,
-                    minHeight: "46px"
+                    padding: "10px 12px",
+                    fontSize: "13px",
+                    fontWeight: 700,
+                    minHeight: "40px"
                   }}
                 >
                   {t.myPets}
@@ -109,10 +105,10 @@ export default function Dashboard({
                   className="btn btnSecondary"
                   style={{
                     width: "100%",
-                    padding: "12px 20px",
-                    fontSize: "14px",
-                    fontWeight: 600,
-                    minHeight: "46px"
+                    padding: "10px 12px",
+                    fontSize: "13px",
+                    fontWeight: 700,
+                    minHeight: "40px"
                   }}
                 >
                   {lang === "da" ? "Mine besøg" : "My Visits"}
@@ -124,9 +120,7 @@ export default function Dashboard({
 
         {mode === "myVisits" && <VisitsScreen lang={lang} userId={userId} mode="myVisits" />}
 
-        {mode === "prepare" && (
-          <VisitsScreen lang={lang} userId={userId} mode="prepare" />
-        )}
+        {mode === "prepare" && <VisitsScreen lang={lang} userId={userId} mode="prepare" />}
 
         {mode === "pets" && <PetsScreen lang={lang} userId={userId} />}
       </div>
@@ -141,73 +135,72 @@ export default function Dashboard({
             right: 0,
             backgroundColor: "#e8f0f7",
             borderTop: "1px solid #d0e0f0",
-            padding: "12px 16px",
+            padding: "10px 12px",
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
             zIndex: 50
           }}
         >
-          <div style={{ width: "100%", maxWidth: "360px", display: "flex", flexDirection: "column", gap: 10 }}>
-            {/* Big primary CTA */}
+          <div style={{ width: "100%", maxWidth: "360px", display: "flex", flexDirection: "column", gap: 8 }}>
             <button
               onClick={handlePrepareClick}
               className="btn btnPrimary"
               style={{
                 width: "100%",
-                padding: "16px 20px",
-                fontSize: "15px",
-                fontWeight: "bold",
-                minHeight: "52px"
+                padding: "12px 16px",
+                fontSize: "14px",
+                fontWeight: 800,
+                minHeight: "44px"
               }}
             >
               {lang === "da" ? "Forbered besøg" : "Prepare Visit"}
             </button>
 
-            {/* Smaller secondary */}
-            <button
-              onClick={() => setMode("pets")}
-              className="btn btnSecondary"
-              style={{
-                width: "100%",
-                padding: "12px 20px",
-                fontSize: "14px",
-                fontWeight: 600,
-                minHeight: "46px"
-              }}
-            >
-              {t.myPets}
-            </button>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              <button
+                onClick={() => setMode("pets")}
+                className="btn btnSecondary"
+                style={{
+                  width: "100%",
+                  padding: "10px 12px",
+                  fontSize: "13px",
+                  fontWeight: 700,
+                  minHeight: "40px"
+                }}
+              >
+                {t.myPets}
+              </button>
 
-            {/* My Visits button */}
-            <button
-              onClick={() => setMode("myVisits")}
-              className="btn btnSecondary"
-              style={{
-                width: "100%",
-                padding: "12px 20px",
-                fontSize: "14px",
-                fontWeight: 600,
-                minHeight: "46px"
-              }}
-            >
-              {lang === "da" ? "Mine besøg" : "My Visits"}
-            </button>
+              <button
+                onClick={() => setMode("myVisits")}
+                className="btn btnSecondary"
+                style={{
+                  width: "100%",
+                  padding: "10px 12px",
+                  fontSize: "13px",
+                  fontWeight: 700,
+                  minHeight: "40px"
+                }}
+              >
+                {lang === "da" ? "Mine besøg" : "My Visits"}
+              </button>
 
-            {/* Home button */}
-            <button
-              onClick={() => setMode("home")}
-              className="btn btnSecondary"
-              style={{
-                width: "100%",
-                padding: "12px 20px",
-                fontSize: "14px",
-                fontWeight: 600,
-                minHeight: "46px"
-              }}
-            >
-              {lang === "da" ? "Hjem" : "Home"}
-            </button>
+              <button
+                onClick={() => setMode("home")}
+                className="btn btnSecondary"
+                style={{
+                  width: "100%",
+                  padding: "10px 12px",
+                  fontSize: "13px",
+                  fontWeight: 700,
+                  minHeight: "40px",
+                  gridColumn: "1 / span 2"
+                }}
+              >
+                {lang === "da" ? "Hjem" : "Home"}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -262,9 +255,7 @@ export default function Dashboard({
             <p>
               <strong>This is not a substitute for professional veterinary care.</strong>
             </p>
-            <p>
-              If your pet is experiencing a life-threatening emergency, contact your veterinarian or emergency vet clinic immediately.
-            </p>
+            <p>If your pet is experiencing a life-threatening emergency, contact your veterinarian or emergency vet clinic immediately.</p>
             <h3>Signs of Emergency:</h3>
             <ul>
               <li>Difficulty breathing or choking</li>
