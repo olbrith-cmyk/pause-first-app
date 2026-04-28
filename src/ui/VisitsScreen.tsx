@@ -1,4 +1,4 @@
-    import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
 
@@ -456,4 +456,4 @@ export default function VisitsScreen({
                     setShowChoosePetModal(false);
                     setShowAddPetForm(true);
                   }}
-                >        
+                >
