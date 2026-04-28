@@ -175,8 +175,7 @@ export default function PetsScreen({
         {/* List of pets (when nothing selected and not editing) */}
         {!selected && mode !== "edit" && (
           <div className="stack">
-            {pets.length === 0 ? (
-              <div className="muted">No pets yet. Click “+ {t.addPet}” to get started.</div>
+           {pets.length === 0 ? "+ Add Your First Pet" : "+ Add Another Pet"} 
             ) : (
               pets.map((pet) => (
                 <button
