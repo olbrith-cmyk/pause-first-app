@@ -456,4 +456,229 @@ export default function VisitsScreen({
                     setShowChoosePetModal(false);
                     setShowAddPetForm(true);
                   }}
+                                  >
+                    {lang === "da" ? "Tilføj en kæledyrsprofil" : "Add a pet profile"}
+                  </button>
+
+                  <button
+                    className="btn btnSecondary"
+                    onClick={handleContinueWithoutProfile}
+                  >
+                    {lang === "da"
+                      ? "Fortsæt uden kæledyrsprofil"
+                      : "Continue without pet profile"}
+                  </button>
+
+                  <button
+                    className="btn btnSecondary"
+                    onClick={() => setShowChoosePetModal(false)}
+                  >
+                    {t.cancel}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Pet Modal */}
+      {showChoosePetModal && showAddPetForm && (
+        <div
+          className="modal"
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center"
+          }}
+        >
+          <div
+            className="modalOverlay"
+            onClick={() => {
+              setShowAddPetForm(false);
+              setShowChoosePetModal(true);
+            }}
+            style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.5)" }}
+          />
+
+          <div
+            className="modalContent"
+            style={{
+              position: "relative",
+              zIndex: 10000,
+              backgroundColor: "white",
+              borderRadius: "8px",
+              width: "90%",
+              maxWidth: "500px",
+              maxHeight: "90vh",
+              overflow: "auto",
+              boxShadow: "0 4px 6px rgba(0,0,0,0.1)"
+            }}
+          >
+            <div
+              className="modalHeader"
+              style={{
+                padding: "16px",
+                borderBottom: "1px solid var(--border)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center"
+              }}
+            >
+              <h3 style={{ margin: 0 }}>
+                {lang === "da" ? "Tilføj kæledyr" : "Add Pet"}
+              </h3>
+              <button
+                className="btnClose"
+                onClick={() => {
+                  setShowAddPetForm(false);
+                  setShowChoosePetModal(false);
+                }}
+                style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer" }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div
+              className="modalBody"
+              style={{ padding: "16px", overflowY: "auto", maxHeight: "calc(90vh - 80px)" }}
+            >
+              {petFormError && (
+                <div className="error" style={{ marginBottom: 12 }}>
+                  {petFormError}
+                </div>
+              )}
+
+              <div className="stack">
+                <label className="label">
+                  {lang === "da" ? "Navn" : "Name"}
+                  <input
+                    className="input"
+                    value={editingNewPet.name}
+                    onChange={(e) =>
+                      setEditingNewPet({ ...editingNewPet, name: e.target.value })
+                    }
+                    placeholder={lang === "da" ? "F.eks. Bella" : "e.g. Bella"}
+                  />
+                </label>
+
+                <label className="label">
+                  {lang === "da" ? "Dyreart" : "Species"}
+                  <input
+                    className="input"
+                    value={editingNewPet.species}
+                    onChange={(e) =>
+                      setEditingNewPet({ ...editingNewPet, species: e.target.value })
+                    }
+                    placeholder={lang === "da" ? "Hund, kat..." : "Dog, cat..."}
+                  />
+                </label>
+
+                <label className="label">
+                  {lang === "da" ? "Alder" : "Age"}
+                  <input
+                    className="input"
+                    value={editingNewPet.age}
+                    onChange={(e) =>
+                      setEditingNewPet({ ...editingNewPet, age: e.target.value })
+                    }
+                    placeholder={lang === "da" ? "F.eks. 5 år" : "e.g. 5 years"}
+                  />
+                </label>
+
+                <label className="label">
+                  {lang === "da" ? "Køn" : "Sex"}
+                  <input
+                    className="input"
+                    value={editingNewPet.sex}
+                    onChange={(e) =>
+                      setEditingNewPet({ ...editingNewPet, sex: e.target.value })
+                    }
+                    placeholder={lang === "da" ? "Han/hun..." : "Male/female..."}
+                  />
+                </label>
+
+                <label className="label">
+                  {lang === "da" ? "Vægt" : "Weight"}
+                  <input
+                    className="input"
+                    value={editingNewPet.weight}
+                    onChange={(e) =>
+                      setEditingNewPet({ ...editingNewPet, weight: e.target.value })
+                    }
+                    placeholder={lang === "da" ? "F.eks. 12 kg" : "e.g. 12 kg"}
+                  />
+                </label>
+              </div>
+
+              <div className="row" style={{ marginTop: 16, gap: 8 }}>
+                <button className="btn btnPrimary" onClick={handleSaveNewPet}>
+                  {lang === "da" ? "Gem kæledyr" : "Save Pet"}
+                </button>
+
+                <button
+                  className="btn btnSecondary"
+                  onClick={() => {
+                    setShowAddPetForm(false);
+                    setEditingNewPet(emptyPet(userId));
+                    setPetFormError(null);
+                    // go back to choose pet list
+                    setShowChoosePetModal(true);
+                  }}
                 >
+                  {t.cancel}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Wizard */}
+      {showWizard && selectedPetForWizard?.id && (
+        <PrepareWizard
+          lang={lang}
+          userId={userId}
+          pet={selectedPetForWizard}
+          onClose={async () => {
+            setShowWizard(false);
+            setSelectedPetForWizard(null);
+            setShowChoosePetModal(false);
+            await load();
+          }}
+        />
+      )}
+
+      {/* Fallback (if wizard not open) */}
+      {!showWizard && (
+        <div className="panel">
+          <div className="muted">
+            {lang === "da"
+              ? "Vælg et kæledyr for at starte forberedelsen."
+              : "Choose a pet to start preparing."}
+          </div>
+
+          <div className="row" style={{ marginTop: 12, gap: 8 }}>
+            <button
+              className="btn btnPrimary"
+              onClick={() => setShowChoosePetModal(true)}
+            >
+              {lang === "da" ? "Vælg kæledyr" : "Choose Pet"}
+            </button>
+
+            <button
+              className="btn btnSecondary"
+              onClick={() => setShowChoosePetModal(false)}
+            >
+              {t.cancel}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
