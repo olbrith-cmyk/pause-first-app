@@ -5,7 +5,7 @@ import PetsScreen from "./PetsScreen";
 import VisitsScreen from "./VisitsScreen";
 import HamburgerMenu from "./HamburgerMenu";
 
-type DashboardMode = "visits" | "prepare" | "pets";
+type DashboardMode = "home" | "myVisits" | "prepare" | "pets";
 
 export default function Dashboard({
   lang,
@@ -24,24 +24,17 @@ export default function Dashboard({
 }) {
   const t = useTranslation(lang);
 
-  // Default to PREPARE (main purpose of the app)
-  const [mode, setMode] = useState<DashboardMode>("prepare");
+  // Default to HOME (welcome page first)
+  const [mode, setMode] = useState<DashboardMode>("home");
   const [menuOpen, setMenuOpen] = useState(false);
   const [showEmergencyGuide, setShowEmergencyGuide] = useState(false);
-
-  // If later you want a “force open prepare wizard” trigger, we can wire this into VisitsScreen
-  const [prepareWizardTrigger, setPrepareWizardTrigger] = useState(0);
 
   const goToTab = (nextMode: DashboardMode) => {
     setMode(nextMode);
   };
 
   const handlePrepareClick = () => {
-    // Option A behavior will be implemented inside VisitsScreen:
-    // - if no pets: guide user to add pet, then continue
-    // - if pets exist: choose pet and start preparing
     setMode("prepare");
-    setPrepareWizardTrigger((n) => n + 1);
   };
 
   return (
@@ -63,69 +56,161 @@ export default function Dashboard({
           width: "100%"
         }}
       >
-        {mode === "visits" && <VisitsScreen lang={lang} userId={userId} mode="myVisits" />}
+        {/* HOME PAGE */}
+        {mode === "home" && (
+          <div className="pageContent">
+            <div className="stack" style={{ textAlign: "center", marginTop: "40px" }}>
+              <div style={{ fontSize: "64px", marginBottom: "20px" }}>🐾</div>
+              <h2 style={{ margin: "0 0 12px 0", fontSize: "28px", fontWeight: "bold" }}>
+                Walk in Prepared
+              </h2>
+              <p
+                style={{
+                  margin: "0 0 32px 0",
+                  color: "var(--textMuted)",
+                  fontSize: "16px",
+                  lineHeight: "1.6"
+                }}
+              >
+                Choose a pet (or add one) and start gathering your observations. Partner with your vet by preparing for the visit.
+              </p>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                <button
+                  onClick={handlePrepareClick}
+                  className="btn btnPrimary"
+                  style={{
+                    width: "100%",
+                    padding: "16px 20px",
+                    fontSize: "15px",
+                    fontWeight: "bold",
+                    minHeight: "52px"
+                  }}
+                >
+                  {lang === "da" ? "Forbered besøg" : "Prepare Visit"}
+                </button>
+
+                <button
+                  onClick={() => setMode("pets")}
+                  className="btn btnSecondary"
+                  style={{
+                    width: "100%",
+                    padding: "12px 20px",
+                    fontSize: "14px",
+                    fontWeight: 600,
+                    minHeight: "46px"
+                  }}
+                >
+                  {t.myPets}
+                </button>
+
+                <button
+                  onClick={() => setMode("myVisits")}
+                  className="btn btnSecondary"
+                  style={{
+                    width: "100%",
+                    padding: "12px 20px",
+                    fontSize: "14px",
+                    fontWeight: 600,
+                    minHeight: "46px"
+                  }}
+                >
+                  {lang === "da" ? "Mine besøg" : "My Visits"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {mode === "myVisits" && <VisitsScreen lang={lang} userId={userId} mode="myVisits" />}
 
         {mode === "prepare" && (
-          <VisitsScreen
-            lang={lang}
-            userId={userId}
-            mode="prepare"
-            // If VisitsScreen supports it later, we can use this to auto-open the wizard
-            // prepareWizardTrigger={prepareWizardTrigger}
-          />
+          <VisitsScreen lang={lang} userId={userId} mode="prepare" />
         )}
 
         {mode === "pets" && <PetsScreen lang={lang} userId={userId} />}
       </div>
 
-      {/* BOTTOM NAV (Primary = Prepare Visit, Secondary = My Pets) */}
-      <div
-        style={{
-          position: "fixed",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          backgroundColor: "#e8f0f7",
-          borderTop: "1px solid #d0e0f0",
-          padding: "12px 16px",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          zIndex: 50
-        }}
-      >
-        <div style={{ width: "100%", maxWidth: "360px", display: "flex", flexDirection: "column", gap: 10 }}>
-          {/* Big primary CTA */}
-          <button
-            onClick={handlePrepareClick}
-            className="btn btnPrimary"
-            style={{
-              width: "100%",
-              padding: "16px 20px",
-              fontSize: "15px",
-              fontWeight: "bold",
-              minHeight: "52px"
-            }}
-          >
-            {lang === "da" ? "Forbered besøg" : "Prepare Visit"}
-          </button>
+      {/* BOTTOM NAV (only show if NOT on home) */}
+      {mode !== "home" && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            backgroundColor: "#e8f0f7",
+            borderTop: "1px solid #d0e0f0",
+            padding: "12px 16px",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 50
+          }}
+        >
+          <div style={{ width: "100%", maxWidth: "360px", display: "flex", flexDirection: "column", gap: 10 }}>
+            {/* Big primary CTA */}
+            <button
+              onClick={handlePrepareClick}
+              className="btn btnPrimary"
+              style={{
+                width: "100%",
+                padding: "16px 20px",
+                fontSize: "15px",
+                fontWeight: "bold",
+                minHeight: "52px"
+              }}
+            >
+              {lang === "da" ? "Forbered besøg" : "Prepare Visit"}
+            </button>
 
-          {/* Smaller secondary */}
-          <button
-            onClick={() => setMode("pets")}
-            className="btn btnSecondary"
-            style={{
-              width: "100%",
-              padding: "12px 20px",
-              fontSize: "14px",
-              fontWeight: 600,
-              minHeight: "46px"
-            }}
-          >
-            {t.myPets}
-          </button>
+            {/* Smaller secondary */}
+            <button
+              onClick={() => setMode("pets")}
+              className="btn btnSecondary"
+              style={{
+                width: "100%",
+                padding: "12px 20px",
+                fontSize: "14px",
+                fontWeight: 600,
+                minHeight: "46px"
+              }}
+            >
+              {t.myPets}
+            </button>
+
+            {/* My Visits button */}
+            <button
+              onClick={() => setMode("myVisits")}
+              className="btn btnSecondary"
+              style={{
+                width: "100%",
+                padding: "12px 20px",
+                fontSize: "14px",
+                fontWeight: 600,
+                minHeight: "46px"
+              }}
+            >
+              {lang === "da" ? "Mine besøg" : "My Visits"}
+            </button>
+
+            {/* Home button */}
+            <button
+              onClick={() => setMode("home")}
+              className="btn btnSecondary"
+              style={{
+                width: "100%",
+                padding: "12px 20px",
+                fontSize: "14px",
+                fontWeight: 600,
+                minHeight: "46px"
+              }}
+            >
+              {lang === "da" ? "Hjem" : "Home"}
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* HAMBURGER MENU */}
       <HamburgerMenu
