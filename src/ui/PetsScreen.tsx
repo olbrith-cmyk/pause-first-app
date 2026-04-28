@@ -168,14 +168,17 @@ export default function PetsScreen({
         <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
           <h3 style={{ margin: 0 }}>{t.myPets}</h3>
           <button className="btn btnPrimary" onClick={startNew}>
-            + {t.addPet}
+            {pets.length === 0 ? "+ Add Your First Pet" : "+ Add Another Pet"}
           </button>
         </div>
 
         {/* List of pets (when nothing selected and not editing) */}
         {!selected && mode !== "edit" && (
           <div className="stack">
-           {pets.length === 0 ? "+ Add Your First Pet" : "+ Add Another Pet"} 
+            {pets.length === 0 ? (
+              <div className="muted">
+                No pets yet. Click "+ Add Your First Pet" to get started.
+              </div>
             ) : (
               pets.map((pet) => (
                 <button
