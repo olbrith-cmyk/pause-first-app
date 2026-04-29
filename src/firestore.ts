@@ -6,15 +6,20 @@ import {
   deleteDoc,
   doc,
   getDocs,
+  getDoc,
   query,
   where,
-  Timestamp
+  Timestamp,
+  setDoc
 } from "firebase/firestore";
 import { firebaseApp } from "./firebase";
 
 const db = getFirestore(firebaseApp);
 
+// --------------------
 // Types
+// --------------------
+
 export interface Pet {
   id?: string;
   userId: string;
@@ -33,11 +38,57 @@ export interface Pet {
   createdAt?: Timestamp;
 }
 
+export type TriState = "normal" | "changed" | "na";
+
+export interface CurrentStatus {
+  appetite: TriState;
+  appetiteNotes?: string;
+
+  drinking: TriState;
+  drinkingNotes?: string;
+
+  energy: TriState;
+  energyNotes?: string;
+
+  toileting: TriState;
+  toiletingNotes?: string;
+
+  gi: TriState; // vomiting/diarrhea
+  giNotes?: string;
+
+  breathing: TriState; // breathing/coughing
+  breathingNotes?: string;
+
+  mobilityPain: TriState;
+  mobilityPainNotes?: string;
+
+  skinEars: TriState;
+  skinEarsNotes?: string;
+
+  otherNotes?: string;
+}
+
+export type AttachmentType = "photo" | "video" | "audio";
+
+export interface Attachment {
+  id: string; // client-generated id for UI lists
+  type: AttachmentType;
+  url: string; // Firebase Storage download URL
+  caption?: string;
+  createdAt: string; // ISO string for easy sorting/display
+}
+
+export type OrganizeMode = "private" | "ai";
+
 export interface Visit {
   id?: string;
   userId: string;
   petId: string;
+
+  // metadata
   visitDate: string;
+
+  // Visit Brief (anamnesis-style) — existing fields (keep!)
   mainConcern: string;
   whenStart: string;
   howProgressing: string;
@@ -45,6 +96,18 @@ export interface Visit {
   associatedSigns: string;
   previousTreatment: string;
   questionsVet: string;
+
+  // NEW (optional) — “How is your animal doing right now?” step
+  currentStatus?: CurrentStatus;
+
+  // NEW (optional) — paste/import support
+  importText?: string;
+  importOrganizedBy?: OrganizeMode;
+  importOrganizedAt?: Timestamp;
+
+  // NEW (optional) — attachments (photos/videos/audio)
+  attachments?: Attachment[];
+
   createdAt?: Timestamp;
 }
 
@@ -58,10 +121,73 @@ export interface VisitNote {
   treatmentMeds: string;
   homeInstructions: string;
   followUp: string;
+
+  // NEW (optional) — paste/import for take-home notes
+  importText?: string;
+  importOrganizedBy?: OrganizeMode;
+  importOrganizedAt?: Timestamp;
+
+  // NEW (optional) — attachments (e.g., discharge sheet photo, audio)
+  attachments?: Attachment[];
+
   createdAt?: Timestamp;
 }
 
+// Per-account preferences (remember A/B choice)
+export interface UserProfile {
+  id?: string; // same as userId
+  userId: string;
+
+  // Remembered choice for organizing pasted text
+  aiOrganizeEnabled: boolean; // default false
+  organizeMode: OrganizeMode; // default "private"
+
+  createdAt?: Timestamp;
+  updatedAt?: Timestamp;
+}
+
+// --------------------
+// User Profile
+// --------------------
+
+export const getUserProfile = async (userId: string): Promise<UserProfile | null> => {
+  const ref = doc(db, "users", userId);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return null;
+  return { id: snap.id, ...(snap.data() as any) } as UserProfile;
+};
+
+export const upsertUserProfile = async (
+  userId: string,
+  data: Partial<UserProfile>
+) => {
+  const ref = doc(db, "users", userId);
+
+  // Ensure defaults exist if creating for first time
+  const existing = await getUserProfile(userId);
+
+  const base: UserProfile = existing ?? {
+    userId,
+    aiOrganizeEnabled: false,
+    organizeMode: "private",
+    createdAt: Timestamp.now()
+  };
+
+  const next: UserProfile = {
+    ...base,
+    ...data,
+    userId,
+    updatedAt: Timestamp.now()
+  };
+
+  await setDoc(ref, next, { merge: true });
+  return next;
+};
+
+// --------------------
 // Pets
+// --------------------
+
 export const addPet = (pet: Pet) =>
   addDoc(collection(db, "pets"), { ...pet, createdAt: Timestamp.now() });
 
@@ -73,25 +199,32 @@ export const deletePet = (petId: string) => deleteDoc(doc(db, "pets", petId));
 export const getUserPets = async (userId: string) => {
   const q = query(collection(db, "pets"), where("userId", "==", userId));
   const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() } as Pet));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Pet));
 };
 
+// --------------------
 // Visits
+// --------------------
+
 export const addVisit = (visit: Visit) =>
   addDoc(collection(db, "visits"), { ...visit, createdAt: Timestamp.now() });
 
 export const updateVisit = (visitId: string, data: Partial<Visit>) =>
   updateDoc(doc(db, "visits", visitId), data);
 
-export const deleteVisit = (visitId: string) => deleteDoc(doc(db, "visits", visitId));
+export const deleteVisit = (visitId: string) =>
+  deleteDoc(doc(db, "visits", visitId));
 
 export const getUserVisits = async (userId: string) => {
   const q = query(collection(db, "visits"), where("userId", "==", userId));
   const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() } as Visit));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Visit));
 };
 
+// --------------------
 // Visit Notes
+// --------------------
+
 export const addVisitNote = (note: VisitNote) =>
   addDoc(collection(db, "visitNotes"), { ...note, createdAt: Timestamp.now() });
 
@@ -108,7 +241,11 @@ export const getVisitNote = async (userId: string, visitId: string) => {
   const d = snap.docs[0];
   return d ? ({ id: d.id, ...d.data() } as VisitNote) : undefined;
 };
+
+// --------------------
 // Delete Account (with full data cleanup)
+// --------------------
+
 import { writeBatch } from "firebase/firestore";
 import { deleteUser, getAuth } from "firebase/auth";
 
@@ -159,11 +296,13 @@ export async function deleteUserAccount(userId: string) {
     throw new Error("User mismatch. Please log in again.");
   }
 
-  // Delete all Firestore docs for this user (in order: notes → visits → pets)
-  const collectionsToDelete = ["visitNotes", "visits", "pets"];
+  // Delete all Firestore docs for this user (in order: notes → visits → pets → user profile)
+  const collectionsToDelete = ["visitNotes", "visits", "pets", "users"];
 
   const results: Record<string, number> = {};
   for (const name of collectionsToDelete) {
+    // users collection is keyed by doc id = userId, not by userId field necessarily,
+    // but we also store userId so this still works. If you prefer, we can delete doc(db,"users",userId) directly.
     results[name] = await deleteAllDocsForUser({ collectionName: name, userId });
   }
 
