@@ -702,17 +702,19 @@ export default function VisitsScreen({
           petName={selectedPetForWizard.name || "(Unnamed)"}
           visitId={editingVisitId ?? undefined}
           onClose={async () => {
-            setShowWizard(false);
-            visitId={editingVisitId ?? undefined}
-            setSelectedPetForWizard(null);
-            setShowChoosePetModal(false);
-            await load();
-          }}
+  setShowWizard(false);
+  setEditingVisitId(null);
+  setSelectedPetForWizard(null);
+  setShowChoosePetModal(false);
+  await load();
+}}
           onComplete={async () => {
-            await load();
-          }}
-        />
-      )}
+  setShowWizard(false);
+  setEditingVisitId(null);
+  setSelectedPetForWizard(null);
+  setShowChoosePetModal(false);
+  await load();
+}}
 
       {/* Fallback (if wizard not open) */}
       {!showWizard && (
