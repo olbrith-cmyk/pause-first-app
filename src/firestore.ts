@@ -113,6 +113,10 @@ export interface Visit {
   // NEW — draft/final support
   status?: "draft" | "final";
 
+  // NEW — derived flags for fast UI
+  hasNotes?: boolean;
+  notesUpdatedAt?: Timestamp;
+
   createdAt?: Timestamp;
   updatedAt?: Timestamp;
 }
@@ -213,6 +217,7 @@ export const addVisit = (visit: Visit) =>
   addDoc(collection(db, "visits"), {
     ...visit,
     status: visit.status ?? "final",
+    hasNotes: visit.hasNotes ?? false,
     createdAt: Timestamp.now(),
     updatedAt: Timestamp.now()
   });
@@ -240,15 +245,37 @@ export const getVisitById = async (userId: string, visitId: string): Promise<Vis
   return { id: snap.id, ...data } as Visit;
 };
 
+// Mark the parent visit so My Visits can show Notes status without extra reads
+export const markVisitHasNotes = (visitId: string, hasNotes: boolean) =>
+  updateDoc(doc(db, "visits", visitId), {
+    hasNotes,
+    notesUpdatedAt: Timestamp.now(),
+    updatedAt: Timestamp.now()
+  });
+
 // --------------------
 // Visit Notes
 // --------------------
 
-export const addVisitNote = (note: VisitNote) =>
-  addDoc(collection(db, "visitNotes"), { ...note, createdAt: Timestamp.now() });
+export const addVisitNote = async (note: VisitNote) => {
+  const res = await addDoc(collection(db, "visitNotes"), {
+    ...note,
+    createdAt: Timestamp.now()
+  });
 
-export const updateVisitNote = (noteId: string, data: Partial<VisitNote>) =>
-  updateDoc(doc(db, "visitNotes", noteId), data);
+  await markVisitHasNotes(note.visitId, true);
+  return res;
+};
+
+export const updateVisitNote = async (noteId: string, data: Partial<VisitNote>) => {
+  const res = await updateDoc(doc(db, "visitNotes", noteId), data);
+
+  if (data.visitId) {
+    await markVisitHasNotes(data.visitId, true);
+  }
+
+  return res;
+};
 
 export const getVisitNote = async (userId: string, visitId: string) => {
   const q = query(
