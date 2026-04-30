@@ -1,5 +1,3 @@
-import { EmergencyGuide, MedicalDisclaimer, PrivacyPolicy } from "./ui/Modals";
-import HamburgerMenu from "./ui/HamburgerMenu";
 import { useEffect, useState } from "react";
 import type { Lang } from "./i18n";
 import { useTranslation } from "./i18n";
@@ -15,11 +13,6 @@ export default function App() {
 
   const [user, setUser] = useState<User | null>(null);
   const [authReady, setAuthReady] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  const [showEmergencyGuide, setShowEmergencyGuide] = useState(false);
-  const [showMedicalDisclaimer, setShowMedicalDisclaimer] = useState(false);
-  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
 
   useEffect(() => {
     const unsub = onAuthChange((u) => {
@@ -48,43 +41,6 @@ export default function App() {
         backgroundColor: "#fff"
       }}
     >
-      <header className="header">
-        {user && (
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            style={{
-              background: "none",
-              border: "none",
-              fontSize: "24px",
-              cursor: "pointer",
-              color: "#333",
-              marginRight: "16px"
-            }}
-          >
-            ☰
-          </button>
-        )}
-
-        <div>
-          <h1 className="brand">{t.appTitle}</h1>
-          <p className="subtitle">{t.appSubtitle}</p>
-        </div>
-
-        <button
-          onClick={() => setLang(lang === "en" ? "da" : "en")}
-          style={{
-            background: "none",
-            border: "none",
-            fontSize: "14px",
-            cursor: "pointer",
-            color: "#0066cc",
-            fontWeight: "bold"
-          }}
-        >
-          {lang === "en" ? "DA" : "EN"}
-        </button>
-      </header>
-
       {!user ? (
         <AuthScreen lang={lang} />
       ) : (
@@ -96,40 +52,6 @@ export default function App() {
           onLogout={logOut}
           onDeleteAccount={deleteCurrentUser}
         />
-      )}
-
-      <HamburgerMenu
-        lang={lang}
-        isOpen={menuOpen}
-        onClose={() => setMenuOpen(false)}
-        onLogout={logOut}
-        onDeleteAccount={deleteCurrentUser}
-        onEmergencyGuide={() => setShowEmergencyGuide(true)}
-        onMedicalDisclaimer={() => setShowMedicalDisclaimer(true)}
-        onPrivacyPolicy={() => setShowPrivacyPolicy(true)}
-        onMyPets={() => {
-          setMenuOpen(false);
-        }}
-        onMyVisits={() => {
-          // App.tsx doesn't control Dashboard's mode, so just close the menu.
-          // Navigation to "My Visits" is handled inside Dashboard.
-          setMenuOpen(false);
-        }}
-      />
-
-      {showEmergencyGuide && (
-        <EmergencyGuide lang={lang} onClose={() => setShowEmergencyGuide(false)} />
-      )}
-
-      {showMedicalDisclaimer && (
-        <MedicalDisclaimer
-          lang={lang}
-          onClose={() => setShowMedicalDisclaimer(false)}
-        />
-      )}
-
-      {showPrivacyPolicy && (
-        <PrivacyPolicy lang={lang} onClose={() => setShowPrivacyPolicy(false)} />
       )}
     </div>
   );
