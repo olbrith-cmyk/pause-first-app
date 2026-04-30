@@ -24,14 +24,16 @@ export default function Dashboard({
 }) {
   const t = useTranslation(lang);
 
-  // Default to HOME (welcome page first)
   const [mode, setMode] = useState<DashboardMode>("home");
   const [menuOpen, setMenuOpen] = useState(false);
   const [showEmergencyGuide, setShowEmergencyGuide] = useState(false);
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
 
-  const handlePrepareClick = () => {
-    setMode("prepare");
+  const handlePrepareClick = () => setMode("prepare");
+
+  const toggleLang = () => {
+    if (!onLangChange) return;
+    onLangChange(lang === "en" ? "da" : "en");
   };
 
   return (
@@ -43,6 +45,56 @@ export default function Dashboard({
         backgroundColor: "#f5f5f5"
       }}
     >
+      {/* TOP HEADER (Dashboard owns the menu + navigation) */}
+      <header
+        className="header"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          padding: "12px 14px",
+          backgroundColor: "#fff",
+          borderBottom: "1px solid #eee"
+        }}
+      >
+        <button
+          onClick={() => setMenuOpen(true)}
+          style={{
+            background: "none",
+            border: "none",
+            fontSize: "24px",
+            cursor: "pointer",
+            color: "#333"
+          }}
+          aria-label="Open menu"
+        >
+          ☰
+        </button>
+
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontWeight: 800, fontSize: 16, lineHeight: 1.2 }}>{t.appTitle}</div>
+          <div style={{ fontSize: 12, color: "var(--textMuted)", lineHeight: 1.2 }}>
+            {t.appSubtitle}
+          </div>
+        </div>
+
+        {onLangChange && (
+          <button
+            onClick={toggleLang}
+            style={{
+              background: "none",
+              border: "none",
+              fontSize: "14px",
+              cursor: "pointer",
+              color: "#0066cc",
+              fontWeight: "bold"
+            }}
+          >
+            {lang === "en" ? "DA" : "EN"}
+          </button>
+        )}
+      </header>
+
       {/* CONTENT AREA */}
       <div
         style={{
@@ -69,8 +121,8 @@ export default function Dashboard({
                   lineHeight: "1.6"
                 }}
               >
-                Choose a pet (or add one) and start gathering your observations. Partner with your vet
-                by preparing for the visit.
+                Choose a pet (or add one) and start gathering your observations. Partner with your
+                vet by preparing for the visit.
               </p>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
@@ -121,9 +173,7 @@ export default function Dashboard({
         )}
 
         {mode === "myVisits" && <VisitsScreen lang={lang} userId={userId} mode="myVisits" />}
-
         {mode === "prepare" && <VisitsScreen lang={lang} userId={userId} mode="prepare" />}
-
         {mode === "pets" && <PetsScreen lang={lang} userId={userId} />}
       </div>
 
