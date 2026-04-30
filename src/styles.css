@@ -2,11 +2,15 @@
   --blue: #1B4A7C;
   --green: #4CAF50;
   --red: #D32F2F;
+
+  /* Calm, clean base */
   --bg: #f6f8fb;
   --card: #ffffff;
+
   --text: #1f2937;
   --muted: #6b7280;
   --border: #e5e7eb;
+
   --lightBlue: #E8F0F7;
   --lightGreen: #f0f9f4;
   --lightRed: #fef2f2;
@@ -131,7 +135,7 @@ body {
   padding: 12px 16px;
   color: var(--muted);
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   border-bottom: 3px solid transparent;
   transition: all 0.2s;
@@ -157,64 +161,74 @@ body {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--blue);
   font-size: 14px;
 }
 
 .input,
 .textarea {
-  padding: 10px 12px;
+  padding: 12px 12px;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 10px;
   font-family: inherit;
-  font-size: 14px;
+  font-size: 15px;
   color: var(--text);
   background: var(--card);
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .input:focus,
 .textarea:focus {
   outline: none;
-  border-color: var(--blue);
-  box-shadow: 0 0 0 3px rgba(27, 74, 124, 0.1);
+  border-color: rgba(27, 74, 124, 0.75);
+  box-shadow: 0 0 0 4px rgba(27, 74, 124, 0.12);
 }
 
 .textarea {
   resize: vertical;
-  min-height: 80px;
+  min-height: 96px;
 }
 
-/* Buttons */
+/* Buttons (grandmother-easy) */
 .btn {
-  padding: 10px 16px;
+  padding: 12px 16px;
   border: none;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 14px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 15px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: transform 0.02s ease, background 0.2s ease, box-shadow 0.2s ease;
   text-align: center;
   white-space: nowrap;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .btnPrimary {
   background: var(--green);
   color: white;
+  box-shadow: 0 6px 16px rgba(76, 175, 80, 0.18);
 }
 
-.btnPrimary:hover {
+.btnPrimary:hover:not(:disabled) {
   background: #45a049;
 }
 
 .btnSecondary {
   background: white;
-  border: 2px solid var(--blue);
+  border: 2px solid rgba(27, 74, 124, 0.55);
   color: var(--blue);
 }
 
-.btnSecondary:hover {
+.btnSecondary:hover:not(:disabled) {
   background: var(--lightBlue);
 }
 
@@ -223,7 +237,7 @@ body {
   color: white;
 }
 
-.btnDanger:hover {
+.btnDanger:hover:not(:disabled) {
   background: #b71c1c;
 }
 
@@ -234,6 +248,7 @@ body {
   text-decoration: underline;
   padding: 0;
   font-weight: 400;
+  cursor: pointer;
 }
 
 .btnLink:hover {
@@ -243,7 +258,7 @@ body {
 /* Alerts */
 .alert {
   padding: 12px 14px;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 14px;
   border-left: 4px solid;
 }
@@ -276,7 +291,7 @@ body {
 .itemCard {
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 12px;
   display: flex;
   flex-direction: column;
@@ -284,7 +299,7 @@ body {
 }
 
 .itemTitle {
-  font-weight: 600;
+  font-weight: 700;
   color: var(--blue);
   font-size: 16px;
 }
@@ -333,6 +348,9 @@ body {
 
   .btn {
     width: 100%;
+    padding: 14px 16px;
+    font-size: 16px;
+    border-radius: 12px;
   }
 
   .row {
@@ -342,7 +360,13 @@ body {
   .row .btn {
     width: 100%;
   }
+
+  .input,
+  .textarea {
+    font-size: 16px; /* prevents iOS zoom */
+  }
 }
+
 /* Modal */
 .modalOverlay{
   position: fixed;
@@ -358,15 +382,19 @@ body {
 .modalCard{
   width: min(720px, 100%);
   background: var(--card);
-  border-radius: 12px;
+  border-radius: 14px;
   border: 1px solid var(--border);
   box-shadow: 0 20px 60px rgba(0,0,0,0.25);
   overflow: hidden;
+
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 36px);
 }
 
 .modalHeader{
   display:flex;
-  align-items:center;
+  align-items:flex-start;
   justify-content: space-between;
   gap: 12px;
   padding: 14px 16px;
@@ -377,6 +405,7 @@ body {
   margin:0;
   color: var(--blue);
   font-size: 22px;
+  font-weight: 800;
 }
 
 .modalClose{
@@ -386,14 +415,16 @@ body {
   cursor: pointer;
   padding: 8px 10px;
   border-radius: 8px;
+  color: var(--muted);
 }
+
 .modalClose:hover{
   background: var(--bg);
 }
 
 .modalBody {
   padding: 16px;
-  max-height: 70vh;
+  flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
@@ -401,9 +432,12 @@ body {
 .list{
   padding-left: 18px;
 }
+
 .list li{
   margin: 8px 0;
 }
+
+/* View-only blocks */
 .vo { display: grid; gap: 12px; }
 .vo-title { margin: 0; }
 .vo-card {
@@ -457,6 +491,7 @@ body {
 .topLinkDanger:hover {
   color: var(--red);
 }
+
 /* Top bar: links + language switch */
 .topBar {
   display: flex;
@@ -508,7 +543,7 @@ body {
 .langLabel {
   font-size: 12px;
   color: var(--muted);
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .langLabelActive {
