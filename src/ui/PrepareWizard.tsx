@@ -580,7 +580,7 @@ export default function PrepareWizard({
       case 4:
         return (
           <label className="label">
-            {lang === "da" ? "Mønstre eller triggere?" : "Patterns / triggers"}
+            {lang === "da" ? "Mønstre eller udløsende faktorer?" : "Patterns / triggers"}
             <textarea
               className="textarea"
               value={draft.patterns}
@@ -668,8 +668,8 @@ export default function PrepareWizard({
                 onChange={(e) => setDraft({ ...(draft as any), otherDetails: e.target.value } as Visit)}
                 placeholder={
                   lang === "da"
-                    ? "f.eks. hvad du håber at få ud af besøget, hvad du er mest bekymret for, eller noget du ofte glemmer at nævne"
-                    : "e.g., what you hope to get out of the visit, what worries you most, or something you often forget to mention"
+                    ? "f.eks. foderændringer, rejse, nye godbidder, løbetid, mulig eksponering, timing, videoer du har... (ikke spørgsmål, der kommer et trin til spørgsmål senere)
+                    : "e.g., diet changes, travel, new treats, heat cycle, possible exposure, timing, videos you have... (not questions, there is a step for that later)
                 }
                 rows={4}
               />
