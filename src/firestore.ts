@@ -10,8 +10,10 @@ import {
   query,
   where,
   Timestamp,
-  setDoc
+  setDoc,
+  writeBatch
 } from "firebase/firestore";
+import { deleteUser, getAuth } from "firebase/auth";
 import { firebaseApp } from "./firebase";
 
 const db = getFirestore(firebaseApp);
@@ -108,7 +110,11 @@ export interface Visit {
   // NEW (optional) — attachments (photos/videos/audio)
   attachments?: Attachment[];
 
+  // NEW — draft/final support
+  status?: "draft" | "final";
+
   createdAt?: Timestamp;
+  updatedAt?: Timestamp;
 }
 
 export interface VisitNote {
@@ -157,10 +163,7 @@ export const getUserProfile = async (userId: string): Promise<UserProfile | null
   return { id: snap.id, ...(snap.data() as any) } as UserProfile;
 };
 
-export const upsertUserProfile = async (
-  userId: string,
-  data: Partial<UserProfile>
-) => {
+export const upsertUserProfile = async (userId: string, data: Partial<UserProfile>) => {
   const ref = doc(db, "users", userId);
 
   // Ensure defaults exist if creating for first time
@@ -207,13 +210,17 @@ export const getUserPets = async (userId: string) => {
 // --------------------
 
 export const addVisit = (visit: Visit) =>
-  addDoc(collection(db, "visits"), { ...visit, createdAt: Timestamp.now() });
+  addDoc(collection(db, "visits"), {
+    ...visit,
+    status: visit.status ?? "final",
+    createdAt: Timestamp.now(),
+    updatedAt: Timestamp.now()
+  });
 
 export const updateVisit = (visitId: string, data: Partial<Visit>) =>
-  updateDoc(doc(db, "visits", visitId), data);
+  updateDoc(doc(db, "visits", visitId), { ...data, updatedAt: Timestamp.now() });
 
-export const deleteVisit = (visitId: string) =>
-  deleteDoc(doc(db, "visits", visitId));
+export const deleteVisit = (visitId: string) => deleteDoc(doc(db, "visits", visitId));
 
 export const getUserVisits = async (userId: string) => {
   const q = query(collection(db, "visits"), where("userId", "==", userId));
@@ -246,13 +253,7 @@ export const getVisitNote = async (userId: string, visitId: string) => {
 // Delete Account (with full data cleanup)
 // --------------------
 
-import { writeBatch } from "firebase/firestore";
-import { deleteUser, getAuth } from "firebase/auth";
-
-async function deleteAllDocsForUser(params: {
-  collectionName: string;
-  userId: string;
-}) {
+async function deleteAllDocsForUser(params: { collectionName: string; userId: string }) {
   const { collectionName, userId } = params;
 
   const q = query(collection(db, collectionName), where("userId", "==", userId));
@@ -288,22 +289,22 @@ export async function deleteUserAccount(userId: string) {
   const auth = getAuth();
   const user = auth.currentUser;
 
-  if (!user) {
-    throw new Error("Not logged in.");
-  }
-
-  if (user.uid !== userId) {
-    throw new Error("User mismatch. Please log in again.");
-  }
-
-  // Delete all Firestore docs for this user (in order: notes → visits → pets → user profile)
-  const collectionsToDelete = ["visitNotes", "visits", "pets", "users"];
+  if (!user) throw new Error("Not logged in.");
+  if (user.uid !== userId) throw new Error("User mismatch. Please log in again.");
 
   const results: Record<string, number> = {};
-  for (const name of collectionsToDelete) {
-    // users collection is keyed by doc id = userId, not by userId field necessarily,
-    // but we also store userId so this still works. If you prefer, we can delete doc(db,"users",userId) directly.
-    results[name] = await deleteAllDocsForUser({ collectionName: name, userId });
+
+  // Delete in order: notes → visits → pets
+  results["visitNotes"] = await deleteAllDocsForUser({ collectionName: "visitNotes", userId });
+  results["visits"] = await deleteAllDocsForUser({ collectionName: "visits", userId });
+  results["pets"] = await deleteAllDocsForUser({ collectionName: "pets", userId });
+
+  // Delete user profile doc directly (users/{userId})
+  try {
+    await deleteDoc(doc(db, "users", userId));
+    results["users"] = 1;
+  } catch {
+    results["users"] = 0;
   }
 
   // Finally delete the auth user
