@@ -693,8 +693,8 @@ export default function PrepareWizard({
               onChange={(e) => setDraft({ ...draft, previousTreatment: e.target.value })}
               placeholder={
                 lang === "da"
-                  ? "f.eks. hvad du har prøvet hjemme, og om dit dyr får NOGEN medicin"
-                  : "e.g., what you tried at home, and whether your pet is getting ANY medication"
+                  ? "f.eks. hvad du har prøvet hjemme. Skriv desuden AL medicin/tilskud - også selvom det er for noget helt andet (allergimedicin, gigtmedicin, beroligende, vitaminer). Hvis du kan: dosis + hvornår det sidst blev givet."
+                  : "e.g., what you tried at home. Also write ALL medication/supplements - even if it's for something else (allergy meds, arthritis meds, calming meds, vitamins). If you can: dose + when last given."
               }
               rows={4}
             />
