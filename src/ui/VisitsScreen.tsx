@@ -71,6 +71,7 @@ export default function VisitsScreen({
   const [selectedPetForWizard, setSelectedPetForWizard] = useState<Pet | null>(null);
   const [showWizard, setShowWizard] = useState(false);
   const [editingVisitId, setEditingVisitId] = useState<string | null>(null);
+
   const load = async () => {
     const [p, v] = await Promise.all([getUserPets(userId), getUserVisits(userId)]);
     setPets(p);
@@ -155,6 +156,41 @@ export default function VisitsScreen({
     setShowWizard(true);
   };
 
+  const openWizardForVisit = (visitId: string, petId: string) => {
+    const pet = pets.find((p) => p.id === petId) ?? null;
+    setEditingVisitId(visitId);
+    setSelectedPetForWizard(pet);
+    setShowChoosePetModal(false);
+    setShowWizard(true);
+  };
+
+  const isDraft = (v: Visit) => (v.status ?? "final") === "draft";
+
+  const hasAnyPreparation = (v: Visit) => {
+    return !!(
+      v.mainConcern?.trim() ||
+      v.whenStart?.trim() ||
+      v.howProgressing?.trim() ||
+      v.patterns?.trim() ||
+      v.associatedSigns?.trim() ||
+      v.previousTreatment?.trim() ||
+      v.questionsVet?.trim() ||
+      (v.currentStatus && Object.keys(v.currentStatus).length > 0)
+    );
+  };
+
+  const prepStatusText = (v: Visit) => {
+    if (isDraft(v)) return lang === "da" ? "Forberedelse: Kladde" : "Prep: Draft";
+    if (hasAnyPreparation(v)) return lang === "da" ? "Forberedelse: Klar" : "Prep: Ready";
+    return lang === "da" ? "Forberedelse: Ikke udfyldt" : "Prep: Not started";
+  };
+
+  const notesStatusTextFromVisit = (v: Visit) => {
+    const hasNotes = v.hasNotes === true;
+    if (lang === "da") return `Noter: ${hasNotes ? "Ja" : "Nej"}`;
+    return `Notes: ${hasNotes ? "Yes" : "No"}`;
+  };
+
   // Critical fix: create a real minimal pet so visits are saved & accessible later
   const handleContinueWithoutProfile = async () => {
     try {
@@ -234,9 +270,7 @@ export default function VisitsScreen({
           {draftVisits.length > 0 && !openVisit && (
             <div className="panel" style={{ marginBottom: 12 }}>
               <div className="panelHeader">
-                <h4 style={{ margin: 0 }}>
-                  {lang === "da" ? "Fortsæt kladde" : "Continue draft"}
-                </h4>
+                <h4 style={{ margin: 0 }}>{lang === "da" ? "Fortsæt kladde" : "Continue draft"}</h4>
               </div>
 
               <div className="stack">
@@ -246,17 +280,22 @@ export default function VisitsScreen({
                     <button
                       key={v.id}
                       className="itemCard"
-                      onClick={() => openVisitCard(v.id!)}
+                      onClick={() => openWizardForVisit(v.id!, v.petId)}
                       style={{ cursor: "pointer", textAlign: "left" }}
                     >
                       <div className="itemTitle">
                         {pet?.name || "(Unnamed)"} — {v.visitDate || "No date"}
                       </div>
+
                       <div className="muted">
                         {v.mainConcern ||
                           (lang === "da"
                             ? "Kladde (ingen hovedbekymring endnu)"
                             : "Draft (no main concern yet)")}
+                      </div>
+
+                      <div className="muted" style={{ marginTop: 6, fontSize: 13 }}>
+                        {prepStatusText(v)} • {notesStatusTextFromVisit(v)}
                       </div>
                     </button>
                   );
@@ -266,7 +305,7 @@ export default function VisitsScreen({
           )}
 
           {finalVisitsSorted.length === 0 && draftVisits.length === 0 && (
-            <div className="muted">No visits yet.</div>
+            <div className="muted">{lang === "da" ? "Ingen besøg endnu." : "No visits yet."}</div>
           )}
 
           {!openVisit && (
@@ -283,7 +322,15 @@ export default function VisitsScreen({
                     <div className="itemTitle">
                       {pet?.name || "(Unnamed)"} — {v.visitDate || "No date"}
                     </div>
-                    <div className="muted">{v.mainConcern || "No main concern yet."}</div>
+
+                    <div className="muted">
+                      {v.mainConcern ||
+                        (lang === "da" ? "Ingen hovedbekymring endnu." : "No main concern yet.")}
+                    </div>
+
+                    <div className="muted" style={{ marginTop: 6, fontSize: 13 }}>
+                      {prepStatusText(v)} • {notesStatusTextFromVisit(v)}
+                    </div>
                   </button>
                 );
               })}
@@ -302,7 +349,7 @@ export default function VisitsScreen({
                 >
                   ← {t.back}
                 </button>
-                
+
                 <button
                   className="btn btnSecondary"
                   onClick={() => {
@@ -311,16 +358,22 @@ export default function VisitsScreen({
                     setShowWizard(true);
                   }}
                 >
-                  Edit Preparation
+                  {(openVisit.status ?? "final") === "draft"
+                    ? lang === "da"
+                      ? "Fortsæt kladde"
+                      : "Continue draft"
+                    : lang === "da"
+                      ? "Redigér forberedelse"
+                      : "Edit Preparation"}
                 </button>
-                
+
                 <button
                   className="btn btnSecondary"
                   onClick={async () => {
                     await loadNoteForVisit(openVisit.id!);
                   }}
                 >
-                  Edit Visit Notes
+                  {lang === "da" ? "Redigér besøgsnoter" : "Edit Visit Notes"}
                 </button>
               </div>
 
@@ -328,16 +381,21 @@ export default function VisitsScreen({
                 <h4 style={{ margin: 0 }}>
                   {openPet?.name || "(Unnamed)"} — {openVisit.visitDate || "No date"}
                 </h4>
+                <div className="muted" style={{ marginTop: 6 }}>
+                  {prepStatusText(openVisit)} • {notesStatusTextFromVisit(openVisit)}
+                </div>
               </div>
 
-              <h4 style={{ marginTop: 12 }}>Preparation</h4>
+              <h4 style={{ marginTop: 12 }}>{lang === "da" ? "Forberedelse" : "Preparation"}</h4>
               <ViewOnlyPrepare visit={openVisit} />
 
-              <h4 style={{ marginTop: 16 }}>Visit Notes</h4>
+              <h4 style={{ marginTop: 16 }}>{lang === "da" ? "Besøgsnoter" : "Visit Notes"}</h4>
               {openNote ? (
                 <ViewOnlyNotes note={openNote} />
               ) : (
-                <div className="muted">No visit notes yet.</div>
+                <div className="muted">
+                  {lang === "da" ? "Ingen besøgsnoter endnu." : "No visit notes yet."}
+                </div>
               )}
             </div>
           )}
@@ -345,7 +403,7 @@ export default function VisitsScreen({
           {editingNote && noteVisitId && (
             <div className="panel" style={{ marginTop: 16 }}>
               <div className="panelHeader">
-                <h4 style={{ margin: 0 }}>Edit Visit Notes</h4>
+                <h4 style={{ margin: 0 }}>{lang === "da" ? "Redigér besøgsnoter" : "Edit Visit Notes"}</h4>
               </div>
 
               <label className="label">
@@ -440,7 +498,7 @@ export default function VisitsScreen({
     );
   }
 
-  // -------------------------
+    // -------------------------
   // PREPARE MODE
   // -------------------------
   return (
@@ -488,7 +546,7 @@ export default function VisitsScreen({
                 alignItems: "center"
               }}
             >
-              <h3 style={{ margin: 0 }}>Choose a Pet</h3>
+              <h3 style={{ margin: 0 }}>{lang === "da" ? "Vælg kæledyr" : "Choose a Pet"}</h3>
               <button
                 className="btnClose"
                 onClick={() => setShowChoosePetModal(false)}
@@ -504,7 +562,9 @@ export default function VisitsScreen({
             >
               {pets.length > 0 && (
                 <>
-                  <h4 style={{ marginTop: 0, marginBottom: 12 }}>Your Pets</h4>
+                  <h4 style={{ marginTop: 0, marginBottom: 12 }}>
+                    {lang === "da" ? "Dine kæledyr" : "Your Pets"}
+                  </h4>
                   <div className="stack" style={{ marginBottom: 20 }}>
                     {pets.map((pet) => (
                       <button
@@ -514,7 +574,7 @@ export default function VisitsScreen({
                         style={{ cursor: "pointer", textAlign: "left" }}
                       >
                         <div className="itemTitle">{pet.name || "(Unnamed)"}</div>
-                        <div className="muted">{pet.species || "Unknown species"}</div>
+                        <div className="muted">{pet.species || (lang === "da" ? "Ukendt art" : "Unknown species")}</div>
                       </button>
                     ))}
                   </div>
@@ -545,7 +605,7 @@ export default function VisitsScreen({
         </div>
       )}
 
-            {/* Add Pet Modal */}
+      {/* Add Pet Modal */}
       {showChoosePetModal && showAddPetForm && (
         <div
           className="modal"
@@ -693,31 +753,31 @@ export default function VisitsScreen({
       )}
 
       {/* Wizard */}
-{showWizard && selectedPetForWizard?.id && (
-  <PrepareWizard
-    lang={lang}
-    userId={userId}
-    mode="prepare"
-    petId={selectedPetForWizard.id}
-    petName={selectedPetForWizard.name || "(Unnamed)"}
-    visitId={editingVisitId ?? undefined}
-    onClose={async () => {
-      setShowWizard(false);
-      setEditingVisitId(null);
-      setSelectedPetForWizard(null);
-      setShowChoosePetModal(false);
-      await load();
-    }}
-    onComplete={async () => {
-      setShowWizard(false);
-      setEditingVisitId(null);
-      setSelectedPetForWizard(null);
-      setShowChoosePetModal(false);
-      await load();
-    }}
-  />
-)}
-      
+      {showWizard && selectedPetForWizard?.id && (
+        <PrepareWizard
+          lang={lang}
+          userId={userId}
+          mode="prepare"
+          petId={selectedPetForWizard.id}
+          petName={selectedPetForWizard.name || "(Unnamed)"}
+          visitId={editingVisitId ?? undefined}
+          onClose={async () => {
+            setShowWizard(false);
+            setEditingVisitId(null);
+            setSelectedPetForWizard(null);
+            setShowChoosePetModal(false);
+            await load();
+          }}
+          onComplete={async () => {
+            setShowWizard(false);
+            setEditingVisitId(null);
+            setSelectedPetForWizard(null);
+            setShowChoosePetModal(false);
+            await load();
+          }}
+        />
+      )}
+
       {/* Fallback (if wizard not open) */}
       {!showWizard && (
         <div className="panel">
