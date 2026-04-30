@@ -70,7 +70,7 @@ export default function VisitsScreen({
   const [petFormError, setPetFormError] = useState<string | null>(null);
   const [selectedPetForWizard, setSelectedPetForWizard] = useState<Pet | null>(null);
   const [showWizard, setShowWizard] = useState(false);
-
+  const [editingVisitId, setEditingVisitId] = useState<string | null>(null);
   const load = async () => {
     const [p, v] = await Promise.all([getUserPets(userId), getUserVisits(userId)]);
     setPets(p);
@@ -302,7 +302,18 @@ export default function VisitsScreen({
                 >
                   ← {t.back}
                 </button>
-
+                
+                <button
+                  className="btn btnSecondary"
+                  onClick={() => {
+                    setEditingVisitId(openVisit.id!);
+                    setSelectedPetForWizard(openPet ?? null);
+                    setShowWizard(true);
+                  }}
+                >
+                  Edit Preparation
+                </button>
+                
                 <button
                   className="btn btnSecondary"
                   onClick={async () => {
@@ -689,8 +700,10 @@ export default function VisitsScreen({
           mode="prepare"
           petId={selectedPetForWizard.id}
           petName={selectedPetForWizard.name || "(Unnamed)"}
+          visitId={editingVisitId ?? undefined}
           onClose={async () => {
             setShowWizard(false);
+            visitId={editingVisitId ?? undefined}
             setSelectedPetForWizard(null);
             setShowChoosePetModal(false);
             await load();
