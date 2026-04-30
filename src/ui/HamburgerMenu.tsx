@@ -11,7 +11,8 @@ export default function HamburgerMenu({
   onEmergencyGuide,
   onMedicalDisclaimer,
   onPrivacyPolicy,
-  onMyPets
+  onMyPets,
+  onMyVisits
 }: {
   lang: Lang;
   isOpen: boolean;
@@ -22,6 +23,7 @@ export default function HamburgerMenu({
   onMedicalDisclaimer: () => void;
   onPrivacyPolicy: () => void;
   onMyPets: () => void;
+  onMyVisits: () => void;
 }) {
   const t = useTranslation(lang);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -45,6 +47,12 @@ export default function HamburgerMenu({
       icon: "🐾",
       label: t.myPets,
       onClick: onMyPets,
+      color: "#0066cc"
+    },
+    {
+      icon: "🗓️",
+      label: lang === "da" ? "Mine besøg" : "My Visits",
+      onClick: onMyVisits,
       color: "#0066cc"
     },
     {
@@ -177,7 +185,8 @@ export default function HamburgerMenu({
                 transition: "background-color 0.2s ease"
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(0, 0, 0, 0.05)";
+                (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                  "rgba(0, 0, 0, 0.05)";
               }}
               onMouseLeave={(e) => {
                 (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
@@ -219,7 +228,8 @@ export default function HamburgerMenu({
                 transition: "background-color 0.2s ease"
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(0, 0, 0, 0.05)";
+                (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                  "rgba(0, 0, 0, 0.05)";
               }}
               onMouseLeave={(e) => {
                 (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
