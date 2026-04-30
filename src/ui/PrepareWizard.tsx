@@ -31,7 +31,7 @@ function makeEmptyStatus(): CurrentStatus {
   };
 }
 
-export default function PrepareWizard({
+function PrepareWizard({
   lang,
   userId,
   petId,
