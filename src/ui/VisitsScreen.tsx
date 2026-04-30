@@ -693,29 +693,31 @@ export default function VisitsScreen({
       )}
 
       {/* Wizard */}
-      {showWizard && selectedPetForWizard?.id && (
-        <PrepareWizard
-          lang={lang}
-          userId={userId}
-          mode="prepare"
-          petId={selectedPetForWizard.id}
-          petName={selectedPetForWizard.name || "(Unnamed)"}
-          visitId={editingVisitId ?? undefined}
-          onClose={async () => {
-  setShowWizard(false);
-  setEditingVisitId(null);
-  setSelectedPetForWizard(null);
-  setShowChoosePetModal(false);
-  await load();
-}}
-          onComplete={async () => {
-  setShowWizard(false);
-  setEditingVisitId(null);
-  setSelectedPetForWizard(null);
-  setShowChoosePetModal(false);
-  await load();
-}}
-
+{showWizard && selectedPetForWizard?.id && (
+  <PrepareWizard
+    lang={lang}
+    userId={userId}
+    mode="prepare"
+    petId={selectedPetForWizard.id}
+    petName={selectedPetForWizard.name || "(Unnamed)"}
+    visitId={editingVisitId ?? undefined}
+    onClose={async () => {
+      setShowWizard(false);
+      setEditingVisitId(null);
+      setSelectedPetForWizard(null);
+      setShowChoosePetModal(false);
+      await load();
+    }}
+    onComplete={async () => {
+      setShowWizard(false);
+      setEditingVisitId(null);
+      setSelectedPetForWizard(null);
+      setShowChoosePetModal(false);
+      await load();
+    }}
+  />
+)}
+      
       {/* Fallback (if wizard not open) */}
       {!showWizard && (
         <div className="panel">
