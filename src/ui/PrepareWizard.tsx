@@ -87,11 +87,10 @@ export default function PrepareWizard({
           setVisitId(visitIdProp);
           setDraft({
             ...existing,
-            // ensure these are present for rendering
             userId,
             petId,
             currentStatus: existing.currentStatus ?? makeEmptyStatus(),
-            otherDetails: (existing as any).otherDetails ?? "",
+            otherDetails: existing.otherDetails ?? "",
             status: existing.status ?? "final"
           });
           return;
@@ -157,7 +156,7 @@ export default function PrepareWizard({
         ok: true
       },
       {
-        title: lang === "da" ? "Mønstre eller triggere?" : "Patterns / triggers",
+        title: lang === "da" ? "Mønstre eller udløsende faktorer?" : "Patterns / triggers",
         desc: lang === "da" ? "Sker det på bestemte tidspunkter?" : "Does it happen at certain times?",
         ok: true
       },
@@ -178,11 +177,11 @@ export default function PrepareWizard({
         ok: true
       },
       {
-        title: lang === "da" ? "Andre detaljer til dyrlægen" : "Other details for the vet",
+        title: lang === "da" ? "Andre detaljer (fakta til dyrlægen)" : "Other details (facts for the vet)",
         desc:
           lang === "da"
-            ? "Alt andet du vil sikre dig at nævne"
-            : "Anything else you want to make sure you mention",
+            ? "Hjælpsomme observationer (ikke spørgsmål). Gem spørgsmål til næste trin."
+            : "Helpful observations (not questions). Save questions for the next step.",
         ok: true
       },
       {
@@ -228,7 +227,6 @@ export default function PrepareWizard({
 
     setSaving(true);
     try {
-      // Finalize, but still editable later
       await updateVisit(visitId, { ...draft, status: "final" });
       if (onComplete) await onComplete();
       setMode("done");
@@ -336,9 +334,9 @@ export default function PrepareWizard({
       lines.push("");
     }
 
-    const od = String((draft as any).otherDetails ?? "");
+    const od = draft.otherDetails ?? "";
     if (od.trim()) {
-      lines.push(lang === "da" ? "Andre detaljer til dyrlægen:" : "Other details for the vet:");
+      lines.push(lang === "da" ? "Andre detaljer (fakta til dyrlægen):" : "Other details (facts for the vet):");
       lines.push(od);
       lines.push("");
     }
@@ -368,11 +366,7 @@ export default function PrepareWizard({
     }
   };
 
-  const renderCurrentStatusRow = (
-    label: string,
-    key: keyof CurrentStatus,
-    notesKey: keyof CurrentStatus
-  ) => {
+  const renderCurrentStatusRow = (label: string, key: keyof CurrentStatus, notesKey: keyof CurrentStatus) => {
     const cs = draft.currentStatus ?? makeEmptyStatus();
     const value = (cs[key] as TriState) ?? "normal";
     const notesValue = (cs[notesKey] as string) ?? "";
@@ -418,11 +412,7 @@ export default function PrepareWizard({
               });
             }}
             rows={2}
-            placeholder={
-              lang === "da"
-                ? "Skriv kort hvis noget er anderledes..."
-                : "Add a short note if something is different..."
-            }
+            placeholder={lang === "da" ? "Skriv kort hvis noget er anderledes..." : "Add a short note if something is different..."}
           />
         </label>
       </div>
@@ -443,29 +433,14 @@ export default function PrepareWizard({
     const cs = draft.currentStatus;
     if (!cs) return null;
 
-    const Row = ({
-      label,
-      value,
-      notes
-    }: {
-      label: string;
-      value: TriState;
-      notes?: string;
-    }) => {
+    const Row = ({ label, value, notes }: { label: string; value: TriState; notes?: string }) => {
       const hasNotes = !!notes && notes.trim() !== "";
       return (
         <div style={{ marginBottom: 10 }}>
           <div style={{ fontWeight: 700, fontSize: 14 }}>{label}</div>
           <div style={{ fontSize: 14, marginTop: 2 }}>{triLabel(value)}</div>
           {hasNotes && (
-            <div
-              style={{
-                fontSize: 13,
-                color: "var(--textMuted)",
-                marginTop: 2,
-                whiteSpace: "pre-wrap"
-              }}
-            >
+            <div style={{ fontSize: 13, color: "var(--textMuted)", marginTop: 2, whiteSpace: "pre-wrap" }}>
               {notes}
             </div>
           )}
@@ -474,23 +449,16 @@ export default function PrepareWizard({
     };
 
     return (
-      <div
-        style={{
-          backgroundColor: "var(--bgAlt)",
-          padding: 12,
-          borderRadius: 8,
-          marginBottom: 16
-        }}
-      >
+      <div style={{ backgroundColor: "var(--bgAlt)", padding: 12, borderRadius: 8, marginBottom: 16 }}>
         <h4 style={{ margin: "0 0 10px 0" }}>{lang === "da" ? "Status lige nu" : "Current status"}</h4>
 
         <Row label={lang === "da" ? "Appetit" : "Appetite"} value={cs.appetite} notes={cs.appetiteNotes} />
         <Row label={lang === "da" ? "Drikker" : "Drinking"} value={cs.drinking} notes={cs.drinkingNotes} />
-        <Row label={lang === "da" ? "Energi" : "Energy"} value={cs.energy} notes={cs.energyNotes} />
+                <Row label={lang === "da" ? "Energi" : "Energy"} value={cs.energy} notes={cs.energyNotes} />
         <Row label={lang === "da" ? "Toiletvaner" : "Toileting"} value={cs.toileting} notes={cs.toiletingNotes} />
         <Row label={lang === "da" ? "Mave/tarm" : "GI"} value={cs.gi} notes={cs.giNotes} />
         <Row label={lang === "da" ? "Vejrtrækning" : "Breathing"} value={cs.breathing} notes={cs.breathingNotes} />
-               <Row
+        <Row
           label={lang === "da" ? "Bevægelse/smerte" : "Mobility / pain"}
           value={cs.mobilityPain}
           notes={cs.mobilityPainNotes}
@@ -585,7 +553,9 @@ export default function PrepareWizard({
               className="textarea"
               value={draft.patterns}
               onChange={(e) => setDraft({ ...draft, patterns: e.target.value })}
-              placeholder={lang === "da" ? "f.eks. efter mad, værre om morgenen" : "e.g., happens after meals, worse in the morning"}
+              placeholder={
+                lang === "da" ? "f.eks. efter mad, værre om morgenen" : "e.g., happens after meals, worse in the morning"
+              }
               rows={4}
             />
           </label>
@@ -647,11 +617,7 @@ export default function PrepareWizard({
               className="textarea"
               value={draft.associatedSigns}
               onChange={(e) => setDraft({ ...draft, associatedSigns: e.target.value })}
-              placeholder={
-                lang === "da"
-                  ? "f.eks. ændret appetit, adfærd, energi"
-                  : "e.g., appetite changes, behavior changes, energy level"
-              }
+              placeholder={lang === "da" ? "f.eks. ændret appetit, adfærd, energi" : "e.g., appetite changes, behavior changes, energy level"}
               rows={4}
             />
           </label>
@@ -661,15 +627,15 @@ export default function PrepareWizard({
         return (
           <>
             <label className="label">
-              {lang === "da" ? "Andre detaljer til dyrlægen" : "Other details for the vet"}
+              {lang === "da" ? "Andre detaljer (fakta til dyrlægen)" : "Other details (facts for the vet)"}
               <textarea
                 className="textarea"
-                value={String((draft as any).otherDetails ?? "")}
-                onChange={(e) => setDraft({ ...(draft as any), otherDetails: e.target.value } as Visit)}
+                value={draft.otherDetails ?? ""}
+                onChange={(e) => setDraft({ ...draft, otherDetails: e.target.value })}
                 placeholder={
                   lang === "da"
-                    ? "f.eks. foderændringer, rejse, nye godbidder, løbetid, mulig eksponering, timing, videoer du har... (ikke spørgsmål, der kommer et trin til spørgsmål senere)
-                    : "e.g., diet changes, travel, new treats, heat cycle, possible exposure, timing, videos you have... (not questions, there is a step for that later)
+                    ? "f.eks. foderændringer, rejse, nye godbidder, løbetid, mulig eksponering, timing, videoer du har... (ikke spørgsmål)"
+                    : "e.g., diet changes, travel, new treats, heat cycle, possible exposure, timing, videos you have... (not questions)"
                 }
                 rows={4}
               />
@@ -685,20 +651,28 @@ export default function PrepareWizard({
 
       case 8:
         return (
-          <label className="label">
-            {lang === "da" ? "Hvad har du prøvet allerede?" : "What have you tried already?"}
-            <textarea
-              className="textarea"
-              value={draft.previousTreatment}
-              onChange={(e) => setDraft({ ...draft, previousTreatment: e.target.value })}
-              placeholder={
-                lang === "da"
-                  ? "f.eks. hvad du har prøvet hjemme. Skriv desuden AL medicin/tilskud - også selvom det er for noget helt andet (allergimedicin, gigtmedicin, beroligende, vitaminer). Hvis du kan: dosis + hvornår det sidst blev givet."
-                  : "e.g., what you tried at home. Also write ALL medication/supplements - even if it's for something else (allergy meds, arthritis meds, calming meds, vitamins). If you can: dose + when last given."
-              }
-              rows={4}
-            />
-          </label>
+          <>
+            <div className="muted" style={{ marginBottom: 8 }}>
+              {lang === "da"
+                ? "Vigtigt: Skriv AL medicin/tilskud — også selvom det er for noget helt andet."
+                : "Important: Include ALL medication/supplements — even if it’s for something else."}
+            </div>
+
+            <label className="label">
+              {lang === "da" ? "Hvad har du prøvet allerede?" : "What have you tried already?"}
+              <textarea
+                className="textarea"
+                value={draft.previousTreatment}
+                onChange={(e) => setDraft({ ...draft, previousTreatment: e.target.value })}
+                placeholder={
+                  lang === "da"
+                    ? "f.eks. hvad du har prøvet hjemme. Skriv AL medicin/tilskud (allergimedicin, gigtmedicin, beroligende, vitaminer). Hvis du kan: dosis + hvornår det sidst blev givet."
+                    : "e.g., what you tried at home. Include ALL medication/supplements (allergy meds, arthritis meds, calming meds, vitamins). If you can: dose + when last given."
+                }
+                rows={4}
+              />
+            </label>
+          </>
         );
 
       case 9:
@@ -711,8 +685,8 @@ export default function PrepareWizard({
               onChange={(e) => setDraft({ ...draft, questionsVet: e.target.value })}
               placeholder={
                 lang === "da"
-                  ? "f.eks. Er operation nødvendig? Hvor lang tid tager det?"
-                  : "e.g., Is surgery needed? How long will recovery take?"
+                  ? "f.eks. Hvad er den mest sandsynlige årsag? Hvad er næste skridt? Hvornår skal jeg kontakte jer igen?"
+                  : "e.g., What’s the most likely cause? What’s the next step? When should I contact you again?"
               }
               rows={4}
             />
@@ -724,77 +698,37 @@ export default function PrepareWizard({
     }
   };
 
+  // Modal: use your global modal styles for consistent scrolling
   return (
-    <div
-      className="modal"
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 9999,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center"
-      }}
-    >
-      <div
-        className="modalOverlay"
-        onClick={onClose}
-        style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.5)" }}
-      />
-      <div
-        className="modalContent"
-        style={{
-          position: "relative",
-          zIndex: 10000,
-          backgroundColor: "white",
-          borderRadius: "8px",
-          width: "90%",
-          maxWidth: "500px",
-          maxHeight: "90vh",
-          overflow: "auto",
-          boxShadow: "0 4px 6px rgba(0,0,0,0.1)"
-        }}
-      >
-        <div
-          className="modalHeader"
-          style={{
-            padding: "16px",
-            borderBottom: "1px solid var(--border)",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center"
-          }}
-        >
+    <div className="modalOverlay" onClick={onClose}>
+      <div className="modalCard" onClick={(e) => e.stopPropagation()}>
+        <div className="modalHeader">
           <div style={{ flex: 1 }}>
-            <h3 style={{ margin: 0 }}>
+            <h3 className="modalTitle" style={{ margin: 0 }}>
               {mode === "wizard" && (lang === "da" ? "Forbered besøg" : "Prepare for Visit")}
-              {mode === "preview" && (lang === "da" ? "Preview" : "Preview")}
+              {mode === "preview" && (lang === "da" ? "Gennemse & gem" : "Review & save")}
               {mode === "done" && (lang === "da" ? "Klar!" : "Your prep is ready!")}
             </h3>
 
             {mode === "wizard" && (
-              <p style={{ margin: "6px 0 0 0", fontSize: 12, color: "var(--textMuted)" }}>
+              <p style={{ margin: "6px 0 0 0", fontSize: 12, color: "var(--muted)" }}>
                 {lang === "da" ? "Trin" : "Step"} {step + 1} {lang === "da" ? "af" : "of"} {stepData.length}
               </p>
             )}
           </div>
 
-          <button
-            className="btnClose"
-            onClick={onClose}
-            style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer" }}
-          >
+          <button className="modalClose" onClick={onClose} aria-label={lang === "da" ? "Luk" : "Close"}>
             ✕
           </button>
         </div>
 
-        <div className="modalBody" style={{ padding: "16px", overflowY: "auto", maxHeight: "calc(90vh - 120px)" }}>
+        <div className="modalBody">
           {/* MODE 1: WIZARD */}
           {mode === "wizard" && (
             <>
               <div style={{ marginBottom: 16 }}>
                 <h4 style={{ margin: "0 0 6px 0" }}>{stepData[step].title}</h4>
-                <p style={{ color: "var(--textMuted)", fontSize: 14, margin: 0 }}>{stepData[step].desc}</p>
+                <p style={{ color: "var(--muted)", fontSize: 14, margin: 0 }}>{stepData[step].desc}</p>
               </div>
               {renderStep()}
             </>
@@ -805,7 +739,7 @@ export default function PrepareWizard({
             <>
               <div
                 style={{
-                  backgroundColor: "var(--bgAlt)",
+                  backgroundColor: "var(--lightBlue)",
                   padding: 12,
                   borderRadius: 8,
                   marginBottom: 12
@@ -827,7 +761,7 @@ export default function PrepareWizard({
 
               <div
                 style={{
-                  backgroundColor: "var(--bgAlt)",
+                  backgroundColor: "var(--lightBlue)",
                   padding: 12,
                   borderRadius: 8,
                   marginBottom: 16
@@ -838,9 +772,15 @@ export default function PrepareWizard({
                 <ReviewLine label={lang === "da" ? "Hvordan udvikler det sig?" : "How is it changing?"} value={draft.howProgressing} />
                 <ReviewLine label={lang === "da" ? "Mønstre / triggere" : "Patterns / triggers"} value={draft.patterns} />
                 <ReviewLine label={lang === "da" ? "Hvad ellers er anderledes?" : "What else is different?"} value={draft.associatedSigns} />
-                <ReviewLine label={lang === "da" ? "Andre detaljer til dyrlægen" : "Other details for the vet"} value={String((draft as any).otherDetails ?? "")} />
-                <ReviewLine label={lang === "da" ? "Hvad har du prøvet allerede?" : "What have you tried already?"} value={draft.previousTreatment} />
-                <ReviewLine label={lang === "da" ? "Topspørgsmål til dyrlægen" : "Top questions for the vet"} value={draft.questionsVet} />
+                <ReviewLine
+                  label={lang === "da" ? "Andre detaljer (fakta)" : "Other details (facts)"}
+                  value={draft.otherDetails ?? ""}
+                />
+                <ReviewLine
+                  label={lang === "da" ? "Hvad har du prøvet allerede?" : "What have you tried already?"}
+                  value={draft.previousTreatment}
+                />
+                <ReviewLine label={lang === "da" ? "Topspørgsmål" : "Top questions"} value={draft.questionsVet} />
               </div>
 
               <div className="row" style={{ gap: 8, flexDirection: "column" as const }}>
@@ -864,7 +804,7 @@ export default function PrepareWizard({
             <>
               <div
                 style={{
-                  backgroundColor: "var(--bgAlt)",
+                  backgroundColor: "var(--lightGreen)",
                   padding: 12,
                   borderRadius: 8,
                   marginBottom: 16
@@ -874,7 +814,7 @@ export default function PrepareWizard({
                   <strong>{lang === "da" ? "Gemt!" : "Saved!"}</strong>{" "}
                   {lang === "da" ? "Din forberedelse er gemt i appen." : "Your visit prep has been saved in the app."}
                 </p>
-                <p style={{ margin: 0, color: "var(--textMuted)", fontSize: 14 }}>
+                <p style={{ margin: 0, color: "var(--muted)", fontSize: 14 }}>
                   {lang === "da"
                     ? "Gå forberedt ind. Vær en partner i dit dyrs behandling."
                     : "Walk in prepared. Partner in your pet's care."}
@@ -883,7 +823,7 @@ export default function PrepareWizard({
 
               <div className="row" style={{ gap: 8, flexDirection: "column" as const }}>
                 <button className="btn btnPrimary" onClick={onClose}>
-                  {lang === "da" ? "Færdig" : "Done"} (Saved in app)
+                  {lang === "da" ? "Færdig" : "Done"}
                 </button>
 
                 <button className="btn btnSecondary" onClick={handleEmail}>
@@ -917,20 +857,19 @@ export default function PrepareWizard({
             <div style={{ flex: 0, minWidth: 80 }} />
           )}
 
-          {mode === "wizard" && (
-            <button className="btn btnPrimary" onClick={handleNext} disabled={!stepData[step].ok} style={{ flex: 1 }}>
-              {isLastWizardStep ? (lang === "da" ? "Preview" : "Preview") : lang === "da" ? "Næste →" : "Next →"}
-            </button>
-          )}
-
-          {mode === "preview" && (
-            <button className="btn btnPrimary" onClick={onClose} style={{ flex: 1 }}>
-              {lang === "da" ? "Luk" : "Close"}
+                    {mode === "wizard" && (
+            <button
+              className="btn btnPrimary"
+              onClick={handleNext}
+              disabled={!stepData[step].ok}
+              style={{ flex: 1, minWidth: 120 }}
+            >
+              {step === stepData.length - 1 ? (lang === "da" ? "Preview" : "Preview") : lang === "da" ? "Næste" : "Next"}
             </button>
           )}
 
           {mode === "done" && (
-            <button className="btn btnPrimary" onClick={onClose} style={{ flex: 1 }}>
+            <button className="btn btnPrimary" onClick={onClose} style={{ flex: 1, minWidth: 120 }}>
               {lang === "da" ? "Luk" : "Close"}
             </button>
           )}
@@ -938,5 +877,6 @@ export default function PrepareWizard({
       </div>
     </div>
   );
-}
-                
+};
+
+export default PrepareWizard;
