@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
 import type { Visit } from "../firestore";
-import { addVisit } from "../firestore";
+import { addVisit, updateVisit } from "../firestore";
 
 type Props = {
   lang: Lang;
   userId: string;
+  mode?: "prepare";
   petId: string;
   petName: string;
   onClose: () => void;
@@ -22,9 +23,14 @@ export default function PrepareWizard({
   onComplete
 }: Props) {
   const t = useTranslation(lang);
+
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [mode, setMode] = useState<"wizard" | "save" | "done">("wizard");
+
+  const [visitId, setVisitId] = useState<string | null>(null);
+  const didCreateDraft = useRef(false);
+  const autosaveTimer = useRef<number | null>(null);
 
   const [draft, setDraft] = useState<Visit>({
     userId,
@@ -36,11 +42,53 @@ export default function PrepareWizard({
     patterns: "",
     associatedSigns: "",
     previousTreatment: "",
-    questionsVet: ""
+    questionsVet: "",
+    status: "draft"
   });
 
+  // Create draft doc immediately (so closing the modal still keeps progress)
+  useEffect(() => {
+    if (didCreateDraft.current) return;
+    didCreateDraft.current = true;
+
+    (async () => {
+      try {
+        const ref = await addVisit({ ...draft, status: "draft" });
+        setVisitId(ref.id);
+      } catch (e: any) {
+        alert(t.error + ": " + (e?.message ?? String(e)));
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Debounced autosave on any draft change (after we have visitId)
+  useEffect(() => {
+    if (!visitId) return;
+
+    if (autosaveTimer.current) {
+      window.clearTimeout(autosaveTimer.current);
+    }
+
+    autosaveTimer.current = window.setTimeout(async () => {
+      try {
+        await updateVisit(visitId, { ...draft, status: "draft" });
+      } catch (e) {
+        console.error("Autosave failed", e);
+      }
+    }, 500);
+
+    return () => {
+      if (autosaveTimer.current) window.clearTimeout(autosaveTimer.current);
+    };
+  }, [draft, visitId]);
+
   const stepData = [
-    { title: "Basics", desc: "Tell us about today's visit", ok: !!(draft.visitDate && draft.mainConcern) },
+    {
+      title: "Basics",
+      desc: "Tell us about today's visit",
+      ok: !!(draft.visitDate && draft.mainConcern)
+    },
     { title: "When did it start?", desc: "Help your vet understand the timeline", ok: true },
     { title: "How is it progressing?", desc: "Better, worse, or the same?", ok: true },
     { title: "Any patterns or triggers?", desc: "Does it happen at certain times?", ok: true },
@@ -58,9 +106,18 @@ export default function PrepareWizard({
   };
 
   const handleSave = async () => {
+    if (!visitId) {
+      alert(
+        lang === "da"
+          ? "Kladde oprettes stadig. Prøv igen om et øjeblik."
+          : "Still preparing your draft. Please try again in a moment."
+      );
+      return;
+    }
+
     setSaving(true);
     try {
-      await addVisit(draft);
+      await updateVisit(visitId, { ...draft, status: "final" });
       if (onComplete) await onComplete();
       setMode("done");
       setSaving(false);
@@ -154,32 +211,38 @@ export default function PrepareWizard({
 
       case 4:
         return (
+          <>
+            <label className="label">
+              What else is different?
+              <textarea
+                className="textarea"
+                value={draft.associatedSigns}
+                onChange={(e) => setDraft({ ...draft, associatedSigns: e.target.value })}
+                placeholder="e.g., appetite changes, behavior changes, energy level"
+                rows={4}
+              />
+            </label>
+
+            <div className="muted" style={{ marginTop: 8 }}>
+              Tip: If you have a photo or video to show your vet, you can add it at the end.
+            </div>
+          </>
+        );
+
+      case 5:
+        return (
           <label className="label">
-            What else is different?
+            Medications & home remedies
             <textarea
               className="textarea"
-              value={draft.associatedSigns}
-              onChange={(e) => setDraft({ ...draft, associatedSigns: e.target.value })}
-              placeholder="e.g., appetite changes, behavior changes, energy level"
+              value={draft.previousTreatment}
+              onChange={(e) => setDraft({ ...draft, previousTreatment: e.target.value })}
+              placeholder="e.g., what you tried at home and if your pet is getting ANY medication at all?"
               rows={4}
             />
           </label>
         );
 
-      case 5:
-  return (
-    <label className="label">
-      Medications & home remedies
-      <textarea
-        className="textarea"
-        value={draft.previousTreatment}
-        onChange={(e) => setDraft({ ...draft, previousTreatment: e.target.value })}
-        placeholder="e.g., what you tried at home and if your pet is getting ANY medication at all?"
-        rows={4}
-      />
-    </label>
-  );
-          
       case 6:
         return (
           <label className="label">
@@ -204,9 +267,7 @@ export default function PrepareWizard({
     if (!value || value.trim() === "") return null;
     return (
       <div style={{ marginBottom: 12 }}>
-        <p style={{ margin: "0 0 4px 0", fontWeight: "bold", fontSize: 14 }}>
-          {label}
-        </p>
+        <p style={{ margin: "0 0 4px 0", fontWeight: "bold", fontSize: 14 }}>{label}</p>
         <p style={{ margin: 0, whiteSpace: "pre-wrap", fontSize: 14, lineHeight: 1.5 }}>
           {value}
         </p>
@@ -297,7 +358,6 @@ export default function PrepareWizard({
           {/* MODE 2: SAVE (REVIEW) */}
           {mode === "save" && (
             <>
-              {/* Header info */}
               <div
                 style={{
                   backgroundColor: "var(--bgAlt)",
@@ -314,7 +374,6 @@ export default function PrepareWizard({
                 </p>
               </div>
 
-              {/* Full prep details */}
               <div
                 style={{
                   backgroundColor: "var(--bgAlt)",
@@ -370,7 +429,7 @@ export default function PrepareWizard({
           )}
         </div>
 
-        {/* FOOTER: Only show action buttons here */}
+        {/* FOOTER */}
         <div
           style={{
             padding: "12px 16px",
@@ -381,7 +440,6 @@ export default function PrepareWizard({
             alignItems: "center"
           }}
         >
-          {/* Left: Back button (only in wizard, only if not first step) */}
           {mode === "wizard" && step > 0 && (
             <button
               className="btn btnSecondary"
@@ -392,10 +450,8 @@ export default function PrepareWizard({
             </button>
           )}
 
-          {/* Center spacer if no back button */}
           {(mode !== "wizard" || step === 0) && <div style={{ flex: 0, minWidth: 80 }} />}
 
-          {/* Right: Primary action (big) */}
           {mode === "wizard" && (
             <button
               className="btn btnPrimary"
