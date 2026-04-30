@@ -28,6 +28,7 @@ export default function Dashboard({
   const [mode, setMode] = useState<DashboardMode>("home");
   const [menuOpen, setMenuOpen] = useState(false);
   const [showEmergencyGuide, setShowEmergencyGuide] = useState(false);
+  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
 
   const handlePrepareClick = () => {
     setMode("prepare");
@@ -68,7 +69,8 @@ export default function Dashboard({
                   lineHeight: "1.6"
                 }}
               >
-                Choose a pet (or add one) and start gathering your observations. Partner with your vet by preparing for the visit.
+                Choose a pet (or add one) and start gathering your observations. Partner with your vet
+                by preparing for the visit.
               </p>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
@@ -142,7 +144,15 @@ export default function Dashboard({
             zIndex: 50
           }}
         >
-          <div style={{ width: "100%", maxWidth: "360px", display: "flex", flexDirection: "column", gap: 8 }}>
+          <div
+            style={{
+              width: "100%",
+              maxWidth: "360px",
+              display: "flex",
+              flexDirection: "column",
+              gap: 8
+            }}
+          >
             <button
               onClick={handlePrepareClick}
               className="btn btnPrimary"
@@ -214,7 +224,7 @@ export default function Dashboard({
         onDeleteAccount={onDeleteAccount}
         onEmergencyGuide={() => setShowEmergencyGuide(true)}
         onMedicalDisclaimer={() => alert(t.medicalDisclaimer)}
-        onPrivacyPolicy={() => {}}
+        onPrivacyPolicy={() => setShowPrivacyPolicy(true)}
         onMyPets={() => {
           setMode("pets");
           setMenuOpen(false);
@@ -224,6 +234,54 @@ export default function Dashboard({
           setMenuOpen(false);
         }}
       />
+
+      {/* PRIVACY POLICY MODAL */}
+      {showPrivacyPolicy && (
+        <div
+          className="modal"
+          onClick={() => setShowPrivacyPolicy(false)}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 2000
+          }}
+        >
+          <div
+            className="modalContent"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: "#fff",
+              borderRadius: "8px",
+              padding: "24px",
+              maxWidth: "90%",
+              maxHeight: "80vh",
+              overflowY: "auto"
+            }}
+          >
+            <h2>{lang === "da" ? "Privatlivspolitik" : "Privacy Policy"}</h2>
+            <p style={{ color: "var(--textMuted)" }}>
+              {lang === "da"
+                ? "Indsæt din privatlivspolitik her (eller genbrug den modal du allerede har lavet)."
+                : "Paste your privacy policy here (or reuse the modal you already created)."}
+            </p>
+
+            <button
+              onClick={() => setShowPrivacyPolicy(false)}
+              className="btn btnPrimary"
+              style={{ marginTop: "16px" }}
+            >
+              {t.close}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* EMERGENCY GUIDE MODAL */}
       {showEmergencyGuide && (
@@ -259,7 +317,10 @@ export default function Dashboard({
             <p>
               <strong>This is not a substitute for professional veterinary care.</strong>
             </p>
-            <p>If your pet is experiencing a life-threatening emergency, contact your veterinarian or emergency vet clinic immediately.</p>
+            <p>
+              If your pet is experiencing a life-threatening emergency, contact your veterinarian
+              or emergency vet clinic immediately.
+            </p>
             <h3>Signs of Emergency:</h3>
             <ul>
               <li>Difficulty breathing or choking</li>
@@ -271,7 +332,11 @@ export default function Dashboard({
               <li>Severe vomiting or diarrhea</li>
               <li>Sudden paralysis</li>
             </ul>
-            <button onClick={() => setShowEmergencyGuide(false)} className="btn btnPrimary" style={{ marginTop: "16px" }}>
+            <button
+              onClick={() => setShowEmergencyGuide(false)}
+              className="btn btnPrimary"
+              style={{ marginTop: "16px" }}
+            >
               {t.close}
             </button>
           </div>
