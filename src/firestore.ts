@@ -96,6 +96,10 @@ export interface Visit {
   howProgressing: string;
   patterns: string;
   associatedSigns: string;
+
+  // NEW (optional) — broad catch-all “Other details for the vet”
+  otherDetails?: string;
+
   previousTreatment: string;
   questionsVet: string;
 
