@@ -228,6 +228,18 @@ export const getUserVisits = async (userId: string) => {
   return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Visit));
 };
 
+export const getVisitById = async (userId: string, visitId: string): Promise<Visit | null> => {
+  const ref = doc(db, "visits", visitId);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return null;
+
+  const data = snap.data() as any;
+  // Safety: ensure user owns it
+  if (data.userId !== userId) return null;
+
+  return { id: snap.id, ...data } as Visit;
+};
+
 // --------------------
 // Visit Notes
 // --------------------
