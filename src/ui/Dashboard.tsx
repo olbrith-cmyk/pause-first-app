@@ -5,6 +5,8 @@ import PetsScreen from "./PetsScreen";
 import VisitsScreen from "./VisitsScreen";
 import HamburgerMenu from "./HamburgerMenu";
 
+import { EmergencyGuide, MedicalDisclaimer, PrivacyPolicy } from "../ui/Modals";
+
 type DashboardMode = "home" | "myVisits" | "prepare" | "pets";
 
 export default function Dashboard({
@@ -26,8 +28,10 @@ export default function Dashboard({
 
   const [mode, setMode] = useState<DashboardMode>("home");
   const [menuOpen, setMenuOpen] = useState(false);
+
   const [showEmergencyGuide, setShowEmergencyGuide] = useState(false);
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
+  const [showMedicalDisclaimer, setShowMedicalDisclaimer] = useState(false);
 
   const handlePrepareClick = () => setMode("prepare");
 
@@ -272,9 +276,18 @@ export default function Dashboard({
         onClose={() => setMenuOpen(false)}
         onLogout={onLogout}
         onDeleteAccount={onDeleteAccount}
-        onEmergencyGuide={() => setShowEmergencyGuide(true)}
-        onMedicalDisclaimer={() => alert(t.medicalDisclaimer)}
-        onPrivacyPolicy={() => setShowPrivacyPolicy(true)}
+        onEmergencyGuide={() => {
+          setMenuOpen(false);
+          setShowEmergencyGuide(true);
+        }}
+        onMedicalDisclaimer={() => {
+          setMenuOpen(false);
+          setShowMedicalDisclaimer(true);
+        }}
+        onPrivacyPolicy={() => {
+          setMenuOpen(false);
+          setShowPrivacyPolicy(true);
+        }}
         onMyPets={() => {
           setMode("pets");
           setMenuOpen(false);
@@ -285,112 +298,17 @@ export default function Dashboard({
         }}
       />
 
-      {/* PRIVACY POLICY MODAL */}
-      {showPrivacyPolicy && (
-        <div
-          className="modal"
-          onClick={() => setShowPrivacyPolicy(false)}
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 2000
-          }}
-        >
-          <div
-            className="modalContent"
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              backgroundColor: "#fff",
-              borderRadius: "8px",
-              padding: "24px",
-              maxWidth: "90%",
-              maxHeight: "80vh",
-              overflowY: "auto"
-            }}
-          >
-            <h2>{lang === "da" ? "Privatlivspolitik" : "Privacy Policy"}</h2>
-            <p style={{ color: "var(--textMuted)" }}>
-              {lang === "da"
-                ? "Indsæt din privatlivspolitik her (eller genbrug den modal du allerede har lavet)."
-                : "Paste your privacy policy here (or reuse the modal you already created)."}
-            </p>
-
-            <button
-              onClick={() => setShowPrivacyPolicy(false)}
-              className="btn btnPrimary"
-              style={{ marginTop: "16px" }}
-            >
-              {t.close}
-            </button>
-          </div>
-        </div>
+      {/* REAL MODALS (restored) */}
+      {showEmergencyGuide && (
+        <EmergencyGuide lang={lang} onClose={() => setShowEmergencyGuide(false)} />
       )}
 
-      {/* EMERGENCY GUIDE MODAL */}
-      {showEmergencyGuide && (
-        <div
-          className="modal"
-          onClick={() => setShowEmergencyGuide(false)}
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 2000
-          }}
-        >
-          <div
-            className="modalContent"
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              backgroundColor: "#fff",
-              borderRadius: "8px",
-              padding: "24px",
-              maxWidth: "90%",
-              maxHeight: "80vh",
-              overflowY: "auto"
-            }}
-          >
-            <h2>{t.emergencyGuide}</h2>
-            <p>
-              <strong>This is not a substitute for professional veterinary care.</strong>
-            </p>
-            <p>
-              If your pet is experiencing a life-threatening emergency, contact your veterinarian
-              or emergency vet clinic immediately.
-            </p>
-            <h3>Signs of Emergency:</h3>
-            <ul>
-              <li>Difficulty breathing or choking</li>
-              <li>Loss of consciousness or unresponsiveness</li>
-              <li>Severe bleeding</li>
-              <li>Inability to urinate or defecate</li>
-              <li>Severe trauma or injury</li>
-              <li>Seizures</li>
-              <li>Severe vomiting or diarrhea</li>
-              <li>Sudden paralysis</li>
-            </ul>
-            <button
-              onClick={() => setShowEmergencyGuide(false)}
-              className="btn btnPrimary"
-              style={{ marginTop: "16px" }}
-            >
-              {t.close}
-            </button>
-          </div>
-        </div>
+      {showMedicalDisclaimer && (
+        <MedicalDisclaimer lang={lang} onClose={() => setShowMedicalDisclaimer(false)} />
+      )}
+
+      {showPrivacyPolicy && (
+        <PrivacyPolicy lang={lang} onClose={() => setShowPrivacyPolicy(false)} />
       )}
     </div>
   );
