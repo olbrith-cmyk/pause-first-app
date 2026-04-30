@@ -81,7 +81,7 @@ export default function HamburgerMenu({
     },
     {
       icon: "📋",
-      label: "Privacy Policy",
+      label: lang === "da" ? "Privatlivspolitik" : "Privacy Policy",
       onClick: onPrivacyPolicy,
       color: "#1976d2"
     }
