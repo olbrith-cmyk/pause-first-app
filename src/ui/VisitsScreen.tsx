@@ -87,12 +87,26 @@ export default function VisitsScreen({
     }
   }, [mode]);
 
-  const visitsSorted = useMemo(() => {
-    return [...visits].sort((a, b) => {
-      const ad = a.visitDate || "";
-      const bd = b.visitDate || "";
-      return bd.localeCompare(ad);
-    });
+  // Drafts (for "Continue draft")
+  const draftVisits = useMemo(() => {
+    return visits
+      .filter((v) => (v.status ?? "final") === "draft")
+      .sort((a, b) => {
+        const ad = (a.updatedAt as any)?.toMillis?.() ?? 0;
+        const bd = (b.updatedAt as any)?.toMillis?.() ?? 0;
+        return bd - ad;
+      });
+  }, [visits]);
+
+  // Final visits (for main list)
+  const finalVisitsSorted = useMemo(() => {
+    return visits
+      .filter((v) => (v.status ?? "final") !== "draft")
+      .sort((a, b) => {
+        const ad = a.visitDate || "";
+        const bd = b.visitDate || "";
+        return bd.localeCompare(ad);
+      });
   }, [visits]);
 
   const openVisitCard = async (visitId: string) => {
@@ -164,8 +178,7 @@ export default function VisitsScreen({
       await load();
 
       const updated = await getUserPets(userId);
-      const createdPet =
-        [...updated].reverse().find((p) => p.name === "(Unnamed pet)") ?? null;
+      const createdPet = [...updated].reverse().find((p) => p.name === "(Unnamed pet)") ?? null;
 
       if (!createdPet?.id) {
         alert("Could not create pet. Please try again.");
@@ -217,11 +230,48 @@ export default function VisitsScreen({
         <div className="stack">
           <h3>{t.myVisits}</h3>
 
-          {visitsSorted.length === 0 && <div className="muted">No visits yet.</div>}
+          {/* Continue draft */}
+          {draftVisits.length > 0 && !openVisit && (
+            <div className="panel" style={{ marginBottom: 12 }}>
+              <div className="panelHeader">
+                <h4 style={{ margin: 0 }}>
+                  {lang === "da" ? "Fortsæt kladde" : "Continue draft"}
+                </h4>
+              </div>
+
+              <div className="stack">
+                {draftVisits.slice(0, 3).map((v) => {
+                  const pet = pets.find((p) => p.id === v.petId);
+                  return (
+                    <button
+                      key={v.id}
+                      className="itemCard"
+                      onClick={() => openVisitCard(v.id!)}
+                      style={{ cursor: "pointer", textAlign: "left" }}
+                    >
+                      <div className="itemTitle">
+                        {pet?.name || "(Unnamed)"} — {v.visitDate || "No date"}
+                      </div>
+                      <div className="muted">
+                        {v.mainConcern ||
+                          (lang === "da"
+                            ? "Kladde (ingen hovedbekymring endnu)"
+                            : "Draft (no main concern yet)")}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {finalVisitsSorted.length === 0 && draftVisits.length === 0 && (
+            <div className="muted">No visits yet.</div>
+          )}
 
           {!openVisit && (
             <>
-              {visitsSorted.map((v) => {
+              {finalVisitsSorted.map((v) => {
                 const pet = pets.find((p) => p.id === v.petId);
                 return (
                   <button
@@ -273,7 +323,11 @@ export default function VisitsScreen({
               <ViewOnlyPrepare visit={openVisit} />
 
               <h4 style={{ marginTop: 16 }}>Visit Notes</h4>
-              {openNote ? <ViewOnlyNotes note={openNote} /> : <div className="muted">No visit notes yet.</div>}
+              {openNote ? (
+                <ViewOnlyNotes note={openNote} />
+              ) : (
+                <div className="muted">No visit notes yet.</div>
+              )}
             </div>
           )}
 
@@ -309,7 +363,9 @@ export default function VisitsScreen({
                 <textarea
                   className="textarea"
                   value={editingNote.testsPerformed}
-                  onChange={(e) => setEditingNote({ ...editingNote, testsPerformed: e.target.value })}
+                  onChange={(e) =>
+                    setEditingNote({ ...editingNote, testsPerformed: e.target.value })
+                  }
                   placeholder="Any tests done?"
                   rows={3}
                 />
@@ -320,7 +376,9 @@ export default function VisitsScreen({
                 <textarea
                   className="textarea"
                   value={editingNote.treatmentMeds}
-                  onChange={(e) => setEditingNote({ ...editingNote, treatmentMeds: e.target.value })}
+                  onChange={(e) =>
+                    setEditingNote({ ...editingNote, treatmentMeds: e.target.value })
+                  }
                   placeholder="Medications or treatment prescribed"
                   rows={3}
                 />
@@ -331,7 +389,9 @@ export default function VisitsScreen({
                 <textarea
                   className="textarea"
                   value={editingNote.homeInstructions}
-                  onChange={(e) => setEditingNote({ ...editingNote, homeInstructions: e.target.value })}
+                  onChange={(e) =>
+                    setEditingNote({ ...editingNote, homeInstructions: e.target.value })
+                  }
                   placeholder="What to do at home?"
                   rows={3}
                 />
@@ -374,7 +434,7 @@ export default function VisitsScreen({
   // -------------------------
   return (
     <div className="pageContent">
-            {/* Choose Pet Modal */}
+      {/* Choose Pet Modal */}
       {showChoosePetModal && !showAddPetForm && (
         <div
           className="modal"
@@ -462,9 +522,7 @@ export default function VisitsScreen({
                 </button>
 
                 <button className="btn btnSecondary" onClick={handleContinueWithoutProfile}>
-                  {lang === "da"
-                    ? "Fortsæt uden kæledyrsprofil"
-                    : "Continue without pet profile"}
+                  {lang === "da" ? "Fortsæt uden kæledyrsprofil" : "Continue without pet profile"}
                 </button>
 
                 <button className="btn btnSecondary" onClick={() => setShowChoosePetModal(false)}>
@@ -476,7 +534,7 @@ export default function VisitsScreen({
         </div>
       )}
 
-      {/* Add Pet Modal */}
+            {/* Add Pet Modal */}
       {showChoosePetModal && showAddPetForm && (
         <div
           className="modal"
@@ -522,9 +580,7 @@ export default function VisitsScreen({
                 alignItems: "center"
               }}
             >
-              <h3 style={{ margin: 0 }}>
-                {lang === "da" ? "Tilføj kæledyr" : "Add Pet"}
-              </h3>
+              <h3 style={{ margin: 0 }}>{lang === "da" ? "Tilføj kæledyr" : "Add Pet"}</h3>
               <button
                 className="btnClose"
                 onClick={() => {
@@ -553,9 +609,7 @@ export default function VisitsScreen({
                   <input
                     className="input"
                     value={editingNewPet.name}
-                    onChange={(e) =>
-                      setEditingNewPet({ ...editingNewPet, name: e.target.value })
-                    }
+                    onChange={(e) => setEditingNewPet({ ...editingNewPet, name: e.target.value })}
                     placeholder={lang === "da" ? "F.eks. Bella" : "e.g. Bella"}
                   />
                 </label>
@@ -577,9 +631,7 @@ export default function VisitsScreen({
                   <input
                     className="input"
                     value={editingNewPet.age}
-                    onChange={(e) =>
-                      setEditingNewPet({ ...editingNewPet, age: e.target.value })
-                    }
+                    onChange={(e) => setEditingNewPet({ ...editingNewPet, age: e.target.value })}
                     placeholder={lang === "da" ? "F.eks. 5 år" : "e.g. 5 years"}
                   />
                 </label>
@@ -589,9 +641,7 @@ export default function VisitsScreen({
                   <input
                     className="input"
                     value={editingNewPet.sex}
-                    onChange={(e) =>
-                      setEditingNewPet({ ...editingNewPet, sex: e.target.value })
-                    }
+                    onChange={(e) => setEditingNewPet({ ...editingNewPet, sex: e.target.value })}
                     placeholder={lang === "da" ? "Han/hun..." : "Male/female..."}
                   />
                 </label>
@@ -620,7 +670,6 @@ export default function VisitsScreen({
                     setShowAddPetForm(false);
                     setEditingNewPet(emptyPet(userId));
                     setPetFormError(null);
-                    // go back to choose pet list
                     setShowChoosePetModal(true);
                   }}
                 >
@@ -637,11 +686,16 @@ export default function VisitsScreen({
         <PrepareWizard
           lang={lang}
           userId={userId}
-          pet={selectedPetForWizard}
+          mode="prepare"
+          petId={selectedPetForWizard.id}
+          petName={selectedPetForWizard.name || "(Unnamed)"}
           onClose={async () => {
             setShowWizard(false);
             setSelectedPetForWizard(null);
             setShowChoosePetModal(false);
+            await load();
+          }}
+          onComplete={async () => {
             await load();
           }}
         />
@@ -657,17 +711,11 @@ export default function VisitsScreen({
           </div>
 
           <div className="row" style={{ marginTop: 12, gap: 8 }}>
-            <button
-              className="btn btnPrimary"
-              onClick={() => setShowChoosePetModal(true)}
-            >
+            <button className="btn btnPrimary" onClick={() => setShowChoosePetModal(true)}>
               {lang === "da" ? "Vælg kæledyr" : "Choose Pet"}
             </button>
 
-            <button
-              className="btn btnSecondary"
-              onClick={() => setShowChoosePetModal(false)}
-            >
+            <button className="btn btnSecondary" onClick={() => setShowChoosePetModal(false)}>
               {t.cancel}
             </button>
           </div>
