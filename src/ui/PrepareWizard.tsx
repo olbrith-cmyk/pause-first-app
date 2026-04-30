@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
-import type { Visit } from "../firestore";
+import type { CurrentStatus, TriState, Visit } from "../firestore";
 import { addVisit, updateVisit } from "../firestore";
+import TriToggle from "./TriToggle";
 
 type Props = {
   lang: Lang;
@@ -13,6 +14,21 @@ type Props = {
   onClose: () => void;
   onComplete?: () => void | Promise<void>;
 };
+
+function makeEmptyStatus(): CurrentStatus {
+  const normal: TriState = "normal";
+  return {
+    appetite: normal,
+    drinking: normal,
+    energy: normal,
+    toileting: normal,
+    gi: normal,
+    breathing: normal,
+    mobilityPain: normal,
+    skinEars: normal,
+    otherNotes: ""
+  };
+}
 
 export default function PrepareWizard({
   lang,
@@ -43,10 +59,11 @@ export default function PrepareWizard({
     associatedSigns: "",
     previousTreatment: "",
     questionsVet: "",
+    currentStatus: makeEmptyStatus(),
     status: "draft"
   });
 
-  // Create draft doc immediately (so closing the modal still keeps progress)
+  // Create draft doc immediately
   useEffect(() => {
     if (didCreateDraft.current) return;
     didCreateDraft.current = true;
@@ -62,13 +79,11 @@ export default function PrepareWizard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Debounced autosave on any draft change (after we have visitId)
+  // Debounced autosave
   useEffect(() => {
     if (!visitId) return;
 
-    if (autosaveTimer.current) {
-      window.clearTimeout(autosaveTimer.current);
-    }
+    if (autosaveTimer.current) window.clearTimeout(autosaveTimer.current);
 
     autosaveTimer.current = window.setTimeout(async () => {
       try {
@@ -85,16 +100,48 @@ export default function PrepareWizard({
 
   const stepData = [
     {
-      title: "Basics",
-      desc: "Tell us about today's visit",
+      title: lang === "da" ? "Basis" : "Basics",
+      desc: lang === "da" ? "Fortæl om besøget" : "Tell us about today's visit",
       ok: !!(draft.visitDate && draft.mainConcern)
     },
-    { title: "When did it start?", desc: "Help your vet understand the timeline", ok: true },
-    { title: "How is it progressing?", desc: "Better, worse, or the same?", ok: true },
-    { title: "Any patterns or triggers?", desc: "Does it happen at certain times?", ok: true },
-    { title: "What else is different?", desc: "Any other changes you've noticed", ok: true },
-    { title: "Medications & home remedies", desc: "What have you already tried?", ok: true },
-    { title: "Questions for the vet", desc: "What do you want to ask?", ok: true }
+    {
+      title: lang === "da" ? "Hvornår startede det?" : "When did it start?",
+      desc: lang === "da" ? "Hjælp dyrlægen med tidslinjen" : "Help your vet understand the timeline",
+      ok: true
+    },
+    {
+      title: lang === "da" ? "Hvordan udvikler det sig?" : "How is it progressing?",
+      desc: lang === "da" ? "Bedre, værre eller det samme?" : "Better, worse, or the same?",
+      ok: true
+    },
+    {
+      title: lang === "da" ? "Mønstre eller triggere?" : "Any patterns or triggers?",
+      desc: lang === "da" ? "Sker det på bestemte tidspunkter?" : "Does it happen at certain times?",
+      ok: true
+    },
+    {
+      title: lang === "da" ? "Hvordan har dit dyr det lige nu?" : "How is your animal doing right now?",
+      desc:
+        lang === "da"
+          ? "Vælg 'Som normalt', 'Anderledes' eller 'Ikke sikker'"
+          : "Choose 'As usual', 'Different', or 'Not sure'",
+      ok: true
+    },
+    {
+      title: lang === "da" ? "Hvad ellers er anderledes?" : "What else is different?",
+      desc: lang === "da" ? "Andre ændringer du har lagt mærke til" : "Any other changes you've noticed",
+      ok: true
+    },
+    {
+      title: lang === "da" ? "Medicin & hjemmeforsøg" : "Medications & home remedies",
+      desc: lang === "da" ? "Hvad har du allerede prøvet?" : "What have you already tried?",
+      ok: true
+    },
+    {
+      title: lang === "da" ? "Spørgsmål til dyrlægen" : "Questions for the vet",
+      desc: lang === "da" ? "Hvad vil du gerne spørge om?" : "What do you want to ask?",
+      ok: true
+    }
   ];
 
   const isLast = step === stepData.length - 1;
@@ -117,6 +164,7 @@ export default function PrepareWizard({
 
     setSaving(true);
     try {
+      // Finalize, but user can still edit later (we do NOT lock anything here)
       await updateVisit(visitId, { ...draft, status: "final" });
       if (onComplete) await onComplete();
       setMode("done");
@@ -127,12 +175,60 @@ export default function PrepareWizard({
     }
   };
 
-  const handleEmail = () => {
-    alert("Email feature coming soon!");
-  };
+  const handleEmail = () => alert("Email feature coming soon!");
+  const handlePdf = () => alert("PDF download feature coming soon!");
 
-  const handlePdf = () => {
-    alert("PDF download feature coming soon!");
+  const renderCurrentStatusRow = (label: string, key: keyof CurrentStatus, notesKey: keyof CurrentStatus) => {
+    const cs = draft.currentStatus ?? makeEmptyStatus();
+    const value = (cs[key] as TriState) ?? "normal";
+    const notesValue = (cs[notesKey] as string) ?? "";
+
+    return (
+      <div
+        style={{
+          padding: 12,
+          border: "1px solid var(--border)",
+          borderRadius: 10,
+          marginBottom: 10,
+          background: "white"
+        }}
+      >
+        <div style={{ fontWeight: 700, marginBottom: 8 }}>{label}</div>
+
+        <TriToggle
+          lang={lang}
+          value={value}
+          onChange={(next) => {
+            setDraft({
+              ...draft,
+              currentStatus: {
+                ...cs,
+                [key]: next
+              }
+            });
+          }}
+        />
+
+        <label className="label" style={{ marginTop: 10 }}>
+          {lang === "da" ? "Noter (valgfrit)" : "Notes (optional)"}
+          <textarea
+            className="textarea"
+            value={notesValue}
+            onChange={(e) => {
+              setDraft({
+                ...draft,
+                currentStatus: {
+                  ...cs,
+                  [notesKey]: e.target.value
+                }
+              });
+            }}
+            rows={2}
+            placeholder={lang === "da" ? "Skriv kort hvis noget er anderledes..." : "Add a short note if something is different..."}
+          />
+        </label>
+      </div>
+    );
   };
 
   const renderStep = () => {
@@ -141,11 +237,11 @@ export default function PrepareWizard({
         return (
           <>
             <div className="muted" style={{ marginBottom: 8 }}>
-              Pet: <strong>{petName}</strong>
+              {lang === "da" ? "Kæledyr:" : "Pet:"} <strong>{petName}</strong>
             </div>
 
             <label className="label">
-              Visit date
+              {lang === "da" ? "Besøgsdato" : "Visit date"}
               <input
                 className="input"
                 type="date"
@@ -155,12 +251,16 @@ export default function PrepareWizard({
             </label>
 
             <label className="label" style={{ marginTop: 12 }}>
-              Main concern
+              {lang === "da" ? "Hovedbekymring" : "Main concern"}
               <textarea
                 className="textarea"
                 value={draft.mainConcern}
                 onChange={(e) => setDraft({ ...draft, mainConcern: e.target.value })}
-                placeholder="e.g., limping, not eating, vomiting, behavior change"
+                placeholder={
+                  lang === "da"
+                    ? "f.eks. halter, spiser ikke, opkast, adfærdsændring"
+                    : "e.g., limping, not eating, vomiting, behavior change"
+                }
                 rows={4}
               />
             </label>
@@ -170,12 +270,12 @@ export default function PrepareWizard({
       case 1:
         return (
           <label className="label">
-            When did it start?
+            {lang === "da" ? "Hvornår startede det?" : "When did it start?"}
             <textarea
               className="textarea"
               value={draft.whenStart}
               onChange={(e) => setDraft({ ...draft, whenStart: e.target.value })}
-              placeholder="e.g., 3 days ago, this morning"
+              placeholder={lang === "da" ? "f.eks. for 3 dage siden, i morges" : "e.g., 3 days ago, this morning"}
               rows={4}
             />
           </label>
@@ -184,12 +284,16 @@ export default function PrepareWizard({
       case 2:
         return (
           <label className="label">
-            How is it progressing?
+            {lang === "da" ? "Hvordan udvikler det sig?" : "How is it progressing?"}
             <textarea
               className="textarea"
               value={draft.howProgressing}
               onChange={(e) => setDraft({ ...draft, howProgressing: e.target.value })}
-              placeholder="e.g., getting worse, staying the same, improving"
+              placeholder={
+                lang === "da"
+                  ? "f.eks. bliver værre, det samme, bliver bedre"
+                  : "e.g., getting worse, staying the same, improving"
+              }
               rows={4}
             />
           </label>
@@ -198,12 +302,16 @@ export default function PrepareWizard({
       case 3:
         return (
           <label className="label">
-            Any patterns or triggers?
+            {lang === "da" ? "Mønstre eller triggere?" : "Any patterns or triggers?"}
             <textarea
               className="textarea"
               value={draft.patterns}
               onChange={(e) => setDraft({ ...draft, patterns: e.target.value })}
-              placeholder="e.g., happens after meals, worse in the morning"
+              placeholder={
+                lang === "da"
+                  ? "f.eks. efter mad, værre om morgenen"
+                  : "e.g., happens after meals, worse in the morning"
+              }
               rows={4}
             />
           </label>
@@ -212,46 +320,136 @@ export default function PrepareWizard({
       case 4:
         return (
           <>
-            <label className="label">
-              What else is different?
+            <div className="muted" style={{ marginBottom: 10 }}>
+              {lang === "da"
+                ? "Vælg det, der passer bedst. Tilføj en kort note hvis du vil."
+                : "Choose what fits best. Add a short note if you want."}
+            </div>
+
+            {renderCurrentStatusRow(
+              lang === "da" ? "Appetit" : "Appetite",
+              "appetite",
+              "appetiteNotes"
+            )}
+            {renderCurrentStatusRow(
+              lang === "da" ? "Drikker" : "Drinking",
+              "drinking",
+              "drinkingNotes"
+            )}
+            {renderCurrentStatusRow(
+              lang === "da" ? "Energi" : "Energy",
+              "energy",
+              "energyNotes"
+            )}
+            {renderCurrentStatusRow(
+              lang === "da" ? "Toiletvaner" : "Toileting",
+              "toileting",
+              "toiletingNotes"
+            )}
+            {renderCurrentStatusRow(
+              lang === "da" ? "Mave/tarm" : "GI (vomiting/diarrhea)",
+              "gi",
+              "giNotes"
+            )}
+            {renderCurrentStatusRow(
+              lang === "da" ? "Vejrtrækning" : "Breathing",
+              "breathing",
+              "breathingNotes"
+            )}
+            {renderCurrentStatusRow(
+              lang === "da" ? "Bevægelse/smerte" : "Mobility / pain",
+              "mobilityPain",
+              "mobilityPainNotes"
+            )}
+            {renderCurrentStatusRow(
+              lang === "da" ? "Hud/ører" : "Skin / ears",
+              "skinEars",
+              "skinEarsNotes"
+            )}
+
+            <label className="label" style={{ marginTop: 6 }}>
+              {lang === "da" ? "Andre noter (valgfrit)" : "Other notes (optional)"}
               <textarea
                 className="textarea"
-                value={draft.associatedSigns}
-                onChange={(e) => setDraft({ ...draft, associatedSigns: e.target.value })}
-                placeholder="e.g., appetite changes, behavior changes, energy level"
-                rows={4}
+                value={(draft.currentStatus?.otherNotes as string) ?? ""}
+                onChange={(e) => {
+                  const cs = draft.currentStatus ?? makeEmptyStatus();
+                  setDraft({
+                    ...draft,
+                    currentStatus: {
+                      ...cs,
+                      otherNotes: e.target.value
+                    }
+                  });
+                }}
+                rows={3}
+                placeholder={
+                  lang === "da"
+                    ? "Alt andet du synes er vigtigt lige nu..."
+                    : "Anything else you think is important right now..."
+                }
               />
             </label>
-
-            <div className="muted" style={{ marginTop: 8 }}>
-              Tip: If you have a photo or video to show your vet, you can add it at the end.
-            </div>
           </>
         );
 
       case 5:
         return (
-          <label className="label">
-            Medications & home remedies
-            <textarea
-              className="textarea"
-              value={draft.previousTreatment}
-              onChange={(e) => setDraft({ ...draft, previousTreatment: e.target.value })}
-              placeholder="e.g., what you tried at home and if your pet is getting ANY medication at all?"
-              rows={4}
-            />
-          </label>
+          <>
+            <label className="label">
+              {lang === "da" ? "Hvad ellers er anderledes?" : "What else is different?"}
+              <textarea
+                className="textarea"
+                value={draft.associatedSigns}
+                onChange={(e) => setDraft({ ...draft, associatedSigns: e.target.value })}
+                placeholder={
+                  lang === "da"
+                    ? "f.eks. ændret appetit, adfærd, energi"
+                    : "e.g., appetite changes, behavior changes, energy level"
+                }
+                rows={4}
+              />
+            </label>
+
+            <div className="muted" style={{ marginTop: 8 }}>
+              {lang === "da"
+                ? "Tip: Hvis du har et foto eller en video til dyrlægen, kan du tilføje det til sidst."
+                : "Tip: If you have a photo or video to show your vet, you can add it at the end."}
+            </div>
+          </>
         );
 
       case 6:
         return (
           <label className="label">
-            Questions for the vet
+            {lang === "da" ? "Medicin & hjemmeforsøg" : "Medications & home remedies"}
+            <textarea
+              className="textarea"
+              value={draft.previousTreatment}
+              onChange={(e) => setDraft({ ...draft, previousTreatment: e.target.value })}
+              placeholder={
+                lang === "da"
+                  ? "f.eks. hvad du har prøvet hjemme, og om dit dyr får NOGEN medicin"
+                  : "e.g., what you tried at home and if your pet is getting ANY medication at all?"
+              }
+              rows={4}
+            />
+          </label>
+        );
+
+      case 7:
+        return (
+          <label className="label">
+            {lang === "da" ? "Spørgsmål til dyrlægen" : "Questions for the vet"}
             <textarea
               className="textarea"
               value={draft.questionsVet}
               onChange={(e) => setDraft({ ...draft, questionsVet: e.target.value })}
-              placeholder="e.g., Is surgery needed? How long will recovery take?"
+              placeholder={
+                lang === "da"
+                  ? "f.eks. Er operation nødvendig? Hvor lang tid tager det?"
+                  : "e.g., Is surgery needed? How long will recovery take?"
+              }
               rows={4}
             />
           </label>
@@ -262,8 +460,7 @@ export default function PrepareWizard({
     }
   };
 
-  // Helper to render review line (only if filled)
-  const ReviewLine = ({ label, value }: { label: string; value: string }) => {
+const ReviewLine = ({ label, value }: { label: string; value: string }) => {
     if (!value || value.trim() === "") return null;
     return (
       <div style={{ marginBottom: 12 }}>
@@ -271,6 +468,107 @@ export default function PrepareWizard({
         <p style={{ margin: 0, whiteSpace: "pre-wrap", fontSize: 14, lineHeight: 1.5 }}>
           {value}
         </p>
+      </div>
+    );
+  };
+
+  const renderStatusReview = () => {
+    const cs = draft.currentStatus;
+    if (!cs) return null;
+
+    const labelFor = (v: TriState) => {
+      if (lang === "da") {
+        if (v === "normal") return "Som normalt";
+        if (v === "changed") return "Anderledes";
+        return "Ikke sikker";
+      }
+      if (v === "normal") return "As usual";
+      if (v === "changed") return "Different";
+      return "Not sure";
+    };
+
+    const Row = ({
+      label,
+      value,
+      notes
+    }: {
+      label: string;
+      value: TriState;
+      notes?: string;
+    }) => {
+      const hasNotes = !!notes && notes.trim() !== "";
+      return (
+        <div style={{ marginBottom: 10 }}>
+          <div style={{ fontWeight: 700, fontSize: 14 }}>{label}</div>
+          <div style={{ fontSize: 14, marginTop: 2 }}>{labelFor(value)}</div>
+          {hasNotes && (
+            <div style={{ fontSize: 13, color: "var(--textMuted)", marginTop: 2, whiteSpace: "pre-wrap" }}>
+              {notes}
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    return (
+      <div
+        style={{
+          backgroundColor: "var(--bgAlt)",
+          padding: 12,
+          borderRadius: 8,
+          marginBottom: 16
+        }}
+      >
+        <h4 style={{ margin: "0 0 10px 0" }}>
+          {lang === "da" ? "Status lige nu" : "Current status"}
+        </h4>
+
+        <Row
+          label={lang === "da" ? "Appetit" : "Appetite"}
+          value={cs.appetite}
+          notes={cs.appetiteNotes}
+        />
+        <Row
+          label={lang === "da" ? "Drikker" : "Drinking"}
+          value={cs.drinking}
+          notes={cs.drinkingNotes}
+        />
+        <Row
+          label={lang === "da" ? "Energi" : "Energy"}
+          value={cs.energy}
+          notes={cs.energyNotes}
+        />
+        <Row
+          label={lang === "da" ? "Toiletvaner" : "Toileting"}
+          value={cs.toileting}
+          notes={cs.toiletingNotes}
+        />
+        <Row
+          label={lang === "da" ? "Mave/tarm" : "GI"}
+          value={cs.gi}
+          notes={cs.giNotes}
+        />
+        <Row
+          label={lang === "da" ? "Vejrtrækning" : "Breathing"}
+          value={cs.breathing}
+          notes={cs.breathingNotes}
+        />
+        <Row
+          label={lang === "da" ? "Bevægelse/smerte" : "Mobility / pain"}
+          value={cs.mobilityPain}
+          notes={cs.mobilityPainNotes}
+        />
+        <Row
+          label={lang === "da" ? "Hud/ører" : "Skin / ears"}
+          value={cs.skinEars}
+          notes={cs.skinEarsNotes}
+        />
+
+        {!!cs.otherNotes && cs.otherNotes.trim() !== "" && (
+          <div style={{ marginTop: 8, fontSize: 13, color: "var(--textMuted)", whiteSpace: "pre-wrap" }}>
+            <strong>{lang === "da" ? "Andre noter:" : "Other notes:"}</strong> {cs.otherNotes}
+          </div>
+        )}
       </div>
     );
   };
@@ -318,13 +616,14 @@ export default function PrepareWizard({
         >
           <div style={{ flex: 1 }}>
             <h3 style={{ margin: 0 }}>
-              {mode === "wizard" && "Prepare for Visit"}
-              {mode === "save" && "Review & Save"}
-              {mode === "done" && "Your prep is ready!"}
+              {mode === "wizard" && (lang === "da" ? "Forbered besøg" : "Prepare for Visit")}
+              {mode === "save" && (lang === "da" ? "Gennemse & gem" : "Review & Save")}
+              {mode === "done" && (lang === "da" ? "Klar!" : "Your prep is ready!")}
             </h3>
             {mode === "wizard" && (
               <p style={{ margin: "6px 0 0 0", fontSize: 12, color: "var(--textMuted)" }}>
-                Step {step + 1} of {stepData.length}
+                {lang === "da" ? "Trin" : "Step"} {step + 1} {lang === "da" ? "af" : "of"}{" "}
+                {stepData.length}
               </p>
             )}
           </div>
@@ -367,12 +666,15 @@ export default function PrepareWizard({
                 }}
               >
                 <p style={{ margin: "0 0 6px 0" }}>
-                  <strong>Pet:</strong> {petName}
+                  <strong>{lang === "da" ? "Kæledyr:" : "Pet:"}</strong> {petName}
                 </p>
                 <p style={{ margin: "0 0 6px 0" }}>
-                  <strong>Visit Date:</strong> {draft.visitDate}
+                  <strong>{lang === "da" ? "Besøgsdato:" : "Visit Date:"}</strong>{" "}
+                  {draft.visitDate}
                 </p>
               </div>
+
+              {renderStatusReview()}
 
               <div
                 style={{
@@ -382,13 +684,34 @@ export default function PrepareWizard({
                   marginBottom: 16
                 }}
               >
-                <ReviewLine label="Main Concern" value={draft.mainConcern} />
-                <ReviewLine label="When did it start?" value={draft.whenStart} />
-                <ReviewLine label="How is it progressing?" value={draft.howProgressing} />
-                <ReviewLine label="Any patterns or triggers?" value={draft.patterns} />
-                <ReviewLine label="What else is different?" value={draft.associatedSigns} />
-                <ReviewLine label="Medications & home remedies" value={draft.previousTreatment} />
-                <ReviewLine label="Questions for the vet" value={draft.questionsVet} />
+                <ReviewLine
+                  label={lang === "da" ? "Hovedbekymring" : "Main Concern"}
+                  value={draft.mainConcern}
+                />
+                <ReviewLine
+                  label={lang === "da" ? "Hvornår startede det?" : "When did it start?"}
+                  value={draft.whenStart}
+                />
+                <ReviewLine
+                  label={lang === "da" ? "Hvordan udvikler det sig?" : "How is it progressing?"}
+                  value={draft.howProgressing}
+                />
+                <ReviewLine
+                  label={lang === "da" ? "Mønstre / triggere" : "Patterns / Triggers"}
+                  value={draft.patterns}
+                />
+                <ReviewLine
+                  label={lang === "da" ? "Hvad ellers er anderledes?" : "What else is different?"}
+                  value={draft.associatedSigns}
+                />
+                <ReviewLine
+                  label={lang === "da" ? "Medicin & hjemmeforsøg" : "Medications & home remedies"}
+                  value={draft.previousTreatment}
+                />
+                <ReviewLine
+                  label={lang === "da" ? "Spørgsmål til dyrlægen" : "Questions for the vet"}
+                  value={draft.questionsVet}
+                />
               </div>
             </>
           )}
@@ -405,24 +728,29 @@ export default function PrepareWizard({
                 }}
               >
                 <p style={{ margin: "0 0 6px 0" }}>
-                  <strong>Saved!</strong> Your visit prep has been saved in the app.
+                  <strong>{lang === "da" ? "Gemt!" : "Saved!"}</strong>{" "}
+                  {lang === "da"
+                    ? "Din forberedelse er gemt i appen."
+                    : "Your visit prep has been saved in the app."}
                 </p>
                 <p style={{ margin: 0, color: "var(--textMuted)", fontSize: 14 }}>
-                  Walk in prepared. Partner in your pet's care.
+                  {lang === "da"
+                    ? "Gå forberedt ind. Vær en partner i dit dyrs behandling."
+                    : "Walk in prepared. Partner in your pet's care."}
                 </p>
               </div>
 
               <div className="row" style={{ gap: 8, flexDirection: "column" as const }}>
                 <button className="btn btnPrimary" onClick={onClose}>
-                  Done (Saved in app)
+                  {lang === "da" ? "Færdig" : "Done"} (Saved in app)
                 </button>
 
                 <button className="btn btnSecondary" onClick={handleEmail}>
-                  Email to myself (coming soon)
+                  {lang === "da" ? "Email til mig selv (kommer snart)" : "Email to myself (coming soon)"}
                 </button>
 
                 <button className="btn btnSecondary" onClick={handlePdf}>
-                  Download as PDF (coming soon)
+                  {lang === "da" ? "Download som PDF (kommer snart)" : "Download as PDF (coming soon)"}
                 </button>
               </div>
             </>
@@ -446,7 +774,7 @@ export default function PrepareWizard({
               onClick={() => setStep((s) => s - 1)}
               style={{ flex: 0, minWidth: 80 }}
             >
-              ← Back
+              ← {lang === "da" ? "Tilbage" : "Back"}
             </button>
           )}
 
@@ -459,7 +787,7 @@ export default function PrepareWizard({
               disabled={!stepData[step].ok}
               style={{ flex: 1 }}
             >
-              {isLast ? "Review" : "Next →"}
+              {isLast ? (lang === "da" ? "Gennemse" : "Review") : lang === "da" ? "Næste →" : "Next →"}
             </button>
           )}
 
@@ -470,13 +798,13 @@ export default function PrepareWizard({
               disabled={saving}
               style={{ flex: 1 }}
             >
-              {saving ? "Saving..." : "Save Visit"}
+              {saving ? (lang === "da" ? "Gemmer..." : "Saving...") : lang === "da" ? "Gem besøg" : "Save Visit"}
             </button>
           )}
 
           {mode === "done" && (
             <button className="btn btnPrimary" onClick={onClose} style={{ flex: 1 }}>
-              Close
+              {lang === "da" ? "Luk" : "Close"}
             </button>
           )}
         </div>
