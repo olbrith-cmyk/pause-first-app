@@ -225,7 +225,7 @@ body {
 
 .btnSecondary {
   background: white;
-  border: 2px solid rgba(27, 74, 124, 0.55);
+  border: 2px solid rgba(47, 74, 99, 0.35);
   color: var(--blue);
 }
 
