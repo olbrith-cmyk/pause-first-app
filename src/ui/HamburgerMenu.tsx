@@ -2,6 +2,14 @@ import { useEffect, useRef } from "react";
 import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
 
+function Icon({ name }: { name: string }) {
+  return (
+    <span className="material-symbols-outlined menuIcon" aria-hidden="true">
+      {name}
+    </span>
+  );
+}
+
 export default function HamburgerMenu({
   lang,
   isOpen,
@@ -33,214 +41,142 @@ export default function HamburgerMenu({
     if (!isOpen) return;
 
     const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        onClose();
-      }
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) onClose();
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen, onClose]);
 
-  const menuItems = [
-    {
-      icon: "🐾",
-      label: t.myPets,
-      onClick: onMyPets,
-      color: "#0066cc"
-    },
-    {
-      icon: "🗓️",
-      label: lang === "da" ? "Mine besøg" : "My Visits",
-      onClick: onMyVisits,
-      color: "#0066cc"
-    },
-    {
-      icon: "🤖",
-      label: t.aiAssistant,
-      onClick: () => {
-        window.open(
-          "https://chatgpt.com/g/g-695a7a9e17d08191bd88b76d39f9e54f-pause-firsttm",
-          "_blank"
-        );
-        onClose();
-      },
-      color: "#388e3c"
-    },
-    {
-      icon: "🚨",
-      label: t.emergencyGuide,
-      onClick: onEmergencyGuide,
-      color: "#d32f2f"
-    },
-    {
-      icon: "⚖️",
-      label: t.medicalDisclaimer,
-      onClick: onMedicalDisclaimer,
-      color: "#1976d2"
-    },
-    {
-      icon: "📋",
-      label: lang === "da" ? "Privatlivspolitik" : "Privacy Policy",
-      onClick: onPrivacyPolicy,
-      color: "#1976d2"
-    }
-  ];
+  const openAiAssistant = () => {
+    window.open(
+      "https://chatgpt.com/g/g-695a7a9e17d08191bd88b76d39f9e54f-pause-firsttm",
+      "_blank"
+    );
+  };
 
-  const bottomItems = [
+  const items = [
     {
-      icon: "🚪",
-      label: t.logout,
-      onClick: onLogout,
-      color: "#0066cc"
+      icon: "pets",
+      title: t.myPets,
+      hint: lang === "da" ? "Profiler og noter" : "Profiles and notes",
+      onClick: onMyPets
     },
     {
-      icon: "❌",
-      label: t.deleteAccount,
-      onClick: onDeleteAccount,
-      color: "#cc0000"
+      icon: "event_note",
+      title: lang === "da" ? "Mine besøg" : "My visits",
+      hint: lang === "da" ? "Kladder, Visit Briefs og noter" : "Drafts, Visit Briefs, and notes",
+      onClick: onMyVisits
+    },
+    {
+      icon: "auto_awesome",
+      title: t.aiAssistant,
+      hint: lang === "da" ? "Åbner i en ny fane" : "Opens in a new tab",
+      onClick: openAiAssistant
+    },
+    {
+      icon: "warning",
+      title: t.emergencyGuide,
+      hint: lang === "da" ? "Ved akut bekymring: kontakt klinikken" : "For urgent concerns: contact your clinic",
+      onClick: onEmergencyGuide
+    },
+    {
+      icon: "verified_user",
+      title: t.medicalDisclaimer,
+      hint: lang === "da" ? "Ingen diagnose eller medicinsk rådgivning" : "No diagnosis or medical advice",
+      onClick: onMedicalDisclaimer
+    },
+    {
+      icon: "lock",
+      title: lang === "da" ? "Privatlivspolitik" : "Privacy policy",
+      hint: lang === "da" ? "Hvordan data behandles" : "How data is handled",
+      onClick: onPrivacyPolicy
     }
   ];
 
   return (
     <>
-      {/* Overlay */}
-      {isOpen && (
-        <div
-          className="menuOverlay"
-          onClick={onClose}
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.3)",
-            zIndex: 999
-          }}
-        />
-      )}
+      {isOpen && <div className="menuOverlay" onClick={onClose} />}
 
-      {/* Menu Panel */}
-      <div
+      <aside
         ref={menuRef}
-        className="menuPanel"
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          width: "70%",
-          maxWidth: 280,
-          height: "100vh",
-          backgroundColor: "#fff",
-          zIndex: 1000,
-          transform: isOpen ? "translateX(0)" : "translateX(-100%)",
-          transition: "transform 0.3s ease",
-          overflowY: "auto",
-          boxShadow: isOpen ? "2px 0 8px rgba(0, 0, 0, 0.15)" : "none",
-          display: "flex",
-          flexDirection: "column"
-        }}
+        className={`menuDrawer ${isOpen ? "menuDrawerOpen" : ""}`}
+        aria-hidden={!isOpen}
       >
-        {/* Close Button */}
-        <div style={{ padding: "16px", display: "flex", justifyContent: "flex-end" }}>
+        <div className="menuTop">
+          <div className="menuBrand">
+            <div className="menuBrandTitle">Pause First™</div>
+            <div className="menuBrandSub">
+              {lang === "da"
+                ? "Pause. Observer. Kommunikér."
+                : "Pause. Observe. Communicate."}
+            </div>
+          </div>
+
           <button
+            className="menuCloseBtn"
             onClick={onClose}
-            style={{
-              background: "none",
-              border: "none",
-              fontSize: "24px",
-              cursor: "pointer",
-              color: "#333"
-            }}
+            aria-label={lang === "da" ? "Luk" : "Close"}
           >
-            ✕
+            <Icon name="close" />
           </button>
         </div>
 
-        {/* Main Menu Items */}
-        <div style={{ flex: 1, padding: "0 16px" }}>
-          {menuItems.map((item, idx) => (
+        <nav className="menuList">
+          {items.map((item) => (
             <button
-              key={idx}
+              key={item.title}
+              className="menuItem"
               onClick={() => {
                 item.onClick();
                 onClose();
               }}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-                width: "100%",
-                background: "none",
-                border: "none",
-                textAlign: "left",
-                fontSize: "16px",
-                fontWeight: "500",
-                cursor: "pointer",
-                color: item.color,
-                padding: "14px 12px",
-                marginBottom: "8px",
-                borderRadius: "6px",
-                transition: "background-color 0.2s ease"
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.backgroundColor =
-                  "rgba(0, 0, 0, 0.05)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
-              }}
             >
-              <span style={{ fontSize: "20px" }}>{item.icon}</span>
-              <span>{item.label}</span>
+              <Icon name={item.icon} />
+              <span className="menuText">
+                <span className="menuTitle">{item.title}</span>
+                <span className="menuHint">{item.hint}</span>
+              </span>
             </button>
           ))}
-        </div>
+        </nav>
 
-        {/* Divider */}
-        <hr style={{ margin: "16px 0", border: "none", borderTop: "1px solid #e0e0e0" }} />
+        <div className="menuDivider" />
 
-        {/* Bottom Menu Items */}
-        <div style={{ padding: "0 16px 16px 16px" }}>
-          {bottomItems.map((item, idx) => (
-            <button
-              key={idx}
-              onClick={() => {
-                item.onClick();
-                onClose();
-              }}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-                width: "100%",
-                background: "none",
-                border: "none",
-                textAlign: "left",
-                fontSize: "16px",
-                fontWeight: "500",
-                cursor: "pointer",
-                color: item.color,
-                padding: "14px 12px",
-                marginBottom: idx === bottomItems.length - 1 ? 0 : "8px",
-                borderRadius: "6px",
-                transition: "background-color 0.2s ease"
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.backgroundColor =
-                  "rgba(0, 0, 0, 0.05)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
-              }}
-            >
-              <span style={{ fontSize: "20px" }}>{item.icon}</span>
-              <span>{item.label}</span>
-            </button>
-          ))}
+        <div className="menuBottom">
+          <button
+            className="menuItem"
+            onClick={() => {
+              onLogout();
+              onClose();
+            }}
+          >
+            <Icon name="logout" />
+            <span className="menuText">
+              <span className="menuTitle">{t.logout}</span>
+              <span className="menuHint">
+                {lang === "da" ? "Log ud af appen" : "Sign out of the app"}
+              </span>
+            </span>
+          </button>
+
+          <button
+            className="menuItem menuItemDanger"
+            onClick={() => {
+              onDeleteAccount();
+              onClose();
+            }}
+          >
+            <Icon name="delete_forever" />
+            <span className="menuText">
+              <span className="menuTitle">{t.deleteAccount}</span>
+              <span className="menuHint">
+                {lang === "da" ? "Sletter data permanent" : "Deletes data permanently"}
+              </span>
+            </span>
+          </button>
         </div>
-      </div>
+      </aside>
     </>
   );
 }
