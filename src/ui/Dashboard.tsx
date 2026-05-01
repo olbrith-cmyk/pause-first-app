@@ -9,6 +9,14 @@ import { EmergencyGuide, MedicalDisclaimer, PrivacyPolicy } from "../ui/Modals";
 
 type DashboardMode = "home" | "myVisits" | "prepare" | "pets";
 
+function Icon({ name }: { name: string }) {
+  return (
+    <span className="material-symbols-outlined appIcon" aria-hidden="true">
+      {name}
+    </span>
+  );
+}
+
 export default function Dashboard({
   lang,
   userId,
@@ -41,232 +49,94 @@ export default function Dashboard({
   };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        height: "100vh",
-        backgroundColor: "#f5f5f5"
-      }}
-    >
-      {/* TOP HEADER (Dashboard owns the menu + navigation) */}
-      <header
-        className="header"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          padding: "12px 14px",
-          backgroundColor: "#fff",
-          borderBottom: "1px solid #eee"
-        }}
-      >
+    <div className="appShell">
+      {/* TOP HEADER */}
+      <header className="appHeader">
         <button
           onClick={() => setMenuOpen(true)}
-          style={{
-            background: "none",
-            border: "none",
-            fontSize: "24px",
-            cursor: "pointer",
-            color: "#333"
-          }}
-          aria-label="Open menu"
+          className="iconBtn"
+          aria-label={lang === "da" ? "Åbn menu" : "Open menu"}
         >
-          ☰
+          <Icon name="menu" />
         </button>
 
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontWeight: 800, fontSize: 16, lineHeight: 1.2 }}>{t.appTitle}</div>
-          <div style={{ fontSize: 12, color: "var(--textMuted)", lineHeight: 1.2 }}>
-            {t.appSubtitle}
-          </div>
+        <div className="appHeaderText">
+          <div className="appTitle">{t.appTitle}</div>
+          <div className="appSubtitle">{t.appSubtitle}</div>
         </div>
 
         {onLangChange && (
-          <button
-            onClick={toggleLang}
-            style={{
-              background: "none",
-              border: "none",
-              fontSize: "14px",
-              cursor: "pointer",
-              color: "#0066cc",
-              fontWeight: "bold"
-            }}
-          >
+          <button onClick={toggleLang} className="langBtn" aria-label="Toggle language">
             {lang === "en" ? "DA" : "EN"}
           </button>
         )}
       </header>
 
       {/* CONTENT AREA */}
-      <div
-        style={{
-          flex: 1,
-          overflowY: "auto",
-          padding: "0",
-          paddingBottom: mode === "home" ? "40px" : "96px",
-          width: "100%"
-        }}
-      >
+      <main className={`appMain ${mode === "home" ? "appMainHome" : ""}`}>
         {/* HOME PAGE */}
         {mode === "home" && (
           <div className="pageContent">
-            <div className="stack" style={{ textAlign: "center", marginTop: "40px" }}>
-              <div style={{ fontSize: "64px", marginBottom: "20px" }}>🐾</div>
-              <h2 style={{ margin: "0 0 12px 0", fontSize: "28px", fontWeight: "bold" }}>
-                Walk in Prepared
+            <section className="homeHero">
+              <div className="homeIcon" aria-hidden="true">
+                <Icon name="pets" />
+              </div>
+
+              <h2 className="homeTitle">
+                {lang === "da" ? "Gå ind forberedt" : "Walk in prepared"}
               </h2>
-              <p
-                style={{
-                  margin: "0 0 24px 0",
-                  color: "var(--textMuted)",
-                  fontSize: "16px",
-                  lineHeight: "1.6"
-                }}
-              >
-                Choose a pet (or add one) and start gathering your observations. Partner with your
-                vet by preparing for the visit.
+
+              <p className="homeLead">
+                {lang === "da"
+                  ? "Vælg et dyr (eller tilføj et) og begynd at samle dine observationer. Forbered besøget og samarbejd med din dyrlæge."
+                  : "Choose a pet (or add one) and start gathering your observations. Partner with your vet by preparing for the visit."}
               </p>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                <button
-                  onClick={handlePrepareClick}
-                  className="btn btnPrimary"
-                  style={{
-                    width: "100%",
-                    padding: "12px 16px",
-                    fontSize: "14px",
-                    fontWeight: 800,
-                    minHeight: "44px"
-                  }}
-                >
-                  {lang === "da" ? "Forbered besøg" : "Prepare Visit"}
+              <div className="homeActions">
+                <button onClick={handlePrepareClick} className="btn btnPrimary btnLg">
+                  {lang === "da" ? "Forbered besøg" : "Prepare visit"}
                 </button>
 
-                <button
-                  onClick={() => setMode("pets")}
-                  className="btn btnSecondary"
-                  style={{
-                    width: "100%",
-                    padding: "10px 12px",
-                    fontSize: "13px",
-                    fontWeight: 700,
-                    minHeight: "40px"
-                  }}
-                >
+                <button onClick={() => setMode("pets")} className="btn btnSecondary">
                   {t.myPets}
                 </button>
 
-                <button
-                  onClick={() => setMode("myVisits")}
-                  className="btn btnSecondary"
-                  style={{
-                    width: "100%",
-                    padding: "10px 12px",
-                    fontSize: "13px",
-                    fontWeight: 700,
-                    minHeight: "40px"
-                  }}
-                >
-                  {lang === "da" ? "Mine besøg" : "My Visits"}
+                <button onClick={() => setMode("myVisits")} className="btn btnSecondary">
+                  {lang === "da" ? "Mine besøg" : "My visits"}
                 </button>
               </div>
-            </div>
+            </section>
           </div>
         )}
 
         {mode === "myVisits" && <VisitsScreen lang={lang} userId={userId} mode="myVisits" />}
         {mode === "prepare" && <VisitsScreen lang={lang} userId={userId} mode="prepare" />}
         {mode === "pets" && <PetsScreen lang={lang} userId={userId} />}
-      </div>
+      </main>
 
       {/* BOTTOM NAV (only show if NOT on home) */}
       {mode !== "home" && (
-        <div
-          style={{
-            position: "fixed",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            backgroundColor: "#e8f0f7",
-            borderTop: "1px solid #d0e0f0",
-            padding: "10px 12px",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            zIndex: 50
-          }}
-        >
-          <div
-            style={{
-              width: "100%",
-              maxWidth: "360px",
-              display: "flex",
-              flexDirection: "column",
-              gap: 8
-            }}
-          >
-            <button
-              onClick={handlePrepareClick}
-              className="btn btnPrimary"
-              style={{
-                width: "100%",
-                padding: "12px 16px",
-                fontSize: "14px",
-                fontWeight: 800,
-                minHeight: "44px"
-              }}
-            >
-              {lang === "da" ? "Forbered besøg" : "Prepare Visit"}
+        <footer className="bottomDock">
+          <div className="bottomDockInner">
+            <button onClick={handlePrepareClick} className="btn btnPrimary btnLg">
+              {lang === "da" ? "Forbered besøg" : "Prepare visit"}
             </button>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-              <button
-                onClick={() => setMode("pets")}
-                className="btn btnSecondary"
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  fontSize: "13px",
-                  fontWeight: 700,
-                  minHeight: "40px"
-                }}
-              >
+            <div className="bottomDockGrid">
+              <button onClick={() => setMode("pets")} className="btn btnSecondary">
                 {t.myPets}
               </button>
 
-              <button
-                onClick={() => setMode("myVisits")}
-                className="btn btnSecondary"
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  fontSize: "13px",
-                  fontWeight: 700,
-                  minHeight: "40px"
-                }}
-              >
-                {lang === "da" ? "Mine besøg" : "My Visits"}
+              <button onClick={() => setMode("myVisits")} className="btn btnSecondary">
+                {lang === "da" ? "Mine besøg" : "My visits"}
               </button>
 
-              <button
-                onClick={() => setMode("home")}
-                className="btn btnSecondary"
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  fontSize: "13px",
-                  fontWeight: 700,
-                  minHeight: "40px",
-                  gridColumn: "1 / span 2"
-                }}
-              >
+              <button onClick={() => setMode("home")} className="btn btnSecondary bottomDockHome">
                 {lang === "da" ? "Hjem" : "Home"}
               </button>
             </div>
           </div>
-        </div>
+        </footer>
       )}
 
       {/* HAMBURGER MENU */}
@@ -298,7 +168,7 @@ export default function Dashboard({
         }}
       />
 
-      {/* REAL MODALS (restored) */}
+      {/* REAL MODALS */}
       {showEmergencyGuide && (
         <EmergencyGuide lang={lang} onClose={() => setShowEmergencyGuide(false)} />
       )}
