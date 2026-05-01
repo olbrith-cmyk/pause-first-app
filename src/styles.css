@@ -1,19 +1,20 @@
 :root {
-  --blue: #1B4A7C;
-  --green: #4CAF50;
-  --red: #D32F2F;
+  /* Brand accents (kept, but softened) */
+  --blue: #2f4a63;   /* muted slate-blue */
+  --green: #3f7f63;  /* muted sage */
+  --red: #b44a4a;    /* muted brick */
 
-  /* Calm, clean base */
-  --bg: #f6f8fb;
-  --card: #ffffff;
+  /* Warm beige base */
+  --bg: #fbf7f0;     /* warm paper */
+  --card: #ffffff;   /* keep cards clean */
 
-  --text: #1f2937;
-  --muted: #6b7280;
-  --border: #e5e7eb;
+  --text: #2b2a27;   /* warm charcoal */
+  --muted: #6f6a61;  /* warm gray */
+  --border: #e7dfd3; /* warm border */
 
-  --lightBlue: #E8F0F7;
-  --lightGreen: #f0f9f4;
-  --lightRed: #fef2f2;
+  --lightBlue: #eef3f6;   /* subtle cool for info states */
+  --lightGreen: #eef6f1;  /* subtle sage */
+  --lightRed: #fbefef;    /* subtle blush */
 }
 
 * {
