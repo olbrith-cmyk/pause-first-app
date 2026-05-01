@@ -79,7 +79,7 @@ export default function Dashboard({
           <div className="pageContent">
             <section className="homeHero">
               <div className="homeIcon" aria-hidden="true">
-              <Icon name="pause_circle_filled" />
+              <Icon name="pause" />
               </div>
 
               <h2 className="homeTitle">
