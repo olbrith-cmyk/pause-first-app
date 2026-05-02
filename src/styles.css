@@ -198,6 +198,10 @@ body {
   min-height: 96px;
 }
 
+.input, .textarea, button {
+  scroll-margin-bottom: 140px;
+}
+
 /* Notebook-style fields */
 .input,
 .textarea {
