@@ -825,6 +825,13 @@ body {
   grid-column: 1 / span 2;
 }
 
+/* Ensure modal content can scroll past bottom UI on small screens */
+@media (max-width: 640px) {
+  .modalBody {
+    padding-bottom: 160px;
+  }
+}
+
 /* When keyboard is open, don't let the fixed bottom dock cover inputs/buttons */
 .keyboardOpen .bottomDock {
   display: none;
