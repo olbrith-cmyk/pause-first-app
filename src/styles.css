@@ -454,6 +454,11 @@ body {
   line-height: 1.55;
 }
 
+/* Give breathing room above the Close button inside modals */
+.modalBody .row {
+  margin-top: 16px;
+}
+
 /* View-only blocks */
 .vo { display: grid; gap: 12px; }
 .vo-title { margin: 0; }
