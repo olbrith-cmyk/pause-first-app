@@ -42,7 +42,8 @@ export default function Dashboard({
   const [showMedicalDisclaimer, setShowMedicalDisclaimer] = useState(false);
 
   const anyModalOpen = showEmergencyGuide || showPrivacyPolicy || showMedicalDisclaimer;
-  const hideBottomDock = mode === "home" || anyModalOpen || menuOpen;
+  const hideBottomDock =
+  mode === "home" || mode === "prepare" || anyModalOpen || menuOpen;
 
   const handlePrepareClick = () => setMode("prepare");
 
