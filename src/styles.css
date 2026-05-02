@@ -207,6 +207,12 @@ body {
   padding-bottom: 140px; /* adjust if your dock height changes */
 }
 
+@media (max-width: 640px) {
+  .modalBody {
+    padding-bottom: 160px;
+  }
+}
+
 /* Notebook-style fields */
 .input,
 .textarea {
