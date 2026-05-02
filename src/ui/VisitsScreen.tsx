@@ -1,4 +1,3 @@
-```tsx
 import { useEffect, useMemo, useState } from "react";
 import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
