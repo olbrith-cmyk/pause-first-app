@@ -91,29 +91,31 @@ export function EmergencyGuide({ lang, onClose }: { lang: Lang; onClose: () => v
 }
 
 export function MedicalDisclaimer({ lang, onClose }: { lang: Lang; onClose: () => void }) {
-  const t = useTranslation(lang);
+const t = useTranslation(lang);
 
-  return (
-    <ModalShell title={t.medicalDisclaimer} onClose={onClose}>
+return (
+  <ModalShell title={t.medicalDisclaimer} onClose={onClose}>
+    <p>
+      Pause First™ is a preparation tool only—not a substitute for veterinary advice. Always
+      consult your veterinarian. In emergencies, contact your vet or animal clinic immediately.
+    </p>
+
+    <div className="calloutBox">
       <p>
-        Pause First™ is a preparation tool only—not a substitute for veterinary advice. Always
-        consult your veterinarian. In emergencies, contact your vet or animal clinic immediately.
-      </p>
-      <p className="muted">
         This tool is designed to help you organize your thoughts and observations before a vet
         visit. It does not diagnose, treat, or replace professional veterinary medical advice,
         diagnosis, or treatment.
       </p>
+    </div>
 
-      <div className="row">
-        <button className="btn btnSecondary" onClick={onClose}>
-          {t.close}
-        </button>
-      </div>
-    </ModalShell>
-  );
-}
-
+    <div className="row">
+      <button className="btn btnSecondary" onClick={onClose}>
+        {t.close}
+      </button>
+    </div>
+  </ModalShell>
+);
+  
 export function PrivacyPolicy({ lang, onClose }: { lang: Lang; onClose: () => void }) {
   const t = useTranslation(lang);
 
