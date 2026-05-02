@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
 import PetsScreen from "./PetsScreen";
@@ -36,26 +36,13 @@ export default function Dashboard({
 
   const [mode, setMode] = useState<DashboardMode>("home");
   const [menuOpen, setMenuOpen] = useState(false);
-  const [keyboardOpen, setKeyboardOpen] = useState(false);
-
-useEffect(() => {
-  const vv = window.visualViewport;
-  if (!vv) return;
-
-  const onResize = () => {
-    // When keyboard opens, visual viewport height shrinks noticeably
-    const isOpen = vv.height < window.innerHeight - 120;
-    setKeyboardOpen(isOpen);
-  };
-
-  vv.addEventListener("resize", onResize);
-  onResize();
-  return () => vv.removeEventListener("resize", onResize);
-}, []);
 
   const [showEmergencyGuide, setShowEmergencyGuide] = useState(false);
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
   const [showMedicalDisclaimer, setShowMedicalDisclaimer] = useState(false);
+
+  const anyModalOpen = showEmergencyGuide || showPrivacyPolicy || showMedicalDisclaimer;
+  const hideBottomDock = mode === "home" || anyModalOpen || menuOpen;
 
   const handlePrepareClick = () => setMode("prepare");
 
@@ -65,7 +52,7 @@ useEffect(() => {
   };
 
   return (
-      <div className={`appShell ${keyboardOpen ? "keyboardOpen" : ""}`}>
+    <div className="appShell">
       {/* TOP HEADER */}
       <header className="appHeader">
         <button
@@ -95,19 +82,17 @@ useEffect(() => {
           <div className="pageContent">
             <section className="homeHero">
               <div className="homeIcon" aria-hidden="true">
-              <Icon name="pause_circle_filled" />
+                <Icon name="pause_circle_filled" />
               </div>
 
-              <h2 className="homeTitle">
-  {lang === "da" ? "Lad os gøre jer klar" : "Let’s get ready"}
-</h2>
+              <h2 className="homeTitle">{lang === "da" ? "Lad os gøre jer klar" : "Let’s get ready"}</h2>
 
-<p className="homeLead">
-  {lang === "da"
-    ? "Vælg et dyr (eller tilføj et) og skriv dine observationer ned. Så kan du gå ind til besøget rolig og forberedt."
-    : "Choose a pet (or add one) and write down your observations. Walk into the visit calm, clear, and prepared."}
-</p>
-           
+              <p className="homeLead">
+                {lang === "da"
+                  ? "Vælg et dyr (eller tilføj et) og skriv dine observationer ned. Så kan du gå ind til besøget rolig og forberedt."
+                  : "Choose a pet (or add one) and write down your observations. Walk into the visit calm, clear, and prepared."}
+              </p>
+
               <div className="homeActions">
                 <button onClick={handlePrepareClick} className="btn btnPrimary btnLg">
                   {lang === "da" ? "Forbered besøg" : "Prepare visit"}
@@ -130,8 +115,8 @@ useEffect(() => {
         {mode === "pets" && <PetsScreen lang={lang} userId={userId} />}
       </main>
 
-      {/* BOTTOM NAV (only show if NOT on home) */}
-      {mode !== "home" && (
+      {/* BOTTOM NAV (hide on home, and hide when any modal/menu is open) */}
+      {!hideBottomDock && (
         <footer className="bottomDock">
           <div className="bottomDockInner">
             <button onClick={handlePrepareClick} className="btn btnPrimary btnLg">
