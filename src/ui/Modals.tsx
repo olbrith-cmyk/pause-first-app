@@ -77,7 +77,7 @@ export function EmergencyGuide({ lang, onClose }: { lang: Lang; onClose: () => v
         </li>
       </ul>
 
-      <p className="muted">
+      <p className="alert alertInfo">
         When in doubt, contact your vet or the nearest emergency clinic immediately.
       </p>
 
