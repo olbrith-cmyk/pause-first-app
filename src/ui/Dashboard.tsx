@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
 import PetsScreen from "./PetsScreen";
@@ -36,6 +36,22 @@ export default function Dashboard({
 
   const [mode, setMode] = useState<DashboardMode>("home");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
+
+useEffect(() => {
+  const vv = window.visualViewport;
+  if (!vv) return;
+
+  const onResize = () => {
+    // When keyboard opens, visual viewport height shrinks noticeably
+    const isOpen = vv.height < window.innerHeight - 120;
+    setKeyboardOpen(isOpen);
+  };
+
+  vv.addEventListener("resize", onResize);
+  onResize();
+  return () => vv.removeEventListener("resize", onResize);
+}, []);
 
   const [showEmergencyGuide, setShowEmergencyGuide] = useState(false);
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
@@ -49,7 +65,7 @@ export default function Dashboard({
   };
 
   return (
-    <div className="appShell">
+      <div className={`appShell ${keyboardOpen ? "keyboardOpen" : ""}`}>
       {/* TOP HEADER */}
       <header className="appHeader">
         <button
