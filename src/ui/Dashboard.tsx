@@ -83,15 +83,15 @@ export default function Dashboard({
               </div>
 
               <h2 className="homeTitle">
-                {lang === "da" ? "Gå ind forberedt" : "Walk in prepared"}
-              </h2>
+  {lang === "da" ? "Lad os gøre jer klar" : "Let’s get ready"}
+</h2>
 
-              <p className="homeLead">
-                {lang === "da"
-                  ? "Vælg et dyr (eller tilføj et) og begynd at samle dine observationer. Forbered besøget og samarbejd med din dyrlæge."
-                  : "Choose a pet (or add one) and start gathering your observations. Partner with your vet by preparing for the visit."}
-              </p>
-
+<p className="homeLead">
+  {lang === "da"
+    ? "Vælg et dyr (eller tilføj et) og skriv dine observationer ned. Så kan du gå ind til besøget rolig og forberedt."
+    : "Choose a pet (or add one) and write down your observations. Walk into the visit calm, clear, and prepared."}
+</p>
+           
               <div className="homeActions">
                 <button onClick={handlePrepareClick} className="btn btnPrimary btnLg">
                   {lang === "da" ? "Forbered besøg" : "Prepare visit"}
