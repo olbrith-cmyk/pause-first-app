@@ -809,6 +809,17 @@ body {
 .bottomDockHome {
   grid-column: 1 / span 2;
 }
+
+/* When keyboard is open, don't let the fixed bottom dock cover inputs/buttons */
+.keyboardOpen .bottomDock {
+  display: none;
+}
+
+/* Also reduce bottom padding when dock is hidden */
+.keyboardOpen .appMain {
+  padding-bottom: 16px;
+}
+
 /* =========================================================
    NEW: HamburgerMenu drawer (used by updated HamburgerMenu.tsx)
    Requires Material Symbols link in public/index.html
