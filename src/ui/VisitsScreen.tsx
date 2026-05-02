@@ -1,3 +1,4 @@
+```tsx
 import { useEffect, useMemo, useState } from "react";
 import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
@@ -153,6 +154,7 @@ export default function VisitsScreen({
   const handleSelectPetForWizard = (pet: Pet) => {
     setSelectedPetForWizard(pet);
     setShowChoosePetModal(false);
+    setShowAddPetForm(false);
     setShowWizard(true);
   };
 
@@ -161,6 +163,7 @@ export default function VisitsScreen({
     setEditingVisitId(visitId);
     setSelectedPetForWizard(pet);
     setShowChoosePetModal(false);
+    setShowAddPetForm(false);
     setShowWizard(true);
   };
 
@@ -223,6 +226,7 @@ export default function VisitsScreen({
 
       setSelectedPetForWizard(createdPet);
       setShowChoosePetModal(false);
+      setShowAddPetForm(false);
       setShowWizard(true);
     } catch (e: any) {
       alert(t.error + ": " + (e?.message ?? String(e)));
@@ -233,7 +237,7 @@ export default function VisitsScreen({
     setPetFormError(null);
     try {
       if (!editingNewPet.name.trim()) {
-        setPetFormError("Pet name is required");
+        setPetFormError(lang === "da" ? "Navn er påkrævet" : "Pet name is required");
         return;
       }
 
@@ -246,7 +250,9 @@ export default function VisitsScreen({
       if (newPet?.id) {
         setSelectedPetForWizard(newPet);
         setShowAddPetForm(false);
+        setShowChoosePetModal(false);
         setEditingNewPet(emptyPet(userId));
+        setPetFormError(null);
         setShowWizard(true);
       }
     } catch (e: any) {
@@ -403,7 +409,9 @@ export default function VisitsScreen({
           {editingNote && noteVisitId && (
             <div className="panel" style={{ marginTop: 16 }}>
               <div className="panelHeader">
-                <h4 style={{ margin: 0 }}>{lang === "da" ? "Redigér besøgsnoter" : "Edit Visit Notes"}</h4>
+                <h4 style={{ margin: 0 }}>
+                  {lang === "da" ? "Redigér besøgsnoter" : "Edit Visit Notes"}
+                </h4>
               </div>
 
               <label className="label">
@@ -494,11 +502,34 @@ export default function VisitsScreen({
             </div>
           )}
         </div>
+
+        {/* Wizard can also be opened from My Visits */}
+        {showWizard && selectedPetForWizard?.id && (
+          <PrepareWizard
+            lang={lang}
+            userId={userId}
+            mode="prepare"
+            petId={selectedPetForWizard.id}
+            petName={selectedPetForWizard.name || "(Unnamed)"}
+            visitId={editingVisitId ?? undefined}
+            onClose={async () => {
+              setShowWizard(false);
+              setEditingVisitId(null);
+              setSelectedPetForWizard(null);
+              await load();
+            }}
+            onComplete={async () => {
+              setShowWizard(false);
+              setEditingVisitId(null);
+              setSelectedPetForWizard(null);
+              await load();
+            }}
+          />
+        )}
       </div>
     );
   }
-
-    // -------------------------
+  // -------------------------
   // PREPARE MODE
   // -------------------------
   return (
@@ -574,7 +605,9 @@ export default function VisitsScreen({
                         style={{ cursor: "pointer", textAlign: "left" }}
                       >
                         <div className="itemTitle">{pet.name || "(Unnamed)"}</div>
-                        <div className="muted">{pet.species || (lang === "da" ? "Ukendt art" : "Unknown species")}</div>
+                        <div className="muted">
+                          {pet.species || (lang === "da" ? "Ukendt art" : "Unknown species")}
+                        </div>
                       </button>
                     ))}
                   </div>
@@ -585,6 +618,8 @@ export default function VisitsScreen({
                 <button
                   className="btn btnPrimary"
                   onClick={() => {
+                    setEditingNewPet(emptyPet(userId));
+                    setPetFormError(null);
                     setShowChoosePetModal(false);
                     setShowAddPetForm(true);
                   }}
@@ -606,7 +641,7 @@ export default function VisitsScreen({
       )}
 
       {/* Add Pet Modal */}
-      {showChoosePetModal && showAddPetForm && (
+      {showAddPetForm && (
         <div
           className="modal"
           style={{
@@ -656,7 +691,7 @@ export default function VisitsScreen({
                 className="btnClose"
                 onClick={() => {
                   setShowAddPetForm(false);
-                  setShowChoosePetModal(false);
+                  setShowChoosePetModal(true);
                 }}
                 style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer" }}
               >
@@ -766,6 +801,7 @@ export default function VisitsScreen({
             setEditingVisitId(null);
             setSelectedPetForWizard(null);
             setShowChoosePetModal(false);
+            setShowAddPetForm(false);
             await load();
           }}
           onComplete={async () => {
@@ -773,13 +809,14 @@ export default function VisitsScreen({
             setEditingVisitId(null);
             setSelectedPetForWizard(null);
             setShowChoosePetModal(false);
+            setShowAddPetForm(false);
             await load();
           }}
         />
       )}
 
       {/* Fallback (if wizard not open) */}
-      {!showWizard && (
+      {!showWizard && !showChoosePetModal && !showAddPetForm && (
         <div className="panel">
           <div className="muted">
             {lang === "da"
