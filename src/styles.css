@@ -202,6 +202,11 @@ body {
   scroll-margin-bottom: 140px;
 }
 
+/* Reserve space so fixed bottom dock never covers modal content */
+.modalBody {
+  padding-bottom: 140px; /* adjust if your dock height changes */
+}
+
 /* Notebook-style fields */
 .input,
 .textarea {
