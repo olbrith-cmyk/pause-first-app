@@ -82,19 +82,18 @@ export default function VisitsScreen({
   };
 
   useEffect(() => {
-    load();
-  }, [userId]);
+  load();
+}, [userId]);
 
-  useEffect(() => {
-    if (mode === "prepare") {
-      setShowChoosePetModal(true);
-    }
+useEffect(() => {
+  if (mode === "prepare") {
+    setShowChoosePetModal(true);
+  }
+}, [mode]);
 
-    useEffect(() => {
+useEffect(() => {
   onWizardOpenChange?.(showWizard);
 }, [showWizard, onWizardOpenChange]);
-    
-  }, [mode]);
 
   // Drafts (for "Continue draft")
   const draftVisits = useMemo(() => {
