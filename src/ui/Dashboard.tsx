@@ -43,8 +43,9 @@ export default function Dashboard({
 
   const anyModalOpen = showEmergencyGuide || showPrivacyPolicy || showMedicalDisclaimer;
   const hideBottomDock =
-  mode === "home" || mode === "prepare" || anyModalOpen || menuOpen;
+  mode === "home" || mode === "prepare" || anyModalOpen || menuOpen || wizardOpen;
 
+  const [wizardOpen, setWizardOpen] = useState(false);
   const handlePrepareClick = () => setMode("prepare");
 
   const toggleLang = () => {
@@ -111,9 +112,13 @@ export default function Dashboard({
           </div>
         )}
 
-        {mode === "myVisits" && <VisitsScreen lang={lang} userId={userId} mode="myVisits" />}
-        {mode === "prepare" && <VisitsScreen lang={lang} userId={userId} mode="prepare" />}
         {mode === "pets" && <PetsScreen lang={lang} userId={userId} />}
+        {mode === "myVisits" && (
+  <VisitsScreen lang={lang} userId={userId} mode="myVisits" onWizardOpenChange={setWizardOpen} />
+)}
+{mode === "prepare" && (
+  <VisitsScreen lang={lang} userId={userId} mode="prepare" onWizardOpenChange={setWizardOpen} />
+)}
       </main>
 
       {/* BOTTOM NAV (hide on home, and hide when any modal/menu is open) */}
