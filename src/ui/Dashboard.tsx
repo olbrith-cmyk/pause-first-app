@@ -41,11 +41,14 @@ export default function Dashboard({
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
   const [showMedicalDisclaimer, setShowMedicalDisclaimer] = useState(false);
 
-  const anyModalOpen = showEmergencyGuide || showPrivacyPolicy || showMedicalDisclaimer;
-  const hideBottomDock =
-  mode === "home" || mode === "prepare" || anyModalOpen || menuOpen || wizardOpen;
-
+  // Tracks PrepareWizard open state (even when launched from My Visits)
   const [wizardOpen, setWizardOpen] = useState(false);
+
+  const anyModalOpen = showEmergencyGuide || showPrivacyPolicy || showMedicalDisclaimer;
+
+  const hideBottomDock =
+    mode === "home" || mode === "prepare" || anyModalOpen || menuOpen || wizardOpen;
+
   const handlePrepareClick = () => setMode("prepare");
 
   const toggleLang = () => {
@@ -87,7 +90,9 @@ export default function Dashboard({
                 <Icon name="pause_circle_filled" />
               </div>
 
-              <h2 className="homeTitle">{lang === "da" ? "Lad os gøre jer klar" : "Let’s get ready"}</h2>
+              <h2 className="homeTitle">
+                {lang === "da" ? "Lad os gøre jer klar" : "Let’s get ready"}
+              </h2>
 
               <p className="homeLead">
                 {lang === "da"
@@ -113,15 +118,27 @@ export default function Dashboard({
         )}
 
         {mode === "pets" && <PetsScreen lang={lang} userId={userId} />}
+
         {mode === "myVisits" && (
-  <VisitsScreen lang={lang} userId={userId} mode="myVisits" onWizardOpenChange={setWizardOpen} />
-)}
-{mode === "prepare" && (
-  <VisitsScreen lang={lang} userId={userId} mode="prepare" onWizardOpenChange={setWizardOpen} />
-)}
+          <VisitsScreen
+            lang={lang}
+            userId={userId}
+            mode="myVisits"
+            onWizardOpenChange={setWizardOpen}
+          />
+        )}
+
+        {mode === "prepare" && (
+          <VisitsScreen
+            lang={lang}
+            userId={userId}
+            mode="prepare"
+            onWizardOpenChange={setWizardOpen}
+          />
+        )}
       </main>
 
-      {/* BOTTOM NAV (hide on home, and hide when any modal/menu is open) */}
+      {/* BOTTOM NAV (hide on home, and hide when any modal/menu/wizard is open) */}
       {!hideBottomDock && (
         <footer className="bottomDock">
           <div className="bottomDockInner">
