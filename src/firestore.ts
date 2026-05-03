@@ -292,6 +292,27 @@ export const getVisitNote = async (userId: string, visitId: string) => {
   return d ? ({ id: d.id, ...d.data() } as VisitNote) : undefined;
 };
 
+export const deleteVisitNotesForVisit = async (userId: string, visitId: string) => {
+  const q = query(
+    collection(db, "visitNotes"),
+    where("userId", "==", userId),
+    where("visitId", "==", visitId)
+  );
+  const snap = await getDocs(q);
+
+  await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)));
+
+  // If no notes remain, mark parent visit as not having notes
+  await markVisitHasNotes(visitId, false);
+
+  return snap.size;
+};
+
+export const deleteVisitFully = async (userId: string, visitId: string) => {
+  await deleteVisitNotesForVisit(userId, visitId);
+  await deleteVisit(visitId);
+};
+
 // --------------------
 // Delete Account (with full data cleanup)
 // --------------------
