@@ -842,6 +842,27 @@ body {
   padding-bottom: 16px;
 }
 
+/* Bottom dock height buffer so content can scroll above it */
+:root {
+  --bottomDockSpace: 220px; /* adjust if needed */
+}
+
+/* Most of your screens use this wrapper */
+.pageContent {
+  padding-bottom: var(--bottomDockSpace);
+}
+
+/* Safety: if some screens don't use .pageContent */
+.appMain {
+  padding-bottom: var(--bottomDockSpace);
+}
+
+@media (max-width: 640px) {
+  :root { --bottomDockSpace: 240px; }
+  .pageContent { padding-bottom: var(--bottomDockSpace); }
+  .appMain { padding-bottom: var(--bottomDockSpace); }
+}
+
 /* =========================================================
    NEW: HamburgerMenu drawer (used by updated HamburgerMenu.tsx)
    Requires Material Symbols link in public/index.html
