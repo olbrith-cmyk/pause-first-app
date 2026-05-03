@@ -9,7 +9,8 @@ import {
   getUserVisits,
   getVisitNote,
   updateVisitNote,
-  addPet
+  addPet,
+  deleteVisitFully
 } from "../firestore";
 
 import { ViewOnlyPrepare } from "./ViewOnlyPrepare";
@@ -156,7 +157,30 @@ useEffect(() => {
       alert(t.error + ": " + (e?.message ?? String(e)));
     }
   };
+  
+const handleDeleteVisit = async (visitId: string) => {
+  const ok = window.confirm(
+    lang === "da"
+      ? "Vil du slette dette besøg? Dette kan ikke fortrydes."
+      : "Delete this visit? This cannot be undone."
+  );
+  if (!ok) return;
 
+  try {
+    await deleteVisitFully(userId, visitId);
+
+    // Close any open panels/editors
+    setOpenVisitId(null);
+    setOpenNote(null);
+    setEditingNote(null);
+    setNoteVisitId(null);
+
+    await load();
+  } catch (e: any) {
+    alert(t.error + ": " + (e?.message ?? String(e)));
+  }
+};
+  
   const handleSelectPetForWizard = (pet: Pet) => {
     setSelectedPetForWizard(pet);
     setShowChoosePetModal(false);
@@ -388,6 +412,14 @@ useEffect(() => {
                   {lang === "da" ? "Redigér besøgsnoter" : "Edit Visit Notes"}
                 </button>
               </div>
+
+              <button
+  className="btn btnSecondary"
+  onClick={() => handleDeleteVisit(openVisit.id!)}
+  style={{ borderColor: "#d33", color: "#d33" }}
+>
+  {lang === "da" ? "Slet besøg" : "Delete visit"}
+</button>
 
               <div className="panelHeader">
                 <h4 style={{ margin: 0 }}>
