@@ -48,12 +48,15 @@ const emptyPet = (userId: string): Pet => ({
 export default function VisitsScreen({
   lang,
   userId,
-  mode
+  mode,
+  onWizardOpenChange
 }: {
   lang: Lang;
   userId: string;
   mode: Mode;
+  onWizardOpenChange?: (open: boolean) => void;
 }) {
+  
   const t = useTranslation(lang);
 
   const [pets, setPets] = useState<Pet[]>([]);
@@ -86,6 +89,11 @@ export default function VisitsScreen({
     if (mode === "prepare") {
       setShowChoosePetModal(true);
     }
+
+    useEffect(() => {
+  onWizardOpenChange?.(showWizard);
+}, [showWizard, onWizardOpenChange]);
+    
   }, [mode]);
 
   // Drafts (for "Continue draft")
