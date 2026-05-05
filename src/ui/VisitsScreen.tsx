@@ -305,42 +305,42 @@ const handleDeleteVisit = async (visitId: string) => {
           <h3>{t.myVisits}</h3>
 
           {/* Continue draft */}
-          {draftVisits.length > 0 && !openVisit && (
-            <div className="panel" style={{ marginBottom: 12 }}>
-              <div className="panelHeader">
-                <h4 style={{ margin: 0 }}>{lang === "da" ? "Fortsæt kladde" : "Continue draft"}</h4>
-              </div>
+{draftVisits.length > 0 && !openVisit && (
+  <div className="panel" style={{ marginBottom: 12 }}>
+    <div className="panelHeader">
+      <h4 style={{ margin: 0 }}>{lang === "da" ? "Fortsæt kladde" : "Continue draft"}</h4>
+    </div>
 
-              <div className="stack">
-                {draftVisits.slice(0, 3).map((v) => {
-                  const pet = pets.find((p) => p.id === v.petId);
-                  return (
-                    <button
-                      key={v.id}
-                      className="itemCard"
-                      onClick={() => openVisitCard(v.id!)}
-                      style={{ cursor: "pointer", textAlign: "left" }}
-                    >
-                      <div className="itemTitle">
-                        {pet?.name || "(Unnamed)"} — {v.visitDate || "No date"}
-                      </div>
-
-                      <div className="muted">
-                        {v.mainConcern ||
-                          (lang === "da"
-                            ? "Kladde (ingen hovedbekymring endnu)"
-                            : "Draft (no main concern yet)")}
-                      </div>
-
-                      <div className="muted" style={{ marginTop: 6, fontSize: 13 }}>
-                        {prepStatusText(v)} • {notesStatusTextFromVisit(v)}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
+    <div className="stack">
+      {draftVisits.slice(0, 3).map((v) => {
+        const pet = pets.find((p) => p.id === v.petId);
+        return (
+          <button
+            key={v.id}
+            className="itemCard"
+            onClick={() => openVisitCard(v.id!)}   // ✅ open details screen (not wizard)
+            style={{ cursor: "pointer", textAlign: "left" }}
+          >
+            <div className="itemTitle">
+              {pet?.name || "(Unnamed)"} — {v.visitDate || "No date"}
             </div>
-          )}
+
+            <div className="muted">
+              {v.mainConcern ||
+                (lang === "da"
+                  ? "Kladde (ingen hovedbekymring endnu)"
+                  : "Draft (no main concern yet)")}
+            </div>
+
+            <div className="muted" style={{ marginTop: 6, fontSize: 13 }}>
+              {prepStatusText(v)} • {notesStatusTextFromVisit(v)}
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  </div>
+)}
 
           {finalVisitsSorted.length === 0 && draftVisits.length === 0 && (
             <div className="muted">{lang === "da" ? "Ingen besøg endnu." : "No visits yet."}</div>
