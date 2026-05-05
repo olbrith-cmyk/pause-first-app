@@ -318,7 +318,7 @@ const handleDeleteVisit = async (visitId: string) => {
                     <button
                       key={v.id}
                       className="itemCard"
-                      onClick={() => openWizardForVisit(v.id!, v.petId)}
+                      onClick={() => openVisitCard(v.id!)}
                       style={{ cursor: "pointer", textAlign: "left" }}
                     >
                       <div className="itemTitle">
@@ -420,7 +420,11 @@ const handleDeleteVisit = async (visitId: string) => {
   onClick={() => handleDeleteVisit(openVisit.id!)}
   style={{ borderColor: "#d33", color: "#d33" }}
 >
-  {lang === "da" ? "Slet besøg" : "Delete visit"}
+    {
+  isDraft(openVisit)
+    ? (lang === "da" ? "Slet kladde" : "Delete draft")
+    : (lang === "da" ? "Slet besøg" : "Delete visit")
+}            
 </button>
 
               <div className="panelHeader">
