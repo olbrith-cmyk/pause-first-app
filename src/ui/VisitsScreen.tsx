@@ -347,33 +347,47 @@ const handleDeleteVisit = async (visitId: string) => {
           )}
 
           {!openVisit && (
-            <>
-              {finalVisitsSorted.map((v) => {
-                const pet = pets.find((p) => p.id === v.petId);
-                return (
-                  <button
-                    key={v.id}
-                    className="itemCard"
-                    onClick={() => openVisitCard(v.id!)}
-                    style={{ cursor: "pointer", textAlign: "left" }}
-                  >
-                    <div className="itemTitle">
-                      {pet?.name || "(Unnamed)"} — {v.visitDate || "No date"}
-                    </div>
+  <>
+    {/* Second headline for non-draft visits */}
+    {finalVisitsSorted.length > 0 && (
+      <div style={{ marginTop: draftVisits.length > 0 ? 8 : 0, marginBottom: 8 }}>
+        <h4 style={{ margin: 0 }}>
+          {lang === "da" ? "Gemte besøg" : "Saved visits"}
+        </h4>
+        <div className="muted" style={{ marginTop: 4 }}>
+          {lang === "da"
+            ? "Færdige Visit Briefs (ikke kladder)"
+            : "Finished Visit Briefs (not drafts)"}
+        </div>
+      </div>
+    )}
 
-                    <div className="muted">
-                      {v.mainConcern ||
-                        (lang === "da" ? "Ingen hovedbekymring endnu." : "No main concern yet.")}
-                    </div>
+    {finalVisitsSorted.map((v) => {
+      const pet = pets.find((p) => p.id === v.petId);
+      return (
+        <button
+          key={v.id}
+          className="itemCard"
+          onClick={() => openVisitCard(v.id!)}
+          style={{ cursor: "pointer", textAlign: "left" }}
+        >
+          <div className="itemTitle">
+            {pet?.name || "(Unnamed)"} — {v.visitDate || "No date"}
+          </div>
 
-                    <div className="muted" style={{ marginTop: 6, fontSize: 13 }}>
-                      {prepStatusText(v)} • {notesStatusTextFromVisit(v)}
-                    </div>
-                  </button>
-                );
-              })}
-            </>
-          )}
+          <div className="muted">
+            {v.mainConcern ||
+              (lang === "da" ? "Ingen hovedbekymring endnu." : "No main concern yet.")}
+          </div>
+
+          <div className="muted" style={{ marginTop: 6, fontSize: 13 }}>
+            {prepStatusText(v)} • {notesStatusTextFromVisit(v)}
+          </div>
+        </button>
+      );
+    })}
+  </>
+)}
 
           {openVisit && (
             <div className="panel">
