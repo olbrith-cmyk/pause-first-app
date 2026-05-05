@@ -125,6 +125,7 @@ export default function Dashboard({
             userId={userId}
             mode="myVisits"
             onWizardOpenChange={setWizardOpen}
+            onModeChange={(next) => setMode(next === "myVisits" ? "myVisits" : "prepare")}
           />
         )}
 
@@ -134,6 +135,7 @@ export default function Dashboard({
             userId={userId}
             mode="prepare"
             onWizardOpenChange={setWizardOpen}
+            onModeChange={(next) => setMode(next === "myVisits" ? "myVisits" : "prepare")}
           />
         )}
       </main>
