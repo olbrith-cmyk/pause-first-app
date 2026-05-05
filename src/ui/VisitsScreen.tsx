@@ -853,6 +853,19 @@ const handleDeleteVisit = async (visitId: string) => {
         />
       )}
 
+      <PrepareWizard
+  ...
+  onNavigateAfterClose={(target) => {
+    if (target === "myVisits") {
+      // switch the Visits screen to the My Visits tab
+      setMode("myVisits"); // or setTab("myVisits") depending on your state name
+    } else {
+      // go back to Home/Dashboard
+      onBack?.(); // or setScreen("dashboard") depending on your app
+    }
+  }}
+/>
+      
       {/* Fallback (if wizard not open) */}
       {!showWizard && !showChoosePetModal && !showAddPetForm && (
         <div className="panel">
