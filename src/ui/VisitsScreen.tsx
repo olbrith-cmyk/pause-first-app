@@ -50,7 +50,7 @@ export default function VisitsScreen({
   lang,
   userId,
   mode,
-  onWizardOpenChange
+  onWizardOpenChange,
   onModeChange
 }: {
   lang: Lang;
