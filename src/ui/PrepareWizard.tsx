@@ -257,6 +257,32 @@ export default function PrepareWizard({
     }
   };
 
+  const [savingDraft, setSavingDraft] = useState(false);
+
+const handleSaveDraftAndClose = async () => {
+  if (!visitId) {
+    alert(
+      lang === "da"
+        ? "Kladde oprettes stadig. Prøv igen om et øjeblik."
+        : "Still preparing your draft. Please try again in a moment."
+    );
+    return;
+  }
+
+  setSavingDraft(true);
+  try {
+    // Force a write right now (even though autosave exists)
+    await updateVisit(visitId, { ...draft, status: "draft" });
+
+    // Close wizard and go to My Visits
+    closeToMyVisits();
+  } catch (e: any) {
+    alert(t.error + ": " + (e?.message ?? String(e)));
+  } finally {
+    setSavingDraft(false);
+  }
+};
+  
   const handleDeleteDraft = async () => {
     if (!visitId) return;
 
@@ -915,15 +941,38 @@ export default function PrepareWizard({
           )}
 
           {mode === "wizard" && (
-            <button
-              className="btn btnPrimary"
-              onClick={handleNext}
-              disabled={!stepData[step].ok}
-              style={{ flex: 1, minWidth: 120 }}
-            >
-              {step === stepData.length - 1 ? (lang === "da" ? "Preview" : "Preview") : lang === "da" ? "Næste" : "Next"}
-            </button>
-          )}
+  <div style={{ display: "flex", gap: 8, flex: 1 }}>
+    <button
+      className="btn btnSecondary"
+      onClick={handleSaveDraftAndClose}
+      disabled={savingDraft}
+      style={{ flex: 0, minWidth: 140 }}
+    >
+      {savingDraft
+        ? lang === "da"
+          ? "Gemmer..."
+          : "Saving..."
+        : lang === "da"
+          ? "Gem & luk"
+          : "Save & close"}
+    </button>
+
+    <button
+      className="btn btnPrimary"
+      onClick={handleNext}
+      disabled={!stepData[step].ok}
+      style={{ flex: 1, minWidth: 120 }}
+    >
+      {step === stepData.length - 1
+        ? lang === "da"
+          ? "Preview"
+          : "Preview"
+        : lang === "da"
+          ? "Næste"
+          : "Next"}
+    </button>
+  </div>
+)}
 
           {mode === "done" && (
             <button className="btn btnPrimary" onClick={closeToMyVisits} style={{ flex: 1, minWidth: 120 }}>
