@@ -51,11 +51,13 @@ export default function VisitsScreen({
   userId,
   mode,
   onWizardOpenChange
+  onModeChange
 }: {
   lang: Lang;
   userId: string;
   mode: Mode;
   onWizardOpenChange?: (open: boolean) => void;
+  onModeChange?: (mode: Mode) => void;
 }) {
   
   const t = useTranslation(lang);
@@ -852,12 +854,9 @@ const handleDeleteVisit = async (visitId: string) => {
     }}
     onNavigateAfterClose={(target) => {
       if (target === "myVisits") {
-        // IMPORTANT: rename setMode(...) to your actual tab setter
-        setMode("myVisits");
+        onModeChange?. ("myVisits");
       } else {
-        // Home: in your current setup, closing the wizard already returns to the Visits screen.
-        // If you have a parent navigation callback, call it here instead.
-        // Example: onBack?.();
+        // optional: parent-level navigation to Home
       }
     }}
   />
