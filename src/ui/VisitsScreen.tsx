@@ -826,45 +826,42 @@ const handleDeleteVisit = async (visitId: string) => {
       )}
 
       {/* Wizard */}
-      {showWizard && selectedPetForWizard?.id && (
-        <PrepareWizard
-          lang={lang}
-          userId={userId}
-          mode="prepare"
-          petId={selectedPetForWizard.id}
-          petName={selectedPetForWizard.name || "(Unnamed)"}
-          visitId={editingVisitId ?? undefined}
-          onClose={async () => {
-            setShowWizard(false);
-            setEditingVisitId(null);
-            setSelectedPetForWizard(null);
-            setShowChoosePetModal(false);
-            setShowAddPetForm(false);
-            await load();
-          }}
-          onComplete={async () => {
-            setShowWizard(false);
-            setEditingVisitId(null);
-            setSelectedPetForWizard(null);
-            setShowChoosePetModal(false);
-            setShowAddPetForm(false);
-            await load();
-          }}
-        />
-      )}
-
-      <PrepareWizard
-  ...
-  onNavigateAfterClose={(target) => {
-    if (target === "myVisits") {
-      // switch the Visits screen to the My Visits tab
-      setMode("myVisits"); // or setTab("myVisits") depending on your state name
-    } else {
-      // go back to Home/Dashboard
-      onBack?.(); // or setScreen("dashboard") depending on your app
-    }
-  }}
-/>
+{showWizard && selectedPetForWizard?.id && (
+  <PrepareWizard
+    lang={lang}
+    userId={userId}
+    mode="prepare"
+    petId={selectedPetForWizard.id}
+    petName={selectedPetForWizard.name || "(Unnamed)"}
+    visitId={editingVisitId ?? undefined}
+    onClose={async () => {
+      setShowWizard(false);
+      setEditingVisitId(null);
+      setSelectedPetForWizard(null);
+      setShowChoosePetModal(false);
+      setShowAddPetForm(false);
+      await load();
+    }}
+    onComplete={async () => {
+      setShowWizard(false);
+      setEditingVisitId(null);
+      setSelectedPetForWizard(null);
+      setShowChoosePetModal(false);
+      setShowAddPetForm(false);
+      await load();
+    }}
+    onNavigateAfterClose={(target) => {
+      if (target === "myVisits") {
+        // IMPORTANT: rename setMode(...) to your actual tab setter
+        setMode("myVisits");
+      } else {
+        // Home: in your current setup, closing the wizard already returns to the Visits screen.
+        // If you have a parent navigation callback, call it here instead.
+        // Example: onBack?.();
+      }
+    }}
+  />
+)}
       
       {/* Fallback (if wizard not open) */}
       {!showWizard && !showChoosePetModal && !showAddPetForm && (
