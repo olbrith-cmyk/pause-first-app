@@ -3,6 +3,7 @@ import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
 import type { CurrentStatus, TriState, Visit } from "../firestore";
 import { addVisit, getVisitById, updateVisit } from "../firestore";
+import { deleteVisitFully } from "../firestore";
 import TriToggle from "./TriToggle";
 
 type Props = {
@@ -678,7 +679,7 @@ export default function PrepareWizard({
       case 9:
         return (
           <label className="label">
-            {lang === "da" ? "Topspørgsmål til dyrlægen" : "Top questions for the vet"}
+            {lang === "da" ? "Vigtigste spørgsmål til dyrlægen" : "Top questions for the vet"}
             <textarea
               className="textarea"
               value={draft.questionsVet}
