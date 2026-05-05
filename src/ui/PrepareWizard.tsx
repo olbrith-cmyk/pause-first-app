@@ -475,4 +475,463 @@ export default function PrepareWizard({
     const cs = draft.currentStatus;
     if (!cs) return null;
 
-    const Row = ({ label, value, notes }: { label
+        const Row = ({ label, value, notes }: { label: string; value: TriState; notes?: string }) => {
+      const hasNotes = !!notes && notes.trim() !== "";
+      return (
+        <div style={{ marginBottom: 10 }}>
+          <div style={{ fontWeight: 700, fontSize: 14 }}>{label}</div>
+          <div style={{ fontSize: 14, marginTop: 2 }}>{triLabel(value)}</div>
+          {hasNotes && (
+            <div style={{ fontSize: 13, color: "var(--textMuted)", marginTop: 2, whiteSpace: "pre-wrap" }}>
+              {notes}
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    return (
+      <div style={{ backgroundColor: "var(--bgAlt)", padding: 12, borderRadius: 8, marginBottom: 16 }}>
+        <h4 style={{ margin: "0 0 10px 0" }}>{lang === "da" ? "Status lige nu" : "Current status"}</h4>
+
+        <Row label={lang === "da" ? "Appetit" : "Appetite"} value={cs.appetite} notes={cs.appetiteNotes} />
+        <Row label={lang === "da" ? "Drikker" : "Drinking"} value={cs.drinking} notes={cs.drinkingNotes} />
+        <Row label={lang === "da" ? "Energi" : "Energy"} value={cs.energy} notes={cs.energyNotes} />
+        <Row label={lang === "da" ? "Toiletvaner" : "Toileting"} value={cs.toileting} notes={cs.toiletingNotes} />
+        <Row label={lang === "da" ? "Mave/tarm" : "GI"} value={cs.gi} notes={cs.giNotes} />
+        <Row label={lang === "da" ? "Vejrtrækning" : "Breathing"} value={cs.breathing} notes={cs.breathingNotes} />
+        <Row
+          label={lang === "da" ? "Bevægelse/smerte" : "Mobility / pain"}
+          value={cs.mobilityPain}
+          notes={cs.mobilityPainNotes}
+        />
+        <Row label={lang === "da" ? "Hud/ører" : "Skin / ears"} value={cs.skinEars} notes={cs.skinEarsNotes} />
+
+        {!!cs.otherNotes && cs.otherNotes.trim() !== "" && (
+          <div style={{ marginTop: 8, fontSize: 13, color: "var(--textMuted)", whiteSpace: "pre-wrap" }}>
+            <strong>{lang === "da" ? "Andre noter:" : "Other notes:"}</strong> {cs.otherNotes}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderStep = () => {
+    switch (step) {
+      case 0:
+        return (
+          <>
+            <div className="muted" style={{ marginBottom: 8 }}>
+              {lang === "da" ? "Kæledyr:" : "Pet:"} <strong>{petName}</strong>
+            </div>
+
+            <label className="label">
+              {lang === "da" ? "Besøgsdato" : "Visit date"}
+              <input
+                className="input"
+                type="date"
+                value={draft.visitDate}
+                onChange={(e) => setDraft({ ...draft, visitDate: e.target.value })}
+              />
+            </label>
+          </>
+        );
+
+      case 1:
+        return (
+          <label className="label">
+            {lang === "da" ? "Hovedbekymring" : "Main concern"}
+            <textarea
+              className="textarea"
+              value={draft.mainConcern}
+              onChange={(e) => setDraft({ ...draft, mainConcern: e.target.value })}
+              placeholder={
+                lang === "da"
+                  ? "f.eks. halter, spiser ikke, opkast, adfærdsændring"
+                  : "e.g., limping, not eating, vomiting, behavior change"
+              }
+              rows={4}
+            />
+          </label>
+        );
+
+      case 2:
+        return (
+          <label className="label">
+            {lang === "da" ? "Hvornår startede det?" : "When did it start?"}
+            <textarea
+              className="textarea"
+              value={draft.whenStart}
+              onChange={(e) => setDraft({ ...draft, whenStart: e.target.value })}
+              placeholder={lang === "da" ? "f.eks. for 3 dage siden, i morges" : "e.g., 3 days ago, this morning"}
+              rows={4}
+            />
+          </label>
+        );
+
+      case 3:
+        return (
+          <label className="label">
+            {lang === "da" ? "Hvordan udvikler det sig?" : "How is it changing?"}
+            <textarea
+              className="textarea"
+              value={draft.howProgressing}
+              onChange={(e) => setDraft({ ...draft, howProgressing: e.target.value })}
+              placeholder={
+                lang === "da"
+                  ? "f.eks. bliver værre, det samme, bliver bedre"
+                  : "e.g., getting worse, staying the same, improving"
+              }
+              rows={4}
+            />
+          </label>
+        );
+
+      case 4:
+        return (
+          <label className="label">
+            {lang === "da" ? "Mønstre eller udløsende faktorer?" : "Patterns / triggers"}
+            <textarea
+              className="textarea"
+              value={draft.patterns}
+              onChange={(e) => setDraft({ ...draft, patterns: e.target.value })}
+              placeholder={
+                lang === "da" ? "f.eks. efter mad, værre om morgenen" : "e.g., happens after meals, worse in the morning"
+              }
+              rows={4}
+            />
+          </label>
+        );
+
+      case 5:
+        return (
+          <>
+            <div className="muted" style={{ marginBottom: 10 }}>
+              {lang === "da"
+                ? "Vælg det, der passer bedst. Tilføj en kort note hvis du vil."
+                : "Choose what fits best. Add a short note if you want."}
+            </div>
+
+            {renderCurrentStatusRow(lang === "da" ? "Appetit" : "Appetite", "appetite", "appetiteNotes")}
+            {renderCurrentStatusRow(lang === "da" ? "Drikker" : "Drinking", "drinking", "drinkingNotes")}
+            {renderCurrentStatusRow(lang === "da" ? "Energi" : "Energy", "energy", "energyNotes")}
+            {renderCurrentStatusRow(lang === "da" ? "Toiletvaner" : "Toileting", "toileting", "toiletingNotes")}
+            {renderCurrentStatusRow(lang === "da" ? "Mave/tarm" : "GI (vomiting/diarrhea)", "gi", "giNotes")}
+            {renderCurrentStatusRow(lang === "da" ? "Vejrtrækning" : "Breathing", "breathing", "breathingNotes")}
+            {renderCurrentStatusRow(
+              lang === "da" ? "Bevægelse/smerte" : "Mobility / pain",
+              "mobilityPain",
+              "mobilityPainNotes"
+            )}
+            {renderCurrentStatusRow(lang === "da" ? "Hud/ører" : "Skin / ears", "skinEars", "skinEarsNotes")}
+
+            <label className="label" style={{ marginTop: 6 }}>
+              {lang === "da" ? "Andre noter (valgfrit)" : "Other notes (optional)"}
+              <textarea
+                className="textarea"
+                value={(draft.currentStatus?.otherNotes as string) ?? ""}
+                onChange={(e) => {
+                  const cs = draft.currentStatus ?? makeEmptyStatus();
+                  setDraft({
+                    ...draft,
+                    currentStatus: {
+                      ...cs,
+                      otherNotes: e.target.value
+                    }
+                  });
+                }}
+                rows={3}
+                placeholder={
+                  lang === "da"
+                    ? "Alt andet du synes er vigtigt lige nu..."
+                    : "Anything else you think is important right now..."
+                }
+              />
+            </label>
+          </>
+        );
+
+      case 6:
+        return (
+          <label className="label">
+            {lang === "da" ? "Hvad ellers er anderledes?" : "What else is different?"}
+            <textarea
+              className="textarea"
+              value={draft.associatedSigns}
+              onChange={(e) => setDraft({ ...draft, associatedSigns: e.target.value })}
+              placeholder={
+                lang === "da"
+                  ? "f.eks. ændret appetit, adfærd, energi"
+                  : "e.g., appetite changes, behavior changes, energy level"
+              }
+              rows={4}
+            />
+          </label>
+        );
+
+      case 7:
+        return (
+          <>
+            <label className="label">
+              {lang === "da" ? "Andre detaljer (fakta til dyrlægen)" : "Other details (facts for the vet)"}
+              <textarea
+                className="textarea"
+                value={draft.otherDetails ?? ""}
+                onChange={(e) => setDraft({ ...draft, otherDetails: e.target.value })}
+                placeholder={
+                  lang === "da"
+                    ? "f.eks. foderændringer, rejse, nye godbidder, løbetid, mulig eksponering, timing, videoer du har... (ikke spørgsmål)"
+                    : "e.g., diet changes, travel, new treats, heat cycle, possible exposure, timing, videos you have... (not questions)"
+                }
+                rows={4}
+              />
+            </label>
+
+            <div className="muted" style={{ marginTop: 8 }}>
+              {lang === "da"
+                ? "Tip: Hvis du har et foto eller en video til dyrlægen, kan du tilføje det i Preview."
+                : "Tip: If you have a photo or video to show your vet, you can add it in Preview."}
+            </div>
+          </>
+        );
+
+      case 8:
+        return (
+          <>
+            <div className="muted" style={{ marginBottom: 8 }}>
+              {lang === "da"
+                ? "Vigtigt: Skriv AL medicin/tilskud — også selvom det er for noget helt andet."
+                : "Important: Include ALL medication/supplements — even if it’s for something else."}
+            </div>
+
+            <label className="label">
+              {lang === "da" ? "Hvad har du prøvet allerede?" : "What have you tried already?"}
+              <textarea
+                className="textarea"
+                value={draft.previousTreatment}
+                onChange={(e) => setDraft({ ...draft, previousTreatment: e.target.value })}
+                placeholder={
+                  lang === "da"
+                    ? "f.eks. hvad du har prøvet hjemme. Skriv AL medicin/tilskud (allergimedicin, gigtmedicin, beroligende, vitaminer). Hvis du kan: dosis + hvornår det sidst blev givet."
+                    : "e.g., what you tried at home. Include ALL medication/supplements (allergy meds, arthritis meds, calming meds, vitamins). If you can: dose + when last given."
+                }
+                rows={4}
+              />
+            </label>
+          </>
+        );
+
+      case 9:
+        return (
+          <label className="label">
+            {lang === "da" ? "Vigtigste spørgsmål til dyrlægen" : "Top questions for the vet"}
+            <textarea
+              className="textarea"
+              value={draft.questionsVet}
+              onChange={(e) => setDraft({ ...draft, questionsVet: e.target.value })}
+              placeholder={
+                lang === "da"
+                  ? "f.eks. Hvad er den mest sandsynlige årsag? Hvad er næste skridt? Hvornår skal jeg kontakte jer igen?"
+                  : "e.g., What’s the most likely cause? What’s the next step? When should I contact you again?"
+              }
+              rows={4}
+            />
+          </label>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  // Modal: use your global modal styles for consistent scrolling
+  return (
+    <div className="modalOverlay" onClick={closeToMyVisits}>
+      <div className="modalCard" onClick={(e) => e.stopPropagation()}>
+        <div className="modalHeader">
+          <div style={{ flex: 1 }}>
+            <h3 className="modalTitle" style={{ margin: 0 }}>
+              {mode === "wizard" && (lang === "da" ? "Forbered besøg" : "Prepare for Visit")}
+              {mode === "preview" && (lang === "da" ? "Gennemse & gem" : "Review & save")}
+              {mode === "done" && (lang === "da" ? "Klar!" : "Your prep is ready!")}
+            </h3>
+
+            {mode === "wizard" && (
+              <p style={{ margin: "6px 0 0 0", fontSize: 12, color: "var(--muted)" }}>
+                {lang === "da" ? "Trin" : "Step"} {step + 1} {lang === "da" ? "af" : "of"} {stepData.length}
+              </p>
+            )}
+          </div>
+
+          <button className="modalClose" onClick={closeToMyVisits} aria-label={lang === "da" ? "Luk" : "Close"}>
+            ✕
+          </button>
+        </div>
+
+        <div className="modalBody">
+          {/* MODE 1: WIZARD */}
+          {mode === "wizard" && (
+            <>
+              <div style={{ marginBottom: 16 }}>
+                <h4 style={{ margin: "0 0 6px 0" }}>{stepData[step].title}</h4>
+                <p style={{ color: "var(--muted)", fontSize: 14, margin: 0 }}>{stepData[step].desc}</p>
+              </div>
+              {renderStep()}
+            </>
+          )}
+
+          {/* MODE 2: PREVIEW */}
+          {mode === "preview" && (
+            <>
+              <div
+                style={{
+                  backgroundColor: "var(--lightBlue)",
+                  padding: 12,
+                  borderRadius: 8,
+                  marginBottom: 12
+                }}
+              >
+                <p style={{ margin: "0 0 6px 0" }}>
+                  <strong>{lang === "da" ? "Kæledyr:" : "Pet:"}</strong> {petName}
+                </p>
+                <p style={{ margin: 0 }}>
+                  <strong>{lang === "da" ? "Besøgsdato:" : "Visit date:"}</strong> {draft.visitDate}
+                </p>
+              </div>
+
+              <button className="btn btnSecondary" onClick={handleCopy} style={{ width: "100%", marginBottom: 12 }}>
+                {lang === "da" ? "Kopiér Visit Brief" : "Copy Visit Brief"}
+              </button>
+
+              {renderStatusReview()}
+
+              <div
+                style={{
+                  backgroundColor: "var(--lightBlue)",
+                  padding: 12,
+                  borderRadius: 8,
+                  marginBottom: 16
+                }}
+              >
+                <ReviewLine label={lang === "da" ? "Hovedbekymring" : "Main concern"} value={draft.mainConcern} />
+                <ReviewLine label={lang === "da" ? "Hvornår startede det?" : "When did it start?"} value={draft.whenStart} />
+                <ReviewLine label={lang === "da" ? "Hvordan udvikler det sig?" : "How is it changing?"} value={draft.howProgressing} />
+                <ReviewLine label={lang === "da" ? "Mønstre / triggere" : "Patterns / triggers"} value={draft.patterns} />
+                <ReviewLine label={lang === "da" ? "Hvad ellers er anderledes?" : "What else is different?"} value={draft.associatedSigns} />
+                <ReviewLine
+                  label={lang === "da" ? "Andre detaljer (fakta)" : "Other details (facts)"}
+                  value={draft.otherDetails ?? ""}
+                />
+                <ReviewLine
+                  label={lang === "da" ? "Hvad har du prøvet allerede?" : "What have you tried already?"}
+                  value={draft.previousTreatment}
+                />
+                <ReviewLine label={lang === "da" ? "Topspørgsmål" : "Top questions"} value={draft.questionsVet} />
+              </div>
+
+              <div className="row" style={{ gap: 8, flexDirection: "column" as const }}>
+                <button className="btn btnPrimary" onClick={handleSave} disabled={saving}>
+                  {saving ? (lang === "da" ? "Gemmer..." : "Saving...") : lang === "da" ? "Gem besøg" : "Save visit"}
+                </button>
+
+                {/* Only show delete draft if this is still a draft */}
+                {isDraft && !!visitId && (
+                  <button
+                    className="btn btnSecondary"
+                    onClick={handleDeleteDraft}
+                    style={{ borderColor: "#d33", color: "#d33" }}
+                  >
+                    {lang === "da" ? "Slet kladde" : "Delete draft"}
+                  </button>
+                )}
+
+                <button className="btn btnSecondary" onClick={handleEmail}>
+                  {lang === "da" ? "Email til mig selv (kommer snart)" : "Email to myself (coming soon)"}
+                </button>
+
+                                <button className="btn btnSecondary" onClick={handlePdf}>
+                  {lang === "da" ? "Download som PDF (kommer snart)" : "Download as PDF (coming soon)"}
+                </button>
+              </div>
+            </>
+          )}
+
+          {/* MODE 3: DONE */}
+          {mode === "done" && (
+            <>
+              <div
+                style={{
+                  backgroundColor: "var(--lightGreen)",
+                  padding: 12,
+                  borderRadius: 8,
+                  marginBottom: 16
+                }}
+              >
+                <p style={{ margin: "0 0 6px 0" }}>
+                  <strong>{lang === "da" ? "Gemt!" : "Saved!"}</strong>{" "}
+                  {lang === "da" ? "Din forberedelse er gemt i appen." : "Your visit prep has been saved in the app."}
+                </p>
+                <p style={{ margin: 0, color: "var(--muted)", fontSize: 14 }}>
+                  {lang === "da"
+                    ? "Gå forberedt ind. Vær en partner i dit dyrs behandling."
+                    : "Walk in prepared. Partner in your pet's care."}
+                </p>
+              </div>
+
+              <div className="row" style={{ gap: 8, flexDirection: "column" as const }}>
+                <button className="btn btnPrimary" onClick={closeToHome}>
+                  {lang === "da" ? "Færdig" : "Done"}
+                </button>
+
+                <button className="btn btnSecondary" onClick={handleEmail}>
+                  {lang === "da" ? "Email til mig selv (kommer snart)" : "Email to myself (coming soon)"}
+                </button>
+
+                <button className="btn btnSecondary" onClick={handlePdf}>
+                  {lang === "da" ? "Download som PDF (kommer snart)" : "Download as PDF (coming soon)"}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* FOOTER */}
+        <div
+          style={{
+            padding: "12px 16px",
+            borderTop: "1px solid var(--border)",
+            display: "flex",
+            gap: 8,
+            justifyContent: "space-between",
+            alignItems: "center"
+          }}
+        >
+          {(mode === "wizard" && step > 0) || mode === "preview" ? (
+            <button className="btn btnSecondary" onClick={handleBack} style={{ flex: 0, minWidth: 80 }}>
+              ← {lang === "da" ? "Tilbage" : "Back"}
+            </button>
+          ) : (
+            <div style={{ flex: 0, minWidth: 80 }} />
+          )}
+
+          {mode === "wizard" && (
+            <button
+              className="btn btnPrimary"
+              onClick={handleNext}
+              disabled={!stepData[step].ok}
+              style={{ flex: 1, minWidth: 120 }}
+            >
+              {step === stepData.length - 1 ? (lang === "da" ? "Preview" : "Preview") : lang === "da" ? "Næste" : "Next"}
+            </button>
+          )}
+
+          {mode === "done" && (
+            <button className="btn btnPrimary" onClick={closeToMyVisits} style={{ flex: 1, minWidth: 120 }}>
+              {lang === "da" ? "Luk" : "Close"}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
