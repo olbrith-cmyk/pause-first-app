@@ -850,10 +850,13 @@ case 9:
                   label={lang === "da" ? "Andre detaljer (fakta)" : "Other details (facts)"}
                   value={draft.otherDetails ?? ""}
                 />
-                <ReviewLine label={lang === "da" ? "Medicin/tilskud" : "Meds / supplements"} value={(draft as any).medicationsSupplements ?? ""} />
                 <ReviewLine
-                  label={lang === "da" ? "Hvad har du prøvet allerede?" : "What have you tried already?"}
-                  value={draft.previousTreatment}
+  label={lang === "da" ? "Medicin/tilskud" : "Meds / supplements"}
+  value={(draft as any).medicationsSupplements ?? ""}
+/>
+<ReviewLine
+  label={lang === "da" ? "Hvad har du prøvet allerede?" : "What have you tried already?"}
+  value={draft.previousTreatment}
 />
                 <ReviewLine label={lang === "da" ? "Topspørgsmål" : "Top questions"} value={draft.questionsVet} />
               </div>
