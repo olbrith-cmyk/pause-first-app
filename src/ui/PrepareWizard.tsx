@@ -194,11 +194,43 @@ export default function PrepareWizard({
             : "Helpful observations (not questions). Save questions for the next step.",
         ok: true
       },
-      {
-        title: lang === "da" ? "Hvad har du prøvet allerede?" : "What have you tried already?",
-        desc: lang === "da" ? "Medicin, tilskud, ændringer derhjemme" : "Medication, supplements, home changes",
-        ok: true
-      },
+      return (
+  <>
+    <label className="label">
+      {lang === "da" ? "Hvilken medicin/tilskud er dit dyr på?" : "What meds is your pet on?"}
+      <textarea
+        className="textarea"
+        value={(draft as any).medicationsSupplements ?? ""}
+        onChange={(e) => setDraft({ ...draft, medicationsSupplements: e.target.value } as any)}
+        placeholder={
+          lang === "da"
+            ? "F.eks. navn, dosis, hvor ofte...\n(også vitaminer/tilskud)"
+            : "E.g., name, dose, how often...\n(include supplements/vitamins too)"
+        }
+        rows={4}
+      />
+    </label>
+
+    <div style={{ height: 14 }} />
+
+    <label className="label">
+      {lang === "da"
+        ? "Hvad har du prøvet allerede?"
+        : "Any home remedies or treatments already tried?"}
+      <textarea
+        className="textarea"
+        value={draft.previousTreatment}
+        onChange={(e) => setDraft({ ...draft, previousTreatment: e.target.value })}
+        placeholder={
+          lang === "da"
+            ? "F.eks. ro, diætændring, skånekost, hvile, varme/kulde..."
+            : "E.g., rest, diet change, bland diet, heat/cold..."
+        }
+        rows={4}
+      />
+    </label>
+  </>
+);
       {
         title: lang === "da" ? "Topspørgsmål til dyrlægen" : "Top questions for the vet",
         desc: lang === "da" ? "Hvad vil du gerne have svar på?" : "What do you want answered?",
@@ -826,6 +858,10 @@ const handleSaveDraftAndClose = async () => {
                   label={lang === "da" ? "Hvad har du prøvet allerede?" : "What have you tried already?"}
                   value={draft.previousTreatment}
                 />
+                <ReviewLine
+  label={lang === "da" ? "Medicin/tilskud" : "Meds / supplements"}
+  value={(draft as any).medicationsSupplements ?? ""}
+/>
                 <ReviewLine label={lang === "da" ? "Topspørgsmål" : "Top questions"} value={draft.questionsVet} />
               </div>
 
