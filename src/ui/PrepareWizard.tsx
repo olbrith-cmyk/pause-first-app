@@ -185,14 +185,7 @@ export default function PrepareWizard({
             : "Choose 'As usual', 'Different', or 'N/A / not sure' and optionally add a short note.",
         ok: true
       },
-      {
-        title: lang === "da" ? "Hvad ellers er anderledes?" : "What else is different?",
-        desc:
-          lang === "da"
-            ? "Andre ændringer du har lagt mærke til"
-            : "Any other changes you've noticed",
-        ok: true
-      },
+      
       {
         title: lang === "da" ? "Andre detaljer (fakta til dyrlægen)" : "Other details (facts for the vet)",
         desc:
@@ -652,7 +645,7 @@ const handleSaveDraftAndClose = async () => {
             {renderCurrentStatusRow(lang === "da" ? "Hud/ører" : "Skin / ears", "skinEars", "skinEarsNotes")}
 
             <label className="label" style={{ marginTop: 6 }}>
-              {lang === "da" ? "Andre noter (valgfrit)" : "Other notes (optional)"}
+              {lang === "da" ? "Andre ændringer / noter (valgfrit)" : "Other changes / notes (optional)"}
               <textarea
                 className="textarea"
                 value={(draft.currentStatus?.otherNotes as string) ?? ""}
@@ -669,8 +662,8 @@ const handleSaveDraftAndClose = async () => {
                 rows={3}
                 placeholder={
                   lang === "da"
-                    ? "Alt andet du synes er vigtigt lige nu..."
-                    : "Anything else you think is important right now..."
+                    ? "Andre ændringer du har lagt mærke til (symptomer, adfærd, mønstre)..."
+                    : "Any other changes you've noticed (symptoms, behavior, patterns)..."
                 }
               />
             </label>
@@ -678,24 +671,6 @@ const handleSaveDraftAndClose = async () => {
         );
 
       case 6:
-        return (
-          <label className="label">
-            {lang === "da" ? "Hvad ellers er anderledes?" : "What else is different?"}
-            <textarea
-              className="textarea"
-              value={draft.associatedSigns}
-              onChange={(e) => setDraft({ ...draft, associatedSigns: e.target.value })}
-              placeholder={
-                lang === "da"
-                  ? "f.eks. ændret appetit, adfærd, energi"
-                  : "e.g., appetite changes, behavior changes, energy level"
-              }
-              rows={4}
-            />
-          </label>
-        );
-
-      case 7:
         return (
           <>
             <label className="label">
@@ -721,7 +696,7 @@ const handleSaveDraftAndClose = async () => {
           </>
         );
 
-      case 8:
+      case 7:
         return (
           <>
             <div className="muted" style={{ marginBottom: 8 }}>
@@ -747,7 +722,7 @@ const handleSaveDraftAndClose = async () => {
           </>
         );
 
-      case 9:
+      case 8:
         return (
           <label className="label">
             {lang === "da" ? "Vigtigste spørgsmål til dyrlægen" : "Top questions for the vet"}
@@ -843,7 +818,6 @@ const handleSaveDraftAndClose = async () => {
                 <ReviewLine label={lang === "da" ? "Hvornår startede det?" : "When did it start?"} value={draft.whenStart} />
                 <ReviewLine label={lang === "da" ? "Hvordan udvikler det sig?" : "How is it changing?"} value={draft.howProgressing} />
                 <ReviewLine label={lang === "da" ? "Mønstre / triggere" : "Patterns / triggers"} value={draft.patterns} />
-                <ReviewLine label={lang === "da" ? "Hvad ellers er anderledes?" : "What else is different?"} value={draft.associatedSigns} />
                 <ReviewLine
                   label={lang === "da" ? "Andre detaljer (fakta)" : "Other details (facts)"}
                   value={draft.otherDetails ?? ""}
