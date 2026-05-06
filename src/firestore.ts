@@ -101,6 +101,7 @@ export interface Visit {
   otherDetails?: string;
 
   previousTreatment: string;
+  medicationsSupplements?: string;
   questionsVet: string;
 
   // NEW (optional) — “How is your animal doing right now?” step
