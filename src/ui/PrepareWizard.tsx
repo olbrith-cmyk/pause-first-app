@@ -708,50 +708,67 @@ const handleSaveDraftAndClose = async () => {
         );
 
       case 7:
-        return (
-          <>
-            <div className="muted" style={{ marginBottom: 8 }}>
-              {lang === "da"
-                ? "Vigtigt: Skriv AL medicin/tilskud — også selvom det er for noget helt andet."
-                : "Important: Include ALL medication/supplements — even if it’s for something else."}
-            </div>
+  return (
+    <>
+      <div className="muted" style={{ marginBottom: 8 }}>
+        {lang === "da"
+          ? "Vigtigt: Skriv AL medicin/tilskud — også selvom det er for noget helt andet."
+          : "Important: Include ALL medication/supplements — even if it’s for something else."}
+      </div>
 
-            <label className="label">
-              {lang === "da" ? "Hvad har du prøvet allerede?" : "What have you tried already?"}
-              <textarea
-                className="textarea"
-                value={draft.previousTreatment}
-                onChange={(e) => setDraft({ ...draft, previousTreatment: e.target.value })}
-                placeholder={
-                  lang === "da"
-                    ? "f.eks. hvad du har prøvet hjemme. Skriv AL medicin/tilskud (allergimedicin, gigtmedicin, beroligende, vitaminer). Hvis du kan: dosis + hvornår det sidst blev givet."
-                    : "e.g., what you tried at home. Include ALL medication/supplements (allergy meds, arthritis meds, calming meds, vitamins). If you can: dose + when last given."
-                }
-                rows={4}
-              />
-            </label>
-          </>
-        );
+      <label className="label">
+        {lang === "da" ? "Hvilken medicin/tilskud er dit dyr på?" : "What meds is your pet on?"}
+        <textarea
+          className="textarea"
+          value={(draft as any).medicationsSupplements ?? ""}
+          onChange={(e) => setDraft({ ...draft, medicationsSupplements: e.target.value } as any)}
+          placeholder={
+            lang === "da"
+              ? "F.eks. navn, dosis, hvor ofte...\n(også vitaminer/tilskud)"
+              : "E.g., name, dose, how often...\n(include supplements/vitamins too)"
+          }
+          rows={4}
+        />
+      </label>
+    </>
+  );
 
-      case 8:
-        return (
-          <label className="label">
-            {lang === "da" ? "Vigtigste spørgsmål til dyrlægen" : "Top questions for the vet"}
-            <textarea
-              className="textarea"
-              value={draft.questionsVet}
-              onChange={(e) => setDraft({ ...draft, questionsVet: e.target.value })}
-              placeholder={
-                lang === "da"
-                  ? "f.eks. Hvad er den mest sandsynlige årsag? Hvad er næste skridt? Hvornår skal jeg kontakte jer igen?"
-                  : "e.g., What’s the most likely cause? What’s the next step? When should I contact you again?"
-              }
-              rows={4}
-            />
-          </label>
-        );
+case 8:
+  return (
+    <label className="label">
+      {lang === "da" ? "Hvad har du prøvet allerede?" : "What have you tried already?"}
+      <textarea
+        className="textarea"
+        value={draft.previousTreatment}
+        onChange={(e) => setDraft({ ...draft, previousTreatment: e.target.value })}
+        placeholder={
+          lang === "da"
+            ? "F.eks. ro, diætændring, skånekost, hvile, varme/kulde..."
+            : "E.g., rest, diet change, bland diet, heat/cold..."
+        }
+        rows={4}
+      />
+    </label>
+  );
 
-      default:
+case 9:
+  return (
+    <label className="label">
+      {lang === "da" ? "Vigtigste spørgsmål til dyrlægen" : "Top questions for the vet"}
+      <textarea
+        className="textarea"
+        value={draft.questionsVet}
+        onChange={(e) => setDraft({ ...draft, questionsVet: e.target.value })}
+        placeholder={
+          lang === "da"
+            ? "f.eks. Hvad er den mest sandsynlige årsag? Hvad er næste skridt? Hvornår skal jeg kontakte jer igen?"
+            : "e.g., What’s the most likely cause? What’s the next step? When should I contact you again?"
+        }
+        rows={4}
+      />
+    </label>
+  );
+    default:
         return null;
     }
   };
