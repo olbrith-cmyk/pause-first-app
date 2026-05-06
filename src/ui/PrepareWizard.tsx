@@ -187,26 +187,21 @@ export default function PrepareWizard({
       },
       
       {
-        title: lang === "da" ? "Andre detaljer (fakta til dyrlægen)" : "Other details (facts for the vet)",
-        desc:
-          lang === "da"
-            ? "Hjælpsomme observationer (ikke spørgsmål). Gem spørgsmål til næste trin."
-            : "Helpful observations (not questions). Save questions for the next step.",
-        ok: true
-      },
-      return (
-  <>
-    <label className="label">
-      {lang === "da" ? "Hvilken medicin/tilskud er dit dyr på?" : "What meds is your pet on?"}
-      <textarea
-        className="textarea"
-        value={(draft as any).medicationsSupplements ?? ""}
-        onChange={(e) => setDraft({ ...draft, medicationsSupplements: e.target.value } as any)}
-        placeholder={
-          lang === "da"
-            ? "F.eks. navn, dosis, hvor ofte...\n(også vitaminer/tilskud)"
-            : "E.g., name, dose, how often...\n(include supplements/vitamins too)"
-        }
+  title: lang === "da" ? "Andre detaljer (fakta til dyrlægen)" : "Other details (facts for the vet)",
+  desc:
+    lang === "da"
+      ? "Hjælpsomme observationer (ikke spørgsmål). Gem spørgsmål til næste trin."
+      : "Helpful observations (not questions). Save questions for the next step.",
+  ok: true
+},
+{
+  title: lang === "da" ? "Medicin/tilskud" : "Meds / supplements",
+  desc:
+    lang === "da"
+      ? "Skriv navn, dosis og hvor ofte (også vitaminer/tilskud)."
+      : "List name, dose, and how often (include supplements/vitamins too).",
+  ok: true
+},
         rows={4}
       />
     </label>
