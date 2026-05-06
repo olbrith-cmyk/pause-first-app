@@ -223,8 +223,6 @@ export default function PrepareWizard({
         }
         rows={4}
       />
-    </label>
-  </>
 );
       {
         title: lang === "da" ? "Topspørgsmål til dyrlægen" : "Top questions for the vet",
