@@ -202,33 +202,19 @@ export default function PrepareWizard({
       : "List name, dose, and how often (include supplements/vitamins too).",
   ok: true
 },
-        rows={4}
-      />
-    </label>
-
-    <div style={{ height: 14 }} />
-
-    <label className="label">
-      {lang === "da"
-        ? "Hvad har du prøvet allerede?"
-        : "Any home remedies or treatments already tried?"}
-      <textarea
-        className="textarea"
-        value={draft.previousTreatment}
-        onChange={(e) => setDraft({ ...draft, previousTreatment: e.target.value })}
-        placeholder={
-          lang === "da"
-            ? "F.eks. ro, diætændring, skånekost, hvile, varme/kulde..."
-            : "E.g., rest, diet change, bland diet, heat/cold..."
-        }
-        rows={4}
-      />
-);
-      {
-        title: lang === "da" ? "Topspørgsmål til dyrlægen" : "Top questions for the vet",
-        desc: lang === "da" ? "Hvad vil du gerne have svar på?" : "What do you want answered?",
-        ok: true
-      }
+{
+  title: lang === "da" ? "Hvad har du prøvet allerede?" : "What have you tried already?",
+  desc:
+    lang === "da"
+      ? "Hvad har du prøvet hjemme indtil nu?"
+      : "What have you tried at home so far?",
+  ok: true
+},
+{
+  title: lang === "da" ? "Topspørgsmål til dyrlægen" : "Top questions for the vet",
+  desc: lang === "da" ? "Hvad vil du gerne have svar på?" : "What do you want answered?",
+  ok: true
+},
     ],
     [draft.visitDate, draft.mainConcern, lang]
   );
