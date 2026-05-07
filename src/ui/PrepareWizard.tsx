@@ -185,7 +185,6 @@ export default function PrepareWizard({
             : "Choose 'As usual', 'Different', or 'N/A / not sure' and optionally add a short note.",
         ok: true
       },
-      
       {
   title: lang === "da" ? "Andre detaljer (fakta til dyrlægen)" : "Other details (facts for the vet)",
   desc:
@@ -195,19 +194,16 @@ export default function PrepareWizard({
   ok: true
 },
 {
-  title: lang === "da" ? "Medicin/tilskud" : "Meds / supplements",
+  title: lang === "da" ? "Medicin + hvad du har prøvet" : "Meds + what you’ve tried",
   desc:
     lang === "da"
-      ? "Skriv navn, dosis og hvor ofte (også vitaminer/tilskud)."
-      : "List name, dose, and how often (include supplements/vitamins too).",
+      ? "Skriv medicin/tilskud og hvad du allerede har prøvet hjemme."
+      : "List meds/supplements and anything you’ve already tried at home.",
   ok: true
 },
 {
-  title: lang === "da" ? "Hvad har du prøvet allerede?" : "What have you tried already?",
-  desc:
-    lang === "da"
-      ? "Hvad har du prøvet hjemme indtil nu?"
-      : "What have you tried at home so far?",
+  title: lang === "da" ? "Topspørgsmål til dyrlægen" : "Top questions for the vet",
+  desc: lang === "da" ? "Hvad vil du gerne have svar på?" : "What do you want answered?",
   ok: true
 },
 {
@@ -707,7 +703,7 @@ const handleSaveDraftAndClose = async () => {
           </>
         );
 
-      case 7:
+        case 7:
   return (
     <>
       <div className="muted" style={{ marginBottom: 8 }}>
@@ -730,10 +726,33 @@ const handleSaveDraftAndClose = async () => {
           rows={4}
         />
       </label>
+
+      <div style={{ height: 14 }} />
+
+      <h4 style={{ margin: "6px 0 8px 0" }}>
+        {lang === "da"
+          ? "Har du prøvet noget hjemme allerede?"
+          : "Any home remedies or treatments already tried?"}
+      </h4>
+
+      <label className="label">
+        {lang === "da" ? "Hvad har du prøvet allerede?" : "What have you tried already?"}
+        <textarea
+          className="textarea"
+          value={draft.previousTreatment}
+          onChange={(e) => setDraft({ ...draft, previousTreatment: e.target.value })}
+          placeholder={
+            lang === "da"
+              ? "F.eks. ro, diætændring, skånekost, hvile, varme/kulde..."
+              : "E.g., rest, diet change, bland diet, heat/cold..."
+          }
+          rows={4}
+        />
+      </label>
     </>
   );
-
-case 8:
+      
+      case 8:
   return (
     <label className="label">
       {lang === "da" ? "Hvad har du prøvet allerede?" : "What have you tried already?"}
