@@ -542,7 +542,7 @@ const handleSaveDraftAndClose = async () => {
   };
   
   // Notebook-professional preview styles
-  const notebookPageStyle: React.CSSProperties = {
+    const notebookPageStyle: any = { ... }
     backgroundColor: "#fffdf7",
     border: "1px solid rgba(20, 40, 60, 0.12)",
     borderRadius: 14,
