@@ -411,12 +411,25 @@ const handleSaveDraftAndClose = async () => {
       lines.push(od);
       lines.push("");
     }
-    
-    const meds = ((draft as any).medicationsSupplements as string) ?? "";
-    if (meds
-    if (draft.previousTreatment) {
-      lines.push(lang === "da" ? "Hvad har du prøvet allerede?" : "What have you tried already?");
-      lines.push(draft.previousTreatment);
+
+        const meds = (((draft as any).medicationsSupplements as string) ?? "").trim();
+    if (meds) {
+      lines.push(lang === "da" ? "Medicin/tilskud:" : "Meds / supplements:");
+      lines.push(meds);
+      lines.push("");
+    }
+
+    const cond = (((draft as any).knownConditions as string) ?? "").trim();
+    if (cond) {
+      lines.push(lang === "da" ? "Kendte tilstande (diagnosticeret):" : "Known conditions (vet-diagnosed):");
+      lines.push(cond);
+      lines.push("");
+    }
+
+    const tests = (((draft as any).recentTests as string) ?? "").trim();
+    if (tests) {
+      lines.push(lang === "da" ? "Nylige tests/resultater:" : "Recent tests/results:");
+      lines.push(tests);
       lines.push("");
     }
 
