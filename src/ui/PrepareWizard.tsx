@@ -56,21 +56,29 @@ export default function PrepareWizard({
   const didInit = useRef(false);
   const autosaveTimer = useRef<number | null>(null);
 
-  const [draft, setDraft] = useState<Visit>({
-    userId,
-    petId,
-    visitDate: "",
-    mainConcern: "",
-    whenStart: "",
-    howProgressing: "",
-    patterns: "",
-    associatedSigns: "",
-    otherDetails: "",
-    previousTreatment: "",
-    questionsVet: "",
-    currentStatus: makeEmptyStatus(),
-    status: "draft"
-  });
+  const [draft, setDraft] = useState<Visit>(
+   {
+  userId,
+  petId,
+  visitDate: "",
+  mainConcern: "",
+  whenStart: "",
+  howProgressing: "",
+  patterns: "",
+  associatedSigns: "",
+  otherDetails: "",
+  previousTreatment: "",
+  questionsVet: "",
+  currentStatus: makeEmptyStatus(),
+  status: "draft",
+
+  // Step 7 additions (kept compatible even if Visit type isn't updated yet)
+  ...( {
+    medicationsSupplements: "",
+    knownConditions: "",
+    recentTests: ""
+  } as any )
+} );
 
   const isDraft = (draft.status ?? "final") === "draft";
 
@@ -144,7 +152,7 @@ export default function PrepareWizard({
   }, [draft, visitId]);
 
   // Step model (fixed flow + preview)
-  const stepData = useMemo(
+      const stepData = useMemo(
     () => [
       {
         title: lang === "da" ? "Besøgsdato" : "Visit date",
@@ -163,18 +171,19 @@ export default function PrepareWizard({
         ok: !!draft.mainConcern?.trim()
       },
       {
-        title: lang === "da" ? "Hvornår startede det?" : "When did it start?",
-        desc: lang === "da" ? "Hjælp dyrlægen med tidslinjen" : "Help your vet understand the timeline",
+        title: lang === "da" ? "Tidslinje" : "Timeline",
+        desc:
+          lang === "da"
+            ? "Hvornår startede det — og hvordan har det ændret sig?"
+            : "When did it start — and how has it changed since then?",
         ok: true
       },
       {
-        title: lang === "da" ? "Hvordan udvikler det sig?" : "How is it changing?",
-        desc: lang === "da" ? "Bedre, værre eller det samme?" : "Better, worse, or the same?",
-        ok: true
-      },
-      {
-        title: lang === "da" ? "Mønstre eller udløsende faktorer?" : "Patterns / triggers",
-        desc: lang === "da" ? "Sker det på bestemte tidspunkter?" : "Does it happen at certain times?",
+        title: lang === "da" ? "Mønstre & triggere" : "Patterns & triggers",
+        desc:
+          lang === "da"
+            ? "Sker det på bestemte tidspunkter eller i bestemte situationer?"
+            : "Does it happen at certain times or in certain situations?",
         ok: true
       },
       {
@@ -186,31 +195,29 @@ export default function PrepareWizard({
         ok: true
       },
       {
-  title: lang === "da" ? "Andre detaljer (fakta til dyrlægen)" : "Other details (facts for the vet)",
-  desc:
-    lang === "da"
-      ? "Hjælpsomme observationer (ikke spørgsmål). Gem spørgsmål til næste trin."
-      : "Helpful observations (not questions). Save questions for the next step.",
-  ok: true
-},
-{
-  title: lang === "da" ? "Medicin + hvad du har prøvet" : "Meds + what you’ve tried",
-  desc:
-    lang === "da"
-      ? "Skriv medicin/tilskud og hvad du allerede har prøvet hjemme."
-      : "List meds/supplements and anything you’ve already tried at home.",
-  ok: true
-},
-{
-  title: lang === "da" ? "Topspørgsmål til dyrlægen" : "Top questions for the vet",
-  desc: lang === "da" ? "Hvad vil du gerne have svar på?" : "What do you want answered?",
-  ok: true
-},
-{
-  title: lang === "da" ? "Topspørgsmål til dyrlægen" : "Top questions for the vet",
-  desc: lang === "da" ? "Hvad vil du gerne have svar på?" : "What do you want answered?",
-  ok: true
-},
+        title: lang === "da" ? "Andre detaljer (fakta til dyrlægen)" : "Other details (facts for the vet)",
+        desc:
+          lang === "da"
+            ? "Hjælpsomme observationer (ikke spørgsmål). Gem spørgsmål til næste trin."
+            : "Helpful observations (not questions). Save questions for the next step.",
+        ok: true
+      },
+      {
+        title:
+          lang === "da"
+            ? "Medicin, tilstande, tests + hvad du har prøvet"
+            : "Meds, conditions, tests + what you’ve tried",
+        desc:
+          lang === "da"
+            ? "Skriv medicin/tilskud, kendte tilstande, nylige tests og hvad du allerede har prøvet hjemme."
+            : "List meds/supplements, known conditions, recent tests, and anything you’ve already tried at home.",
+        ok: true
+      },
+      {
+        title: lang === "da" ? "Topspørgsmål til dyrlægen" : "Top questions for the vet",
+        desc: lang === "da" ? "Hvad vil du gerne have svar på?" : "What do you want answered?",
+        ok: true
+      }
     ],
     [draft.visitDate, draft.mainConcern, lang]
   );
@@ -404,7 +411,9 @@ const handleSaveDraftAndClose = async () => {
       lines.push(od);
       lines.push("");
     }
-
+    
+    const meds = ((draft as any).medicationsSupplements as string) ?? "";
+    if (meds
     if (draft.previousTreatment) {
       lines.push(lang === "da" ? "Hvad har du prøvet allerede?" : "What have you tried already?");
       lines.push(draft.previousTreatment);
@@ -487,16 +496,68 @@ const handleSaveDraftAndClose = async () => {
     );
   };
 
-  const ReviewLine = ({ label, value }: { label: string; value: string }) => {
+    const ReviewLine = ({ label, value }: { label: string; value: string }) => {
     if (!value || value.trim() === "") return null;
+
     return (
-      <div style={{ marginBottom: 12 }}>
-        <p style={{ margin: "0 0 4px 0", fontWeight: "bold", fontSize: 14 }}>{label}</p>
-        <p style={{ margin: 0, whiteSpace: "pre-wrap", fontSize: 14, lineHeight: 1.5 }}>{value}</p>
+      <div style={{ marginBottom: 14 }}>
+        <div
+          style={{
+            fontSize: 12,
+            letterSpacing: 0.3,
+            textTransform: "uppercase",
+            color: "rgba(20,40,60,0.65)",
+            fontWeight: 700,
+            marginBottom: 6
+          }}
+        >
+          {label}
+        </div>
+
+        <div
+          style={{
+            fontSize: 15,
+            lineHeight: 1.6,
+            whiteSpace: "pre-wrap",
+            color: "rgba(15,25,35,0.92)"
+          }}
+        >
+          {value}
+        </div>
       </div>
     );
   };
+  
+  // Notebook-professional preview styles
+  const notebookPageStyle: React.CSSProperties = {
+    backgroundColor: "#fffdf7",
+    border: "1px solid rgba(20, 40, 60, 0.12)",
+    borderRadius: 14,
+    padding: 14,
+    boxShadow: "0 10px 24px rgba(20, 40, 60, 0.08)",
+    position: "relative",
+    overflow: "hidden"
+  };
 
+  const notebookLinesStyle: React.CSSProperties = {
+    position: "absolute",
+    inset: 0,
+    pointerEvents: "none",
+    opacity: 0.18,
+    backgroundImage:
+      "repeating-linear-gradient(to bottom, rgba(40,70,110,0.18) 0px, rgba(40,70,110,0.18) 1px, transparent 1px, transparent 28px)"
+  };
+
+  const notebookMarginStyle: React.CSSProperties = {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: 18,
+    width: 2,
+    background: "rgba(220, 80, 90, 0.22)",
+    pointerEvents: "none"
+  };
+  
   const renderStatusReview = () => {
     const cs = draft.currentStatus;
     if (!cs) return null;
@@ -580,56 +641,67 @@ const handleSaveDraftAndClose = async () => {
             />
           </label>
         );
-
       case 2:
         return (
-          <label className="label">
-            {lang === "da" ? "Hvornår startede det?" : "When did it start?"}
-            <textarea
-              className="textarea"
-              value={draft.whenStart}
-              onChange={(e) => setDraft({ ...draft, whenStart: e.target.value })}
-              placeholder={lang === "da" ? "f.eks. for 3 dage siden, i morges" : "e.g., 3 days ago, this morning"}
-              rows={4}
-            />
-          </label>
+          <>
+            <label className="label">
+              {lang === "da" ? "Hvornår lagde du først mærke til det?" : "When did you first notice this?"}
+              <textarea
+                className="textarea"
+                value={draft.whenStart}
+                onChange={(e) => setDraft({ ...draft, whenStart: e.target.value })}
+                placeholder={
+                  lang === "da"
+                    ? "F.eks. i tirsdags efter en lang gåtur, i morges, for 2–3 dage siden..."
+                    : "E.g., Tuesday evening after a long walk, this morning, 2–3 days ago..."
+                }
+                rows={4}
+              />
+            </label>
+
+            <div style={{ height: 14 }} />
+
+            <label className="label">
+              {lang === "da" ? "Hvordan har det ændret sig siden da?" : "How has it changed since then?"}
+              <textarea
+                className="textarea"
+                value={draft.howProgressing}
+                onChange={(e) => setDraft({ ...draft, howProgressing: e.target.value })}
+                placeholder={
+                  lang === "da"
+                    ? "F.eks. værre om morgenen, lidt bedre efter hvile, mere hyppigt..."
+                    : "E.g., worse in the mornings, slightly better after rest, more frequent..."
+                }
+                rows={4}
+              />
+            </label>
+          </>
         );
 
       case 3:
         return (
           <label className="label">
-            {lang === "da" ? "Hvordan udvikler det sig?" : "How is it changing?"}
-            <textarea
-              className="textarea"
-              value={draft.howProgressing}
-              onChange={(e) => setDraft({ ...draft, howProgressing: e.target.value })}
-              placeholder={
-                lang === "da"
-                  ? "f.eks. bliver værre, det samme, bliver bedre"
-                  : "e.g., getting worse, staying the same, improving"
-              }
-              rows={4}
-            />
-          </label>
-        );
-
-      case 4:
-        return (
-          <label className="label">
-            {lang === "da" ? "Mønstre eller udløsende faktorer?" : "Patterns / triggers"}
+            {lang === "da" ? "Mønstre & triggere" : "Patterns & triggers"}
             <textarea
               className="textarea"
               value={draft.patterns}
               onChange={(e) => setDraft({ ...draft, patterns: e.target.value })}
               placeholder={
-                lang === "da" ? "f.eks. efter mad, værre om morgenen" : "e.g., happens after meals, worse in the morning"
+                lang === "da"
+                  ? "F.eks. værre efter mad, kun på trapper, oftere om natten..."
+                  : "E.g., worse after meals, only on stairs, more frequent at night..."
               }
               rows={4}
             />
+            <div className="muted" style={{ marginTop: 8 }}>
+              {lang === "da"
+                ? "Hvis der ikke er nogen mønstre, kan du lade feltet stå tomt."
+                : "If there are no patterns, you can leave this blank."}
+            </div>
           </label>
         );
 
-      case 5:
+      case 4:
         return (
           <>
             <div className="muted" style={{ marginBottom: 10 }}>
@@ -667,17 +739,13 @@ const handleSaveDraftAndClose = async () => {
                   });
                 }}
                 rows={3}
-                placeholder={
-                  lang === "da"
-                    ? "Andre ændringer du har lagt mærke til (symptomer, adfærd, mønstre)..."
-                    : "Any other changes you've noticed (symptoms, behavior, patterns)..."
-                }
+                placeholder={lang === "da" ? "Andre ændringer du har lagt mærke til..." : "Any other changes you've noticed..."}
               />
             </label>
           </>
         );
 
-      case 6:
+      case 5:
         return (
           <>
             <label className="label">
@@ -688,105 +756,119 @@ const handleSaveDraftAndClose = async () => {
                 onChange={(e) => setDraft({ ...draft, otherDetails: e.target.value })}
                 placeholder={
                   lang === "da"
-                    ? "f.eks. foderændringer, rejse, nye godbidder, løbetid, mulig eksponering, timing, videoer du har... (ikke spørgsmål)"
-                    : "e.g., diet changes, travel, new treats, heat cycle, possible exposure, timing, videos you have... (not questions)"
+                    ? "F.eks. foderændringer, rejse, nye godbidder, løbetid, mulig eksponering, timing, videoer du har... (ikke spørgsmål)"
+                    : "E.g., new food/treats, travel, boarding, heat cycle, possible exposure, timing, videos you have... (not questions)"
                 }
                 rows={4}
               />
             </label>
 
             <div className="muted" style={{ marginTop: 8 }}>
-              {lang === "da"
-                ? "Tip: Hvis du har et foto eller en video til dyrlægen, kan du tilføje det i Preview."
-                : "Tip: If you have a photo or video to show your vet, you can add it in Preview."}
+              {lang === "da" ? "Tip: Du kan tilføje fotos/videoer i Preview." : "Tip: You can attach photos/videos in Preview."}
             </div>
           </>
         );
 
-        case 7:
-  return (
-    <>
-      <div className="muted" style={{ marginBottom: 8 }}>
-        {lang === "da"
-          ? "Vigtigt: Skriv AL medicin/tilskud — også selvom det er for noget helt andet."
-          : "Important: Include ALL medication/supplements — even if it’s for something else."}
-      </div>
+      case 6:
+        return (
+          <>
+            <div className="muted" style={{ marginBottom: 8 }}>
+              {lang === "da"
+                ? "Husk: Inkludér al medicin/tilskud — også selvom det er for noget helt andet."
+                : "Remember: Include all meds/supplements — even if it’s for something else."}
+            </div>
 
-      <label className="label">
-        {lang === "da" ? "Hvilken medicin/tilskud er dit dyr på?" : "What meds is your pet on?"}
-        <textarea
-          className="textarea"
-          value={(draft as any).medicationsSupplements ?? ""}
-          onChange={(e) => setDraft({ ...draft, medicationsSupplements: e.target.value } as any)}
-          placeholder={
-            lang === "da"
-              ? "F.eks. navn, dosis, hvor ofte...\n(også vitaminer/tilskud)"
-              : "E.g., name, dose, how often...\n(include supplements/vitamins too)"
-          }
-          rows={4}
-        />
-      </label>
+            <label className="label">
+              {lang === "da" ? "Medicin & tilskud" : "Meds & supplements"}
+              <textarea
+                className="textarea"
+                value={((draft as any).medicationsSupplements as string) ?? ""}
+                onChange={(e) => setDraft({ ...draft, medicationsSupplements: e.target.value } as any)}
+                placeholder={
+                  lang === "da"
+                    ? "Navn, dosis, hvor ofte, hvornår startet (inkl. vitaminer)"
+                    : "Name, dose, how often, when started (include vitamins)"
+                }
+                rows={4}
+              />
+            </label>
 
-      <div style={{ height: 14 }} />
+            <div style={{ height: 14 }} />
 
-      <h4 style={{ margin: "6px 0 8px 0" }}>
-        {lang === "da"
-          ? "Har du prøvet noget hjemme allerede?"
-          : "Any home remedies or treatments already tried?"}
-      </h4>
+            <label className="label">
+              {lang === "da" ? "Kendte tilstande at nævne? (valgfrit)" : "Known conditions to mention? (optional)"}
+              <div className="muted" style={{ marginTop: 6 }}>
+                {lang === "da"
+                  ? "Kun tilstande din dyrlæge har diagnosticeret (f.eks. gigt, diabetes)."
+                  : "Only conditions your vet has diagnosed (e.g., arthritis, diabetes)."}
+              </div>
+              <input
+                className="input"
+                value={((draft as any).knownConditions as string) ?? ""}
+                onChange={(e) => setDraft({ ...draft, knownConditions: e.target.value } as any)}
+                placeholder={lang === "da" ? "F.eks. Gigt (2019), allergi, CKD stadie 2" : "E.g., Arthritis (2019), allergies, CKD stage 2"}
+              />
+            </label>
 
-      <label className="label">
-        {lang === "da" ? "Hvad har du prøvet allerede?" : "What have you tried already?"}
-        <textarea
-          className="textarea"
-          value={draft.previousTreatment}
-          onChange={(e) => setDraft({ ...draft, previousTreatment: e.target.value })}
-          placeholder={
-            lang === "da"
-              ? "F.eks. ro, diætændring, skånekost, hvile, varme/kulde..."
-              : "E.g., rest, diet change, bland diet, heat/cold..."
-          }
-          rows={4}
-        />
-      </label>
-    </>
-  );
-      
-      case 8:
-  return (
-    <label className="label">
-      {lang === "da" ? "Hvad har du prøvet allerede?" : "What have you tried already?"}
-      <textarea
-        className="textarea"
-        value={draft.previousTreatment}
-        onChange={(e) => setDraft({ ...draft, previousTreatment: e.target.value })}
-        placeholder={
-          lang === "da"
-            ? "F.eks. ro, diætændring, skånekost, hvile, varme/kulde..."
-            : "E.g., rest, diet change, bland diet, heat/cold..."
-        }
-        rows={4}
-      />
-    </label>
-  );
+            <div style={{ height: 14 }} />
 
-case 9:
-  return (
-    <label className="label">
-      {lang === "da" ? "Vigtigste spørgsmål til dyrlægen" : "Top questions for the vet"}
-      <textarea
-        className="textarea"
-        value={draft.questionsVet}
-        onChange={(e) => setDraft({ ...draft, questionsVet: e.target.value })}
-        placeholder={
-          lang === "da"
-            ? "f.eks. Hvad er den mest sandsynlige årsag? Hvad er næste skridt? Hvornår skal jeg kontakte jer igen?"
-            : "e.g., What’s the most likely cause? What’s the next step? When should I contact you again?"
-        }
-        rows={4}
-      />
-    </label>
-  );
+            <label className="label">
+              {lang === "da" ? "Nylige tests/resultater? (valgfrit)" : "Recent tests/results? (optional)"}
+              <div className="muted" style={{ marginTop: 6 }}>
+                {lang === "da"
+                  ? "Blodprøver, røntgen, urinprøve, ultralyd — ca. dato hvis du kan."
+                  : "Bloodwork, X-rays, urine tests, ultrasound — include approximate date if you can."}
+              </div>
+              <textarea
+                className="textarea"
+                value={((draft as any).recentTests as string) ?? ""}
+                onChange={(e) => setDraft({ ...draft, recentTests: e.target.value } as any)}
+                placeholder={
+                  lang === "da"
+                    ? "F.eks. Blodprøver marts 2026 (normale), røntgen i sidste uge"
+                    : "E.g., Bloodwork March 2026 (normal), X-rays last week"
+                }
+                rows={3}
+              />
+            </label>
+
+            <div style={{ height: 14 }} />
+
+            <h4 style={{ margin: "6px 0 8px 0" }}>
+              {lang === "da" ? "Har du prøvet noget hjemme allerede?" : "Any home remedies or treatments already tried?"}
+            </h4>
+
+            <label className="label">
+              {lang === "da" ? "Hvad har du prøvet allerede?" : "What have you tried already?"}
+              <textarea
+                className="textarea"
+                value={draft.previousTreatment}
+                onChange={(e) => setDraft({ ...draft, previousTreatment: e.target.value })}
+                placeholder={lang === "da" ? "F.eks. ro, diætændring, skånekost, hvile, varme/kulde..." : "E.g., rest, diet change, bland diet, heat/cold..."}
+                rows={4}
+              />
+            </label>
+          </>
+        );
+
+      case 7:
+        return (
+          <label className="label">
+            {lang === "da" ? "Vigtigste spørgsmål til dyrlægen" : "Top questions for the vet"}
+            <textarea
+              className="textarea"
+              value={draft.questionsVet}
+              onChange={(e) => setDraft({ ...draft, questionsVet: e.target.value })}
+              placeholder={
+                lang === "da"
+                  ? "F.eks. Hvad er den mest sandsynlige årsag? Hvad er næste skridt? Hvornår skal jeg kontakte jer igen?"
+                  : "E.g., What’s the most likely cause? What’s the next step? When should I contact you again?"
+              }
+              rows={4}
+            />
+          </label>
+        );
+  
     default:
         return null;
     }
