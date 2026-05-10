@@ -50,6 +50,7 @@ export default function PrepareWizard({
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [mode, setMode] = useState<"wizard" | "preview" | "done">("wizard");
+  const [showCurrentStatus, setShowCurrentStatus] = useState(false);
 
   // Visit draft state
   const [visitId, setVisitId] = useState<string | null>(null);
