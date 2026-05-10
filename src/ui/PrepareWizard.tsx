@@ -924,83 +924,154 @@ const handleSaveDraftAndClose = async () => {
           )}
 
           {/* MODE 2: PREVIEW */}
-          {mode === "preview" && (
-            <>
-              <div
-                style={{
-                  backgroundColor: "var(--lightBlue)",
-                  padding: 12,
-                  borderRadius: 8,
-                  marginBottom: 12
-                }}
-              >
-                <p style={{ margin: "0 0 6px 0" }}>
-                  <strong>{lang === "da" ? "Kæledyr:" : "Pet:"}</strong> {petName}
-                </p>
-                <p style={{ margin: 0 }}>
-                  <strong>{lang === "da" ? "Besøgsdato:" : "Visit date:"}</strong> {draft.visitDate}
-                </p>
-              </div>
+{mode === "preview" && (
+  <>
+    {/* Title + subheading (moment of value) */}
+    <div style={{ marginBottom: 12 }}>
+      <h3 style={{ margin: "0 0 4px 0" }}>{lang === "da" ? "Visit Brief" : "Visit Brief"}</h3>
+      <div className="muted" style={{ fontSize: 14 }}>
+        {lang === "da"
+          ? "Klar til at dele med dit dyrlægeteam."
+          : "Ready to share with your veterinary team."}
+      </div>
+    </div>
 
-              <button className="btn btnSecondary" onClick={handleCopy} style={{ width: "100%", marginBottom: 12 }}>
-                {lang === "da" ? "Kopiér Visit Brief" : "Copy Visit Brief"}
-              </button>
+    {/* Header strip */}
+    <div
+      style={{
+        backgroundColor: "white",
+        border: "1px solid var(--border)",
+        padding: 12,
+        borderRadius: 12,
+        marginBottom: 12
+      }}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+        <div>
+          <div className="muted" style={{ fontSize: 12 }}>
+            {lang === "da" ? "Kæledyr" : "Pet"}
+          </div>
+          <div style={{ fontWeight: 800, fontSize: 18, lineHeight: 1.2 }}>{petName}</div>
+        </div>
 
-              {renderStatusReview()}
+        <div style={{ textAlign: "right" as const }}>
+          <div className="muted" style={{ fontSize: 12 }}>
+            {lang === "da" ? "Besøgsdato" : "Visit date"}
+          </div>
+          <div style={{ fontWeight: 700 }}>{draft.visitDate || "—"}</div>
+        </div>
+      </div>
+    </div>
 
-              <div
-                style={{
-                  backgroundColor: "var(--lightBlue)",
-                  padding: 12,
-                  borderRadius: 8,
-                  marginBottom: 16
-                }}
-              >
-                <ReviewLine label={lang === "da" ? "Hovedbekymring" : "Main concern"} value={draft.mainConcern} />
-                <ReviewLine label={lang === "da" ? "Hvornår startede det?" : "When did it start?"} value={draft.whenStart} />
-                <ReviewLine label={lang === "da" ? "Hvordan udvikler det sig?" : "How is it changing?"} value={draft.howProgressing} />
-                <ReviewLine label={lang === "da" ? "Mønstre / triggere" : "Patterns / triggers"} value={draft.patterns} />
-                <ReviewLine
-                  label={lang === "da" ? "Andre detaljer (fakta)" : "Other details (facts)"}
-                  value={draft.otherDetails ?? ""}
-                />
-                <ReviewLine
-  label={lang === "da" ? "Medicin/tilskud" : "Meds / supplements"}
-  value={(draft as any).medicationsSupplements ?? ""}
-/>
-<ReviewLine
-  label={lang === "da" ? "Hvad har du prøvet allerede?" : "What have you tried already?"}
-  value={draft.previousTreatment}
-/>
-                <ReviewLine label={lang === "da" ? "Topspørgsmål" : "Top questions"} value={draft.questionsVet} />
-              </div>
+    {/* Primary action */}
+    <button className="btn btnSecondary" onClick={handleCopy} style={{ width: "100%", marginBottom: 12 }}>
+      {lang === "da" ? "Kopiér Visit Brief" : "Copy Visit Brief"}
+    </button>
 
-              <div className="row" style={{ gap: 8, flexDirection: "column" as const }}>
-                <button className="btn btnPrimary" onClick={handleSave} disabled={saving}>
-                  {saving ? (lang === "da" ? "Gemmer..." : "Saving...") : lang === "da" ? "Gem besøg" : "Save visit"}
-                </button>
+    {/* Notebook-professional brief */}
+    <div style={{ ...notebookPageStyle, marginBottom: 12 }}>
+      <div style={notebookLinesStyle} />
+      <div style={notebookMarginStyle} />
 
-                {/* Only show delete draft if this is still a draft */}
-                {isDraft && !!visitId && (
-                  <button
-                    className="btn btnSecondary"
-                    onClick={handleDeleteDraft}
-                    style={{ borderColor: "#d33", color: "#d33" }}
-                  >
-                    {lang === "da" ? "Slet kladde" : "Delete draft"}
-                  </button>
-                )}
+      <div style={{ position: "relative", paddingLeft: 14 }}>
+        {/* At a glance */}
+        <div style={{ marginBottom: 10 }}>
+          <div
+            style={{
+              fontSize: 12,
+              letterSpacing: 0.3,
+              textTransform: "uppercase",
+              color: "rgba(20,40,60,0.65)",
+              fontWeight: 800,
+              marginBottom: 6
+            }}
+          >
+            {lang === "da" ? "Overblik" : "At a glance"}
+          </div>
 
-                <button className="btn btnSecondary" onClick={handleEmail}>
-                  {lang === "da" ? "Email til mig selv (kommer snart)" : "Email to myself (coming soon)"}
-                </button>
+          <ReviewLine label={lang === "da" ? "Hovedbekymring" : "Main concern"} value={draft.mainConcern} />
+          <ReviewLine
+            label={lang === "da" ? "Tidslinje" : "Timeline"}
+            value={[
+              draft.whenStart ? `${lang === "da" ? "Start" : "Started"}: ${draft.whenStart}` : "",
+              draft.howProgressing ? `${lang === "da" ? "Udvikling" : "Change"}: ${draft.howProgressing}` : ""
+            ]
+              .filter(Boolean)
+              .join("\n")}
+          />
+        </div>
 
-                                <button className="btn btnSecondary" onClick={handlePdf}>
-                  {lang === "da" ? "Download som PDF (kommer snart)" : "Download as PDF (coming soon)"}
-                </button>
-              </div>
-            </>
-          )}
+        <div style={{ height: 1, background: "rgba(20,40,60,0.10)", margin: "12px 0" }} />
+
+        {/* Current status (collapsed-by-default in doc; here we show your existing review block) */}
+        {renderStatusReview()}
+
+        <div style={{ height: 1, background: "rgba(20,40,60,0.10)", margin: "12px 0" }} />
+
+        {/* Details */}
+        <ReviewLine label={lang === "da" ? "Mønstre & triggere" : "Patterns & triggers"} value={draft.patterns} />
+        <ReviewLine
+          label={lang === "da" ? "Andre detaljer (fakta)" : "Other details (facts)"}
+          value={draft.otherDetails ?? ""}
+        />
+
+        <ReviewLine
+          label={lang === "da" ? "Medicin & tilskud" : "Meds & supplements"}
+          value={(((draft as any).medicationsSupplements as string) ?? "").trim()}
+        />
+
+        <ReviewLine
+          label={lang === "da" ? "Kendte tilstande (diagnosticeret)" : "Known conditions (vet-diagnosed)"}
+          value={(((draft as any).knownConditions as string) ?? "").trim()}
+        />
+
+        <ReviewLine
+          label={lang === "da" ? "Nylige tests/resultater" : "Recent tests/results"}
+          value={(((draft as any).recentTests as string) ?? "").trim()}
+        />
+
+        <ReviewLine
+          label={lang === "da" ? "Hvad du har prøvet" : "What you’ve tried"}
+          value={draft.previousTreatment}
+        />
+
+        <ReviewLine label={lang === "da" ? "Topspørgsmål" : "Top questions"} value={draft.questionsVet} />
+
+        <div style={{ height: 1, background: "rgba(20,40,60,0.10)", margin: "12px 0" }} />
+
+        {/* Trust footer */}
+        <div className="muted" style={{ fontSize: 13, lineHeight: 1.5 }}>
+          {lang === "da"
+            ? "Ikke medicinsk rådgivning. Denne brief afspejler dine observationer. Dit dyrlægeteam guider diagnose og behandling."
+            : "Not medical advice. This brief reflects your observations. Your veterinary team will guide diagnosis and treatment."}
+        </div>
+      </div>
+    </div>
+
+    {/* Actions */}
+    <div className="row" style={{ gap: 8, flexDirection: "column" as const }}>
+      <button className="btn btnPrimary" onClick={handleSave} disabled={saving}>
+        {saving ? (lang === "da" ? "Gemmer..." : "Saving...") : lang === "da" ? "Gem besøg" : "Save visit"}
+      </button>
+
+      {/* Only show delete draft if this is still a draft */}
+      {isDraft && !!visitId && (
+        <button
+          className="btn btnSecondary"
+          onClick={handleDeleteDraft}
+          style={{ borderColor: "#d33", color: "#d33" }}
+        >
+          {lang === "da" ? "Slet kladde" : "Delete draft"}
+        </button>
+      )}
+
+      {/* Replace multiple "coming soon" buttons with one calm line */}
+      <div className="muted" style={{ textAlign: "center", fontSize: 13 }}>
+        {lang === "da" ? "PDF + email eksport kommer snart." : "PDF + email export coming soon."}
+      </div>
+    </div>
+  </>
+)}
 
           {/* MODE 3: DONE */}
           {mode === "done" && (
