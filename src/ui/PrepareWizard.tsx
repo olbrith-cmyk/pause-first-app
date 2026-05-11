@@ -1064,109 +1064,136 @@ const buildVisitBriefText = () => {
       <div style={notebookLinesStyle} />
       <div style={notebookMarginStyle} />
 
-      <div style={{ position: "relative", paddingLeft: 14 }}>
-        {/* At a glance */}
-        <div style={{ marginBottom: 10 }}>
-          <div
-            style={{
-              fontSize: 12,
-              letterSpacing: 0.3,
-              textTransform: "uppercase",
-              color: "rgba(20,40,60,0.65)",
-              fontWeight: 800,
-              marginBottom: 6
-            }}
-          >
-            {lang === "da" ? "Overblik" : "At a glance"}
-          </div>
+     <div style={{ position: "relative", paddingLeft: 14 }}>
+  {/* MAIN CONCERN */}
+  <div style={{ ...sectionLabelStyle, marginTop: 0 }}>
+    {lang === "da" ? "Hovedbekymring" : "Main concern"}
+  </div>
+  <ReviewLine
+    label={lang === "da" ? "Hovedbekymring" : "Main concern"}
+    value={(draft.mainConcern ?? "").trim()}
+  />
 
-          <ReviewLine label={lang === "da" ? "Hovedbekymring" : "Main concern"} value={draft.mainConcern} />
-          <ReviewLine
-            label={lang === "da" ? "Tidslinje" : "Timeline"}
-            value={[
-              draft.whenStart ? `${lang === "da" ? "Start" : "Started"}: ${draft.whenStart}` : "",
-              draft.howProgressing ? `${lang === "da" ? "Udvikling" : "Change"}: ${draft.howProgressing}` : ""
-            ]
-              .filter(Boolean)
-              .join("\n")}
-          />
-        </div>
-
-        <div style={{ height: 1, background: "rgba(20,40,60,0.10)", margin: "12px 0" }} />
-
-       {/* Current status (collapsible) */}
-<div style={{ marginBottom: 6 }}>
-  <button
-    type="button"
-    className="btn btnSecondary"
-    onClick={() => setShowCurrentStatus((v) => !v)}
-    style={{
-      width: "100%",
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      padding: "10px 12px"
-    }}
-  >
-    <span style={{ fontWeight: 700 }}>
-      {lang === "da" ? "Nuværende status" : "Current status"}
-    </span>
-    <span className="muted" style={{ fontWeight: 700 }}>
-      {showCurrentStatus ? (lang === "da" ? "Skjul" : "Hide") : (lang === "da" ? "Vis" : "Show")}
-    </span>
-  </button>
-
-  {!showCurrentStatus && (
-    <div className="muted" style={{ fontSize: 13, marginTop: 8 }}>
-      {lang === "da"
-        ? "Tryk for at se appetit, energi, toiletvaner, mave/tarm m.m."
-        : "Tap to view appetite, energy, toileting, GI, and more."}
-    </div>
+  {/* TIMELINE */}
+  {(((draft.whenStart ?? "").trim() !== "") || ((draft.howProgressing ?? "").trim() !== "")) && (
+    <>
+      <div style={sectionLabelStyle}>{lang === "da" ? "Tidslinje" : "Timeline"}</div>
+      <ReviewLine
+        label={lang === "da" ? "Tidslinje" : "Timeline"}
+        value={[
+          (draft.whenStart ?? "").trim()
+            ? `${lang === "da" ? "Start" : "Started"}: ${draft.whenStart}`
+            : "",
+          (draft.howProgressing ?? "").trim()
+            ? `${lang === "da" ? "Udvikling" : "Change"}: ${draft.howProgressing}`
+            : ""
+        ]
+          .filter(Boolean)
+          .join("\n")}
+      />
+    </>
   )}
 
-  {showCurrentStatus && <div style={{ marginTop: 10 }}>{renderStatusReview()}</div>}
-</div> 
+  <div style={{ height: 1, background: "rgba(20,40,60,0.10)", margin: "14px 0" }} />
 
-        <div style={{ height: 1, background: "rgba(20,40,60,0.10)", margin: "12px 0" }} />
+  {/* CURRENT STATUS (collapsible) */}
+  <div style={sectionLabelStyle}>{lang === "da" ? "Nuværende status" : "Current status"}</div>
 
-        {/* Details */}
-        <ReviewLine label={lang === "da" ? "Mønstre & triggere" : "Patterns & triggers"} value={draft.patterns} />
-        <ReviewLine
-          label={lang === "da" ? "Andre detaljer (fakta)" : "Other details (facts)"}
-          value={draft.otherDetails ?? ""}
-        />
+  <div style={{ marginBottom: 6 }}>
+    <button
+      type="button"
+      className="btn btnSecondary"
+      onClick={() => setShowCurrentStatus((v) => !v)}
+      style={{
+        width: "100%",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        padding: "10px 12px"
+      }}
+    >
+      <span style={{ fontWeight: 700 }}>
+        {lang === "da" ? "Vis status" : "Show status"}
+      </span>
+      <span className="muted" style={{ fontWeight: 700 }}>
+        {showCurrentStatus ? (lang === "da" ? "Skjul" : "Hide") : (lang === "da" ? "Vis" : "Show")}
+      </span>
+    </button>
 
-        <ReviewLine
-          label={lang === "da" ? "Medicin & tilskud" : "Meds & supplements"}
-          value={(((draft as any).medicationsSupplements as string) ?? "").trim()}
-        />
-
-        <ReviewLine
-          label={lang === "da" ? "Kendte tilstande (diagnosticeret)" : "Known conditions (vet-diagnosed)"}
-          value={(((draft as any).knownConditions as string) ?? "").trim()}
-        />
-
-        <ReviewLine
-          label={lang === "da" ? "Nylige tests/resultater" : "Recent tests/results"}
-          value={(((draft as any).recentTests as string) ?? "").trim()}
-        />
-
-        <ReviewLine
-          label={lang === "da" ? "Hvad du har prøvet" : "What you’ve tried"}
-          value={draft.previousTreatment}
-        />
-
-        <ReviewLine label={lang === "da" ? "Topspørgsmål" : "Top questions"} value={draft.questionsVet} />
-
-        <div style={{ height: 1, background: "rgba(20,40,60,0.10)", margin: "12px 0" }} />
-
-        {/* Trust footer */}
-        <div className="muted" style={{ fontSize: 13, lineHeight: 1.5 }}>
-          {lang === "da"
-            ? "Ikke medicinsk rådgivning. Denne brief afspejler dine observationer. Dit dyrlægeteam guider diagnose og behandling."
-            : "Not medical advice. This brief reflects your observations. Your veterinary team will guide diagnosis and treatment."}
-        </div>
+    {!showCurrentStatus && (
+      <div className="muted" style={{ fontSize: 13, marginTop: 8 }}>
+        {lang === "da"
+          ? "Tryk for at se 'Anderledes', 'Ved ikke' og 'Som normalt'."
+          : "Tap to view ‘Different’, ‘Not sure’, and ‘As usual’."}
       </div>
+    )}
+
+    {showCurrentStatus && <div style={{ marginTop: 10 }}>{renderStatusReview()}</div>}
+  </div>
+
+  <div style={{ height: 1, background: "rgba(20,40,60,0.10)", margin: "14px 0" }} />
+
+  {/* PATTERNS / TRIGGERS */}
+  <div style={sectionLabelStyle}>{lang === "da" ? "Mønstre / triggere" : "Patterns / triggers"}</div>
+  <ReviewLine
+    label={lang === "da" ? "Mønstre / triggere" : "Patterns / triggers"}
+    value={(draft.patterns ?? "").trim()}
+  />
+
+  {/* OTHER OBSERVATIONS (FACTS) */}
+  <div style={sectionLabelStyle}>
+    {lang === "da" ? "Andre observationer (fakta)" : "Other observations (facts)"}
+  </div>
+  <ReviewLine
+    label={lang === "da" ? "Andre observationer (fakta)" : "Other observations (facts)"}
+    value={(draft.otherDetails ?? "").trim()}
+  />
+
+  {/* MEDS & SUPPLEMENTS (CURRENT) */}
+  <div style={sectionLabelStyle}>
+    {lang === "da" ? "Medicin & tilskud (aktuelt)" : "Meds & supplements (current)"}
+  </div>
+  <ReviewLine
+    label={lang === "da" ? "Medicin & tilskud (aktuelt)" : "Meds & supplements (current)"}
+    value={((((draft as any).medicationsSupplements as string) ?? "").trim())}
+  />
+
+  {/* KNOWN CONDITIONS (VET-DIAGNOSED) */}
+  <div style={sectionLabelStyle}>
+    {lang === "da" ? "Kendte tilstande (diagnosticeret)" : "Known conditions (vet-diagnosed)"}
+  </div>
+  <ReviewLine
+    label={lang === "da" ? "Kendte tilstande (diagnosticeret)" : "Known conditions (vet-diagnosed)"}
+    value={((((draft as any).knownConditions as string) ?? "").trim())}
+  />
+
+  {/* RECENT TESTS / RESULTS */}
+  <div style={sectionLabelStyle}>
+    {lang === "da" ? "Nylige tests / resultater" : "Recent tests / results"}
+  </div>
+  <ReviewLine
+    label={lang === "da" ? "Nylige tests / resultater" : "Recent tests / results"}
+    value={((((draft as any).recentTests as string) ?? "").trim())}
+  />
+
+  {/* WHAT YOU'VE TRIED AT HOME */}
+  <div style={sectionLabelStyle}>
+    {lang === "da" ? "Hvad du har prøvet hjemme" : "What you’ve tried at home"}
+  </div>
+  <ReviewLine
+    label={lang === "da" ? "Hvad du har prøvet hjemme" : "What you’ve tried at home"}
+    value={(draft.previousTreatment ?? "").trim()}
+  />
+
+  {/* QUESTIONS FOR THE VET */}
+  <div style={sectionLabelStyle}>
+    {lang === "da" ? "Spørgsmål til dyrlægen" : "Questions for the vet"}
+  </div>
+  <ReviewLine
+    label={lang === "da" ? "Spørgsmål til dyrlægen" : "Questions for the vet"}
+    value={(draft.questionsVet ?? "").trim()}
+  />
+</div>    
     </div>
 
     {/* Actions */}
