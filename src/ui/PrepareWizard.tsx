@@ -327,124 +327,154 @@ const handleSaveDraftAndClose = async () => {
     return "N/A / not sure";
   };
 
-  const buildVisitBriefText = () => {
-    const cs = draft.currentStatus;
+const buildVisitBriefText = () => {
+  const cs = draft.currentStatus ?? makeEmptyStatus();
 
-    const lines: string[] = [];
-    lines.push(`${lang === "da" ? "Kæledyr" : "Pet"}: ${petName}`);
-    if (draft.visitDate) lines.push(`${lang === "da" ? "Besøgsdato" : "Visit date"}: ${draft.visitDate}`);
+  const lines: string[] = [];
+
+  // Header
+  lines.push(lang === "da" ? "VISIT BRIEF (Ejer-observationer)" : "VISIT BRIEF (Owner observations)");
+  lines.push(`${lang === "da" ? "Kæledyr" : "Pet"}: ${petName}`);
+  if (draft.visitDate) lines.push(`${lang === "da" ? "Besøgsdato" : "Visit date"}: ${draft.visitDate}`);
+  lines.push("");
+
+  // 1) Chief concern
+  if (draft.mainConcern?.trim()) {
+    lines.push(lang === "da" ? "## 1) Hovedbekymring" : "## 1) Chief concern");
+    lines.push(draft.mainConcern.trim());
     lines.push("");
+  }
 
-    if (draft.mainConcern) {
-      lines.push(lang === "da" ? "Hovedbekymring:" : "Main concern:");
-      lines.push(draft.mainConcern);
+  // 2) Timeline / change (only show filled lines)
+  const started = (draft.whenStart ?? "").trim();
+  const change = (draft.howProgressing ?? "").trim();
+  if (started || change) {
+    lines.push(lang === "da" ? "## 2) Tidslinje / ændring" : "## 2) Timeline / change");
+    if (started) lines.push(`**${lang === "da" ? "Start" : "Started"}:** ${started}`);
+    if (change) lines.push(`**${lang === "da" ? "Udvikling" : "Change"}:** ${change}`);
+    lines.push("");
+  }
+
+  // 3) Current status (exceptions first)
+  const statusItems: Array<{
+    key: keyof CurrentStatus;
+    labelDa: string;
+    labelEn: string;
+    notesKey: keyof CurrentStatus;
+  }> = [
+    { key: "appetite", labelDa: "Appetit", labelEn: "Appetite", notesKey: "appetiteNotes" },
+    { key: "drinking", labelDa: "Drikker", labelEn: "Drinking", notesKey: "drinkingNotes" },
+    { key: "energy", labelDa: "Energi", labelEn: "Energy", notesKey: "energyNotes" },
+    { key: "toileting", labelDa: "Toiletvaner", labelEn: "Toileting", notesKey: "toiletingNotes" },
+    { key: "gi", labelDa: "Mave/tarm", labelEn: "GI", notesKey: "giNotes" },
+    { key: "breathing", labelDa: "Vejrtrækning", labelEn: "Breathing", notesKey: "breathingNotes" },
+    { key: "mobilityPain", labelDa: "Bevægelse/smerte", labelEn: "Mobility/pain", notesKey: "mobilityPainNotes" },
+    { key: "skinEars", labelDa: "Hud/ører", labelEn: "Skin/ears", notesKey: "skinEarsNotes" }
+  ];
+
+  const different: string[] = [];
+  const notSure: string[] = [];
+  const asUsual: string[] = [];
+
+  for (const it of statusItems) {
+    const v = (cs[it.key] as TriState) ?? "normal";
+    const notes = ((cs[it.notesKey] as string) ?? "").trim();
+    const label = lang === "da" ? it.labelDa : it.labelEn;
+
+    const line = notes ? `- **${label}:** ${notes}` : `- **${label}**`;
+
+    if (v === "changed") different.push(line);
+    else if (v === "na") notSure.push(line);
+    else asUsual.push(label);
+  }
+
+  const otherNotes = ((cs.otherNotes as string) ?? "").trim();
+
+  // Only show section if anything exists (it usually will)
+  if (different.length || notSure.length || asUsual.length || otherNotes) {
+    lines.push(lang === "da" ? "## 3) Status lige nu (hurtigt tjek)" : "## 3) Current status (quick check)");
+
+    if (different.length) {
+      lines.push(lang === "da" ? "**Anderledes:**" : "**Different:**");
+      lines.push(...different);
       lines.push("");
     }
 
-    if (draft.whenStart) {
-      lines.push(lang === "da" ? "Hvornår startede det?" : "When did it start?");
-      lines.push(draft.whenStart);
+    if (notSure.length) {
+      lines.push(lang === "da" ? "**Ikke relevant / ved ikke:**" : "**N/A / not sure:**");
+      lines.push(...notSure);
       lines.push("");
     }
 
-    if (draft.howProgressing) {
-      lines.push(lang === "da" ? "Hvordan udvikler det sig?" : "How is it changing?");
-      lines.push(draft.howProgressing);
-      lines.push("");
-    }
-
-    if (draft.patterns) {
-      lines.push(lang === "da" ? "Mønstre / triggere:" : "Patterns / triggers:");
-      lines.push(draft.patterns);
-      lines.push("");
-    }
-
-    if (cs) {
-      lines.push(lang === "da" ? "Status lige nu:" : "Current status:");
+    if (asUsual.length) {
       lines.push(
-        `${lang === "da" ? "Appetit" : "Appetite"}: ${triLabel(cs.appetite)}${
-          cs.appetiteNotes ? ` — ${cs.appetiteNotes}` : ""
-        }`
+        `${lang === "da" ? "**Som normalt:**" : "**As usual:**"} ${asUsual.join(", ")}`
       );
-      lines.push(
-        `${lang === "da" ? "Drikker" : "Drinking"}: ${triLabel(cs.drinking)}${
-          cs.drinkingNotes ? ` — ${cs.drinkingNotes}` : ""
-        }`
-      );
-      lines.push(
-        `${lang === "da" ? "Energi" : "Energy"}: ${triLabel(cs.energy)}${
-          cs.energyNotes ? ` — ${cs.energyNotes}` : ""
-        }`
-      );
-      lines.push(
-        `${lang === "da" ? "Toiletvaner" : "Toileting"}: ${triLabel(cs.toileting)}${
-          cs.toiletingNotes ? ` — ${cs.toiletingNotes}` : ""
-        }`
-      );
-      lines.push(
-        `${lang === "da" ? "Mave/tarm" : "GI"}: ${triLabel(cs.gi)}${cs.giNotes ? ` — ${cs.giNotes}` : ""}`
-      );
-      lines.push(
-        `${lang === "da" ? "Vejrtrækning" : "Breathing"}: ${triLabel(cs.breathing)}${
-          cs.breathingNotes ? ` — ${cs.breathingNotes}` : ""
-        }`
-      );
-      lines.push(
-        `${lang === "da" ? "Bevægelse/smerte" : "Mobility/pain"}: ${triLabel(cs.mobilityPain)}${
-          cs.mobilityPainNotes ? ` — ${cs.mobilityPainNotes}` : ""
-        }`
-      );
-      lines.push(
-        `${lang === "da" ? "Hud/ører" : "Skin/ears"}: ${triLabel(cs.skinEars)}${
-          cs.skinEarsNotes ? ` — ${cs.skinEarsNotes}` : ""
-        }`
-      );
-      if (cs.otherNotes) lines.push(`${lang === "da" ? "Andre noter" : "Other notes"}: ${cs.otherNotes}`);
       lines.push("");
     }
 
-    if (draft.associatedSigns) {
-      lines.push(lang === "da" ? "Hvad ellers er anderledes?" : "What else is different?");
-      lines.push(draft.associatedSigns);
+    if (otherNotes) {
+      lines.push(lang === "da" ? "**Andre noter:**" : "**Other notes:**");
+      lines.push(otherNotes);
       lines.push("");
     }
+  }
 
-    const od = draft.otherDetails ?? "";
-    if (od.trim()) {
-      lines.push(lang === "da" ? "Andre detaljer (fakta til dyrlægen):" : "Other details (facts for the vet):");
-      lines.push(od);
-      lines.push("");
-    }
+  // 4) Patterns / triggers
+  if (draft.patterns?.trim()) {
+    lines.push(lang === "da" ? "## 4) Mønstre / triggere" : "## 4) Patterns / triggers");
+    lines.push(draft.patterns.trim());
+    lines.push("");
+  }
 
-        const meds = (((draft as any).medicationsSupplements as string) ?? "").trim();
-    if (meds) {
-      lines.push(lang === "da" ? "Medicin/tilskud:" : "Meds / supplements:");
-      lines.push(meds);
-      lines.push("");
-    }
+  // 5) Meds / supplements
+  const meds = (((draft as any).medicationsSupplements as string) ?? "").trim();
+  if (meds) {
+    lines.push(lang === "da" ? "## 5) Medicin / tilskud" : "## 5) Meds / supplements");
+    lines.push(meds);
+    lines.push("");
+  }
 
-    const cond = (((draft as any).knownConditions as string) ?? "").trim();
-    if (cond) {
-      lines.push(lang === "da" ? "Kendte tilstande (diagnosticeret):" : "Known conditions (vet-diagnosed):");
-      lines.push(cond);
-      lines.push("");
-    }
+  // 6) Known conditions (vet-diagnosed)
+  const cond = (((draft as any).knownConditions as string) ?? "").trim();
+  if (cond) {
+    lines.push(lang === "da" ? "## 6) Kendte tilstande (diagnosticeret)" : "## 6) Known conditions (vet-diagnosed)");
+    lines.push(cond);
+    lines.push("");
+  }
 
-    const tests = (((draft as any).recentTests as string) ?? "").trim();
-    if (tests) {
-      lines.push(lang === "da" ? "Nylige tests/resultater:" : "Recent tests/results:");
-      lines.push(tests);
-      lines.push("");
-    }
+  // 7) Recent tests/results
+  const tests = (((draft as any).recentTests as string) ?? "").trim();
+  if (tests) {
+    lines.push(lang === "da" ? "## 7) Nylige tests/resultater" : "## 7) Recent tests/results");
+    lines.push(tests);
+    lines.push("");
+  }
 
-    if (draft.questionsVet) {
-      lines.push(lang === "da" ? "Topspørgsmål til dyrlægen:" : "Top questions for the vet:");
-      lines.push(draft.questionsVet);
-      lines.push("");
-    }
+  // 8) Other details (facts)
+  const od = (draft.otherDetails ?? "").trim();
+  if (od) {
+    lines.push(lang === "da" ? "## 8) Andre detaljer (fakta)" : "## 8) Other details (facts)");
+    lines.push(od);
+    lines.push("");
+  }
 
-    return lines.join("\n");
-  };
+  // 9) Top questions
+  if (draft.questionsVet?.trim()) {
+    lines.push(lang === "da" ? "## 9) Topspørgsmål til dyrlægen" : "## 9) Top questions for the vet");
+    lines.push(draft.questionsVet.trim());
+    lines.push("");
+  }
+
+  // Trust footer
+  lines.push(
+    lang === "da"
+      ? "Ikke medicinsk rådgivning. Denne brief afspejler dine observationer. Dit dyrlægeteam guider diagnose og behandling."
+      : "Not medical advice. This brief reflects your observations. Your veterinary team will guide diagnosis and treatment."
+  );
+
+  return lines.join("\n");
+};
 
   const handleCopy = async () => {
     try {
