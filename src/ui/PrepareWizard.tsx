@@ -1087,6 +1087,7 @@ const buildVisitBriefText = () => {
   <ReviewLine
     label={lang === "da" ? "Hovedbekymring" : "Main concern"}
     value={(draft.mainConcern ?? "").trim()}
+    hideLabel
   />
 
   {/* TIMELINE */}
@@ -1105,6 +1106,8 @@ const buildVisitBriefText = () => {
         ]
           .filter(Boolean)
           .join("\n")}
+hideLabel
+
       />
     </>
   )}
@@ -1153,26 +1156,30 @@ const buildVisitBriefText = () => {
   <ReviewLine
     label={lang === "da" ? "Mønstre / triggere" : "Patterns / triggers"}
     value={(draft.patterns ?? "").trim()}
+hideLabel
+
   />
 
   {/* OTHER OBSERVATIONS (FACTS) */}
-  <div style={sectionLabelStyle}>OTHER OBSERVATIONS (FACTS)</div>
-<ReviewLine label="OTHER OBSERVATIONS (FACTS)" value={...} hideLabel />
+  <div style={sectionLabelStyle}>
     {lang === "da" ? "Andre observationer (fakta)" : "Other observations (facts)"}
   </div>
   <ReviewLine
     label={lang === "da" ? "Andre observationer (fakta)" : "Other observations (facts)"}
     value={(draft.otherDetails ?? "").trim()}
+hideLabel
+
   />
 
   {/* MEDS & SUPPLEMENTS (CURRENT) */}
-  <div style={sectionLabelStyle}>MEDS & SUPPLEMENTS (CURRENT)</div>
-<ReviewLine label="MEDS & SUPPLEMENTS (CURRENT)" value={...} hideLabel />
+  <div style={sectionLabelStyle}>
     {lang === "da" ? "Medicin & tilskud (aktuelt)" : "Meds & supplements (current)"}
   </div>
   <ReviewLine
     label={lang === "da" ? "Medicin & tilskud (aktuelt)" : "Meds & supplements (current)"}
     value={((((draft as any).medicationsSupplements as string) ?? "").trim())}
+hideLabel
+
   />
 
   {/* KNOWN CONDITIONS (VET-DIAGNOSED) */}
@@ -1182,6 +1189,8 @@ const buildVisitBriefText = () => {
   <ReviewLine
     label={lang === "da" ? "Kendte tilstande (diagnosticeret)" : "Known conditions (vet-diagnosed)"}
     value={((((draft as any).knownConditions as string) ?? "").trim())}
+hideLabel
+
   />
 
   {/* RECENT TESTS / RESULTS */}
@@ -1191,6 +1200,8 @@ const buildVisitBriefText = () => {
   <ReviewLine
     label={lang === "da" ? "Nylige tests / resultater" : "Recent tests / results"}
     value={((((draft as any).recentTests as string) ?? "").trim())}
+hideLabel
+
   />
 
   {/* WHAT YOU'VE TRIED AT HOME */}
@@ -1200,6 +1211,8 @@ const buildVisitBriefText = () => {
   <ReviewLine
     label={lang === "da" ? "Hvad du har prøvet hjemme" : "What you’ve tried at home"}
     value={(draft.previousTreatment ?? "").trim()}
+hideLabel
+
   />
 
   {/* QUESTIONS FOR THE VET */}
@@ -1209,6 +1222,8 @@ const buildVisitBriefText = () => {
   <ReviewLine
     label={lang === "da" ? "Spørgsmål til dyrlægen" : "Questions for the vet"}
     value={(draft.questionsVet ?? "").trim()}
+hideLabel
+
   />
 </div>    
     </div>
