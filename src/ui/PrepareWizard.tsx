@@ -543,7 +543,7 @@ const handleSaveDraftAndClose = async () => {
   };
   
   // Notebook-professional preview styles
-    const notebookPageStyle: any = { ... }
+  const notebookPageStyle: any = {
     backgroundColor: "#fffdf7",
     border: "1px solid rgba(20, 40, 60, 0.12)",
     borderRadius: 14,
@@ -553,7 +553,7 @@ const handleSaveDraftAndClose = async () => {
     overflow: "hidden"
   };
 
-  const notebookLinesStyle: React.CSSProperties = {
+  const notebookLinesStyle: any = {
     position: "absolute",
     inset: 0,
     pointerEvents: "none",
@@ -562,7 +562,7 @@ const handleSaveDraftAndClose = async () => {
       "repeating-linear-gradient(to bottom, rgba(40,70,110,0.18) 0px, rgba(40,70,110,0.18) 1px, transparent 1px, transparent 28px)"
   };
 
-  const notebookMarginStyle: React.CSSProperties = {
+  const notebookMarginStyle: any = {
     position: "absolute",
     top: 0,
     bottom: 0,
