@@ -1156,7 +1156,8 @@ const buildVisitBriefText = () => {
   />
 
   {/* OTHER OBSERVATIONS (FACTS) */}
-  <div style={sectionLabelStyle}>
+  <div style={sectionLabelStyle}>OTHER OBSERVATIONS (FACTS)</div>
+<ReviewLine label="OTHER OBSERVATIONS (FACTS)" value={...} hideLabel />
     {lang === "da" ? "Andre observationer (fakta)" : "Other observations (facts)"}
   </div>
   <ReviewLine
@@ -1165,7 +1166,8 @@ const buildVisitBriefText = () => {
   />
 
   {/* MEDS & SUPPLEMENTS (CURRENT) */}
-  <div style={sectionLabelStyle}>
+  <div style={sectionLabelStyle}>MEDS & SUPPLEMENTS (CURRENT)</div>
+<ReviewLine label="MEDS & SUPPLEMENTS (CURRENT)" value={...} hideLabel />
     {lang === "da" ? "Medicin & tilskud (aktuelt)" : "Meds & supplements (current)"}
   </div>
   <ReviewLine
