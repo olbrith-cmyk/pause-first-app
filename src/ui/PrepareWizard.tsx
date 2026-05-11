@@ -606,49 +606,97 @@ const buildVisitBriefText = () => {
   };
   
   const renderStatusReview = () => {
-    const cs = draft.currentStatus;
-    if (!cs) return null;
+  const cs = draft.currentStatus ?? makeEmptyStatus();
+  if (!cs) return null;
 
-        const Row = ({ label, value, notes }: { label: string; value: TriState; notes?: string }) => {
-      const hasNotes = !!notes && notes.trim() !== "";
-      return (
-        <div style={{ marginBottom: 10 }}>
-          <div style={{ fontWeight: 700, fontSize: 14 }}>{label}</div>
-          <div style={{ fontSize: 14, marginTop: 2 }}>{triLabel(value)}</div>
-          {hasNotes && (
-            <div style={{ fontSize: 13, color: "var(--textMuted)", marginTop: 2, whiteSpace: "pre-wrap" }}>
-              {notes}
-            </div>
-          )}
-        </div>
-      );
-    };
+  const items: Array<{
+    key: keyof CurrentStatus;
+    labelDa: string;
+    labelEn: string;
+    notesKey: keyof CurrentStatus;
+  }> = [
+    { key: "appetite", labelDa: "Appetit", labelEn: "Appetite", notesKey: "appetiteNotes" },
+    { key: "drinking", labelDa: "Drikker", labelEn: "Drinking", notesKey: "drinkingNotes" },
+    { key: "energy", labelDa: "Energi", labelEn: "Energy", notesKey: "energyNotes" },
+    { key: "toileting", labelDa: "Toiletvaner", labelEn: "Toileting", notesKey: "toiletingNotes" },
+    { key: "gi", labelDa: "Mave/tarm", labelEn: "GI", notesKey: "giNotes" },
+    { key: "breathing", labelDa: "Vejrtrækning", labelEn: "Breathing", notesKey: "breathingNotes" },
+    { key: "mobilityPain", labelDa: "Bevægelse/smerte", labelEn: "Mobility/pain", notesKey: "mobilityPainNotes" },
+    { key: "skinEars", labelDa: "Hud/ører", labelEn: "Skin/ears", notesKey: "skinEarsNotes" }
+  ];
 
-    return (
-      <div style={{ backgroundColor: "var(--bgAlt)", padding: 12, borderRadius: 8, marginBottom: 16 }}>
-        <h4 style={{ margin: "0 0 10px 0" }}>{lang === "da" ? "Status lige nu" : "Current status"}</h4>
+  const different: Array<{ label: string; notes: string }> = [];
+  const notSure: Array<{ label: string; notes: string }> = [];
+  const asUsual: string[] = [];
 
-        <Row label={lang === "da" ? "Appetit" : "Appetite"} value={cs.appetite} notes={cs.appetiteNotes} />
-        <Row label={lang === "da" ? "Drikker" : "Drinking"} value={cs.drinking} notes={cs.drinkingNotes} />
-        <Row label={lang === "da" ? "Energi" : "Energy"} value={cs.energy} notes={cs.energyNotes} />
-        <Row label={lang === "da" ? "Toiletvaner" : "Toileting"} value={cs.toileting} notes={cs.toiletingNotes} />
-        <Row label={lang === "da" ? "Mave/tarm" : "GI"} value={cs.gi} notes={cs.giNotes} />
-        <Row label={lang === "da" ? "Vejrtrækning" : "Breathing"} value={cs.breathing} notes={cs.breathingNotes} />
-        <Row
-          label={lang === "da" ? "Bevægelse/smerte" : "Mobility / pain"}
-          value={cs.mobilityPain}
-          notes={cs.mobilityPainNotes}
-        />
-        <Row label={lang === "da" ? "Hud/ører" : "Skin / ears"} value={cs.skinEars} notes={cs.skinEarsNotes} />
+  for (const it of items) {
+    const v = (cs[it.key] as TriState) ?? "normal";
+    const notes = ((cs[it.notesKey] as string) ?? "").trim();
+    const label = lang === "da" ? it.labelDa : it.labelEn;
 
-        {!!cs.otherNotes && cs.otherNotes.trim() !== "" && (
-          <div style={{ marginTop: 8, fontSize: 13, color: "var(--textMuted)", whiteSpace: "pre-wrap" }}>
-            <strong>{lang === "da" ? "Andre noter:" : "Other notes:"}</strong> {cs.otherNotes}
-          </div>
-        )}
+    if (v === "changed") different.push({ label, notes });
+    else if (v === "na") notSure.push({ label, notes });
+    else asUsual.push(label);
+  }
+
+  const otherNotes = ((cs.otherNotes as string) ?? "").trim();
+
+  const Section = ({ title, children }: { title: string; children: any }) => (
+    <div style={{ marginBottom: 12 }}>
+      <div style={{ fontWeight: 800, marginBottom: 6 }}>{title}</div>
+      {children}
+    </div>
+  );
+
+  const Bullet = ({ label, notes }: { label: string; notes?: string }) => (
+    <div style={{ marginBottom: 8 }}>
+      <div style={{ fontSize: 14 }}>
+        <strong>{label}</strong>
+        {notes ? <span style={{ color: "rgba(15,25,35,0.92)" }}>: {notes}</span> : null}
       </div>
-    );
-  };
+    </div>
+  );
+
+  return (
+    <div
+      style={{
+        backgroundColor: "rgba(20,40,60,0.04)",
+        border: "1px solid rgba(20,40,60,0.10)",
+        padding: 12,
+        borderRadius: 12
+      }}
+    >
+      {different.length > 0 && (
+        <Section title={lang === "da" ? "Anderledes" : "Different"}>
+          {different.map((x, idx) => (
+            <Bullet key={`diff-${idx}`} label={x.label} notes={x.notes} />
+          ))}
+        </Section>
+      )}
+
+      {notSure.length > 0 && (
+        <Section title={lang === "da" ? "Ikke relevant / ved ikke" : "N/A / not sure"}>
+          {notSure.map((x, idx) => (
+            <Bullet key={`na-${idx}`} label={x.label} notes={x.notes} />
+          ))}
+        </Section>
+      )}
+
+      {asUsual.length > 0 && (
+        <div style={{ marginBottom: otherNotes ? 12 : 0 }}>
+          <div style={{ fontWeight: 800, marginBottom: 6 }}>{lang === "da" ? "Som normalt" : "As usual"}</div>
+          <div style={{ fontSize: 14, color: "rgba(15,25,35,0.92)" }}>{asUsual.join(", ")}</div>
+        </div>
+      )}
+
+      {otherNotes && (
+        <div style={{ marginTop: 10, fontSize: 14, whiteSpace: "pre-wrap", color: "rgba(15,25,35,0.92)" }}>
+          <strong>{lang === "da" ? "Andre noter" : "Other notes"}:</strong> {otherNotes}
+        </div>
+      )}
+    </div>
+  );
+}; 
 
   const renderStep = () => {
     switch (step) {
