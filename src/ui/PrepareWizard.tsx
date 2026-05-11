@@ -604,6 +604,15 @@ const buildVisitBriefText = () => {
     background: "rgba(220, 80, 90, 0.22)",
     pointerEvents: "none"
   };
+
+  const sectionLabelStyle: any = {
+  fontSize: 12,
+  letterSpacing: 0.6,
+  textTransform: "uppercase",
+  color: "rgba(20,40,60,0.72)",
+  fontWeight: 900,
+  margin: "18px 0 8px 0"
+};
   
   const renderStatusReview = () => {
   const cs = draft.currentStatus ?? makeEmptyStatus();
