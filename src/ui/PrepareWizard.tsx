@@ -227,7 +227,10 @@ export default function PrepareWizard({
 
   const handleNext = () => {
     if (!stepData[step].ok) return;
-    if (isLastWizardStep) setMode("preview");
+    if (isLastWizardStep) {
+  setShowCurrentStatus(false);
+  setMode("preview");
+}
     else setStep((s) => s + 1);
   };
 
@@ -1004,8 +1007,38 @@ const handleSaveDraftAndClose = async () => {
 
         <div style={{ height: 1, background: "rgba(20,40,60,0.10)", margin: "12px 0" }} />
 
-        {/* Current status (collapsed-by-default in doc; here we show your existing review block) */}
-        {renderStatusReview()}
+       {/* Current status (collapsible) */}
+<div style={{ marginBottom: 6 }}>
+  <button
+    type="button"
+    className="btn btnSecondary"
+    onClick={() => setShowCurrentStatus((v) => !v)}
+    style={{
+      width: "100%",
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      padding: "10px 12px"
+    }}
+  >
+    <span style={{ fontWeight: 700 }}>
+      {lang === "da" ? "Nuværende status" : "Current status"}
+    </span>
+    <span className="muted" style={{ fontWeight: 700 }}>
+      {showCurrentStatus ? (lang === "da" ? "Skjul" : "Hide") : (lang === "da" ? "Vis" : "Show")}
+    </span>
+  </button>
+
+  {!showCurrentStatus && (
+    <div className="muted" style={{ fontSize: 13, marginTop: 8 }}>
+      {lang === "da"
+        ? "Tryk for at se appetit, energi, toiletvaner, mave/tarm m.m."
+        : "Tap to view appetite, energy, toileting, GI, and more."}
+    </div>
+  )}
+
+  {showCurrentStatus && <div style={{ marginTop: 10 }}>{renderStatusReview()}</div>}
+</div> 
 
         <div style={{ height: 1, background: "rgba(20,40,60,0.10)", margin: "12px 0" }} />
 
