@@ -547,7 +547,21 @@ const buildVisitBriefText = () => {
     if (!value || value.trim() === "") return null;
 
     return (
-      <div style={{ marginBottom: 14 }}>
+
+      const ReviewLine = ({
+  label,
+  value,
+  hideLabel
+}: {
+  label: string;
+  value: string;
+  hideLabel?: boolean;
+}) => {
+  if (!value || value.trim() === "") return null;
+
+  return (
+    <div style={{ marginBottom: 14 }}>
+      {!hideLabel && (
         <div
           style={{
             fontSize: 12,
@@ -560,20 +574,21 @@ const buildVisitBriefText = () => {
         >
           {label}
         </div>
+      )}
 
-        <div
-          style={{
-            fontSize: 15,
-            lineHeight: 1.6,
-            whiteSpace: "pre-wrap",
-            color: "rgba(15,25,35,0.92)"
-          }}
-        >
-          {value}
-        </div>
+      <div
+        style={{
+          fontSize: 15,
+          lineHeight: 1.6,
+          whiteSpace: "pre-wrap",
+          color: "rgba(15,25,35,0.92)"
+        }}
+      >
+        {value}
       </div>
-    );
-  };
+    </div>
+  );
+};
   
   // Notebook-professional preview styles
   const notebookPageStyle: any = {
