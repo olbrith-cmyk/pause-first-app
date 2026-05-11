@@ -543,11 +543,6 @@ const buildVisitBriefText = () => {
     );
   };
 
-    const ReviewLine = ({ label, value }: { label: string; value: string }) => {
-    if (!value || value.trim() === "") return null;
-
-    return (
-
       const ReviewLine = ({
   label,
   value,
