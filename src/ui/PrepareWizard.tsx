@@ -354,6 +354,8 @@ const getStatusCounts = () => {
 
   return { different, notSure, asUsual };
 };
+
+const counts = getStatusCounts();
   
 const buildVisitBriefText = () => {
   const cs = draft.currentStatus ?? makeEmptyStatus();
