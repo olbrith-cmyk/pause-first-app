@@ -1141,8 +1141,6 @@ hideLabel
 
   {/* CURRENT STATUS (collapsible) */}
   <div style={sectionLabelStyle}>{lang === "da" ? "Nuværende status" : "Current status"}</div>
-
-       const counts = getStatusCounts();
   
        <div style={{ marginBottom: 6 }}>
     <button
