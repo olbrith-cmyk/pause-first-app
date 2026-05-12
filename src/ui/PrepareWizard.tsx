@@ -688,8 +688,6 @@ const buildVisitBriefText = () => {
     else asUsual.push(label);
   }
 
-  const otherNotes = ((cs.otherNotes as string) ?? "").trim();
-
   const Section = ({ title, children }: { title: string; children: any }) => (
     <div style={{ marginBottom: 12 }}>
       <div style={{ fontWeight: 800, marginBottom: 6 }}>{title}</div>
@@ -735,12 +733,6 @@ const buildVisitBriefText = () => {
         <div style={{ marginBottom: otherNotes ? 12 : 0 }}>
           <div style={{ fontWeight: 800, marginBottom: 6 }}>{lang === "da" ? "Som normalt" : "As usual"}</div>
           <div style={{ fontSize: 14, color: "rgba(15,25,35,0.92)" }}>{asUsual.join(", ")}</div>
-        </div>
-      )}
-
-      {otherNotes && (
-        <div style={{ marginTop: 10, fontSize: 14, whiteSpace: "pre-wrap", color: "rgba(15,25,35,0.92)" }}>
-          <strong>{lang === "da" ? "Andre noter" : "Other notes"}:</strong> {otherNotes}
         </div>
       )}
     </div>
@@ -1195,6 +1187,24 @@ hideLabel
 hideLabel
 
   />
+
+       {(() => {
+  const additionalNotes = ((draft.currentStatus?.otherNotes as string) ?? "").trim();
+  if (!additionalNotes) return null;
+
+  return (
+    <>
+      <div style={sectionLabelStyle}>
+        {lang === "da" ? "Yderligere noter (ejer-observationer)" : "Additional notes (owner observations)"}
+      </div>
+      <ReviewLine
+        label={lang === "da" ? "Yderligere noter (ejer-observationer)" : "Additional notes (owner observations)"}
+        value={additionalNotes}
+        hideLabel
+      />
+    </>
+  );
+})()}
 
   {/* MEDS & SUPPLEMENTS (CURRENT) */}
   <div style={sectionLabelStyle}>
