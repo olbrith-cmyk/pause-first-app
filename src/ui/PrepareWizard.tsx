@@ -450,6 +450,13 @@ const buildVisitBriefText = () => {
     }
   }
 
+ const additionalNotes = ((draft.currentStatus?.otherNotes as string) ?? "").trim();
+if (additionalNotes) {
+  lines.push(lang === "da" ? "## 7) Yderligere noter (ejer-observationer)" : "## 7) Additional notes (owner observations)");
+  lines.push(additionalNotes);
+  lines.push("");
+} 
+  
   // 4) Patterns / triggers
   if (draft.patterns?.trim()) {
     lines.push(lang === "da" ? "## 4) Mønstre / triggere" : "## 4) Patterns / triggers");
