@@ -737,7 +737,7 @@ if (additionalNotes) {
       )}
 
       {asUsual.length > 0 && (
-        <div style={{ marginBottom: otherNotes ? 12 : 0 }}>
+        <div style={{ marginBottom: 12 }}>
           <div style={{ fontWeight: 800, marginBottom: 6 }}>{lang === "da" ? "Som normalt" : "As usual"}</div>
           <div style={{ fontSize: 14, color: "rgba(15,25,35,0.92)" }}>{asUsual.join(", ")}</div>
         </div>
