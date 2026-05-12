@@ -327,6 +327,34 @@ const handleSaveDraftAndClose = async () => {
     return "N/A / not sure";
   };
 
+const getStatusCounts = () => {
+  const cs = draft.currentStatus ?? makeEmptyStatus();
+
+  const keys: Array<keyof CurrentStatus> = [
+    "appetite",
+    "drinking",
+    "energy",
+    "toileting",
+    "gi",
+    "breathing",
+    "mobilityPain",
+    "skinEars"
+  ];
+
+  let different = 0;
+  let notSure = 0;
+  let asUsual = 0;
+
+  for (const k of keys) {
+    const v = (cs[k] as TriState) ?? "normal";
+    if (v === "changed") different++;
+    else if (v === "na") notSure++;
+    else asUsual++;
+  }
+
+  return { different, notSure, asUsual };
+};
+  
 const buildVisitBriefText = () => {
   const cs = draft.currentStatus ?? makeEmptyStatus();
 
@@ -1112,7 +1140,9 @@ hideLabel
   {/* CURRENT STATUS (collapsible) */}
   <div style={sectionLabelStyle}>{lang === "da" ? "Nuværende status" : "Current status"}</div>
 
-  <div style={{ marginBottom: 6 }}>
+       const counts = getStatusCounts();
+  
+       <div style={{ marginBottom: 6 }}>
     <button
       type="button"
       className="btn btnSecondary"
@@ -1128,18 +1158,18 @@ hideLabel
       <span style={{ fontWeight: 700 }}>
         {lang === "da" ? "Vis status" : "Show status"}
       </span>
-      <span className="muted" style={{ fontWeight: 700 }}>
-        {showCurrentStatus ? (lang === "da" ? "Skjul" : "Hide") : (lang === "da" ? "Vis" : "Show")}
-      </span>
+      <span style={{ fontWeight: 700 }}>
+  {lang === "da" ? "Se status-oversigt" : "View status summary"}
+</span>
     </button>
 
-    {!showCurrentStatus && (
-      <div className="muted" style={{ fontSize: 13, marginTop: 8 }}>
-        {lang === "da"
-          ? "Tryk for at se 'Anderledes', 'Ved ikke' og 'Som normalt'."
-          : "Tap to view ‘Different’, ‘Not sure’, and ‘As usual’."}
-      </div>
-    )}
+   {!showCurrentStatus && (
+  <div className="muted" style={{ fontSize: 13, marginTop: 8 }}>
+    {lang === "da"
+      ? `Anderledes: ${counts.different} • Ved ikke: ${counts.notSure} • Som normalt: ${counts.asUsual}`
+      : `Different: ${counts.different} • Not sure: ${counts.notSure} • As usual: ${counts.asUsual}`}
+  </div>
+)} 
 
     {showCurrentStatus && <div style={{ marginTop: 10 }}>{renderStatusReview()}</div>}
   </div>
