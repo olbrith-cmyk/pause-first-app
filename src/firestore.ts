@@ -213,7 +213,7 @@ export const addPet = (pet: Pet) =>
   addDoc(collection(db, "pets"), { ...pet, createdAt: Timestamp.now() });
 
 export const updatePet = (petId: string, data: Partial<Pet>) =>
-  updateDoc(doc(db, "pets", petId), data);
+  updateDoc(doc(db, "pets", petId), { ...data, updatedAt: Timestamp.now() });
 
 export const deletePet = (petId: string) => deleteDoc(doc(db, "pets", petId));
 
