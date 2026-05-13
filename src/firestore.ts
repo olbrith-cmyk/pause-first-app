@@ -37,6 +37,15 @@ export interface Pet {
   clinic: string;
   emergencyContact: string;
   notes: string;
+
+  // NEW (optional) — Pet Snapshot / background
+  vaccinationStatus?: "up_to_date" | "not_up_to_date" | "unknown";
+  vaccinationLastDate?: string;
+  preventatives?: string; // v1 free text (later split into flea/tick/worm/heartworm)
+  surgeries?: string;
+  lifestyle?: string; // indoor/outdoor, other animals, travel, etc.
+  updatedAt?: Timestamp;
+
   createdAt?: Timestamp;
 }
 
