@@ -223,6 +223,17 @@ export const getUserPets = async (userId: string) => {
   return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Pet));
 };
 
+export const getPetById = async (userId: string, petId: string): Promise<Pet | null> => {
+  const ref = doc(db, "pets", petId);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return null;
+
+  const data = snap.data() as any;
+  if (data.userId !== userId) return null;
+
+  return { id: snap.id, ...data } as Pet;
+};
+
 // --------------------
 // Visits
 // --------------------
