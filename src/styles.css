@@ -863,6 +863,16 @@ body {
   opacity: 0.95;
 }
 
+.homeActions .btnPrimary.btnLg::after{
+  content: "";
+  position: absolute;
+  inset: 7px;
+  border-radius: 999px;
+  border: 1px dashed rgba(255,255,255,0.32);
+  pointer-events: none;
+}
+.homeActions .btnPrimary.btnLg{ position: relative; }
+
 /* Home: navigation card buttons */
 .homeActions .btnSecondary {
   text-align: left;
