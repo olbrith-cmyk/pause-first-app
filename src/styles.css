@@ -815,76 +815,6 @@ body {
   gap: 10px;
 }
 
-/* Home: Clinic Checklist CTA (distinct, calm, clinical) */
-.homeCtaPrimary{
-  width: 100%;
-  background: linear-gradient(135deg, #f3fbf7 0%, #eef6f1 100%);
-  border: 2px solid rgba(63, 127, 99, 0.32);
-  color: var(--text);
-  padding: 16px 16px;
-  border-radius: 18px;
-  box-shadow:
-    0 16px 32px rgba(63, 127, 99, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  text-align: left;
-  transition: all 0.2s ease;
-}
-
-.homeCtaContent{
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  flex: 1;
-}
-
-.homeCtaMain{
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: 900;
-  font-size: 16px;
-  color: var(--text);
-}
-
-.homeCtaIcon{
-  font-size: 22px;
-  color: var(--green);
-  line-height: 1;
-}
-
-.homeCtaSubline{
-  font-size: 12px;
-  color: var(--muted);
-  margin-left: 32px; /* lines up under text after icon */
-}
-
-.homeCtaArrow{
-  font-size: 20px;
-  color: rgba(47, 74, 99, 0.55);
-  line-height: 1;
-  opacity: 0.85;
-}
-
-.homeCtaPrimary:hover:not(:disabled){
-  background: linear-gradient(135deg, #e9f7f0 0%, #e0f2eb 100%);
-  border-color: rgba(63, 127, 99, 0.45);
-  box-shadow:
-    0 20px 40px rgba(63, 127, 99, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  transform: translateY(-2px);
-}
-
-.homeCtaPrimary:active:not(:disabled){
-  transform: translateY(0px);
-  box-shadow:
-    0 12px 24px rgba(63, 127, 99, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
-}
-
 /* Home: main CTA = pill + depth (more “main path”) */
 .homeActions .btnPrimary.btnLg{
   width: 100%;
@@ -917,54 +847,6 @@ body {
   box-shadow:
     0 12px 26px rgba(63,127,99,0.26),
     inset 0 1px 0 rgba(255,255,255,0.18);
-}
-
-.homeCtaPrimary .homeCtaContent{
-  display:flex;
-  align-items:center;
-  gap:14px;
-  width:100%;
-}
-
-.homeCtaArt{
-  flex:0 0 auto;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding-left:6px;
-}
-
-.homeCtaAnimals{
-  width:54px;          /* adjust 48–64 */
-  height:auto;
-  color:#1b1b1b;       /* elegant black lines */
-  opacity:0.95;
-}
-
-.homeCtaText{
-  display:flex;
-  flex-direction:column;
-  align-items:flex-start;
-  justify-content:center;
-  gap:2px;
-  min-width:0;
-}
-
-.homeCtaPrimary .homeCtaMain{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  font-weight:700;
-}
-
-.homeCtaPrimary .homeCtaSubline{
-  font-size:0.92rem;
-  opacity:0.9;
-}
-
-.homeCtaPrimary .homeCtaArrow{
-  margin-left:auto;
-  opacity:0.75;
 }
 
 /* Icon inside CTA */
