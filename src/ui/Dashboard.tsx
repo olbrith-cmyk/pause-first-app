@@ -113,10 +113,66 @@ export default function Dashboard({
               <div className="homeActions">
                <button onClick={handlePrepareClick} className="btn btnPrimary btnLg homeCtaPrimary">
   <div className="homeCtaContent">
-    <div className="homeCtaMain">
-      <span className="material-symbols-outlined homeCtaIcon" aria-hidden="true">checklist</span>
-      <span>{lang === "da" ? "Forbered besøg" : "Prepare visit"}</span>
+    {/* Left: elegant animal line column */}
+    <div className="homeCtaArt" aria-hidden="true">
+      <svg
+        className="homeCtaAnimals"
+        viewBox="0 0 120 220"
+        role="img"
+        focusable="false"
+      >
+        {/* NOTE: These are simple, original line shapes (placeholders).
+           If you want them to match the mock *exactly*, I can refine the paths,
+           but this will already give you the “elegant column” look in-app. */}
+
+        {/* Horse (top) */}
+        <path d="M18 22 C30 10, 55 10, 68 22 C78 31, 78 45, 64 52 C52 58, 40 56, 34 50 C28 44, 26 36, 30 30"
+          fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M30 30 C26 26, 22 24, 18 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+
+        {/* Cow (slight overlap with horse) */}
+        <path d="M22 60 C34 52, 56 52, 70 62 C80 70, 78 84, 64 90 C50 96, 36 94, 28 86 C22 80, 20 70, 26 66"
+          fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M62 58 L72 52" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+
+        {/* Dog */}
+        <path d="M26 108 C34 98, 52 98, 62 108 C70 116, 70 130, 58 136 C46 142, 34 140, 28 132 C22 126, 20 116, 26 112"
+          fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M58 104 C64 100, 70 100, 74 104" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+
+        {/* Cat (below dog, clearly cat-like ears + tail) */}
+        <path d="M28 148 C34 142, 44 140, 54 144 C64 148, 70 158, 66 168 C62 178, 50 184, 38 180 C28 176, 22 166, 26 156"
+          fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M38 144 L34 138" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+        <path d="M46 144 L50 138" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+        <path d="M64 170 C76 168, 82 176, 74 186" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+
+        {/* Rabbit */}
+        <path d="M30 194 C36 186, 50 184, 60 190 C70 196, 72 210, 62 216 C52 222, 38 220, 32 210 C28 204, 28 198, 30 194"
+          fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M50 186 C48 176, 54 170, 60 178" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+        <path d="M56 186 C58 176, 66 172, 68 182" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+
+        {/* Bird (bottom, iconic + readable) */}
+        <path d="M78 204 C92 194, 104 198, 108 210 C100 206, 92 210, 86 218 C84 212, 80 208, 78 204"
+          fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
     </div>
+
+    {/* Right: text */}
+    <div className="homeCtaText">
+      <div className="homeCtaMain">
+        <span>{lang === "da" ? "Forbered besøg" : "Prepare visit"}</span>
+      </div>
+
+      <div className="homeCtaSubline">
+        {lang === "da" ? "Lav en Visit Brief på 5–10 min" : "Create a Visit Brief in 5–10 min"}
+      </div>
+    </div>
+  </div>
+
+  <span className="homeCtaArrow" aria-hidden="true">→</span>
+</button>
 
     <div className="homeCtaSubline">
       {lang === "da" ? "Lav en Visit Brief på ~5–10 min" : "Create a Visit Brief in ~5–10 min"}
