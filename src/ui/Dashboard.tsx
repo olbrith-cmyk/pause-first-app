@@ -111,12 +111,20 @@ export default function Dashboard({
               </p>
 
               <div className="homeActions">
-               <button onClick={handlePrepareClick} className="btn btnPrimary btnLg">
-  <span className="btnIcon material-symbols-outlined" aria-hidden="true">
-    edit_note
-  </span>
-  {lang === "da" ? "Forbered besøg" : "Prepare visit"}
-</button> 
+               <button onClick={handlePrepareClick} className="btn btnPrimary btnLg homeCtaPrimary">
+  <div className="homeCtaContent">
+    <div className="homeCtaMain">
+      <span className="material-symbols-outlined homeCtaIcon" aria-hidden="true">checklist</span>
+      <span>{lang === "da" ? "Forbered besøg" : "Prepare visit"}</span>
+    </div>
+
+    <div className="homeCtaSubline">
+      {lang === "da" ? "Lav en Visit Brief på ~5–10 min" : "Create a Visit Brief in ~5–10 min"}
+    </div>
+  </div>
+
+  <span className="homeCtaArrow" aria-hidden="true">→</span>
+</button>
 
                 <button onClick={() => setMode("pets")} className="btn btnSecondary">
                   {t.myPets}
