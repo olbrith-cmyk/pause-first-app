@@ -919,6 +919,54 @@ body {
     inset 0 1px 0 rgba(255,255,255,0.18);
 }
 
+.homeCtaPrimary .homeCtaContent{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  width:100%;
+}
+
+.homeCtaArt{
+  flex:0 0 auto;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding-left:6px;
+}
+
+.homeCtaAnimals{
+  width:54px;          /* adjust 48–64 */
+  height:auto;
+  color:#1b1b1b;       /* elegant black lines */
+  opacity:0.95;
+}
+
+.homeCtaText{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:center;
+  gap:2px;
+  min-width:0;
+}
+
+.homeCtaPrimary .homeCtaMain{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-weight:700;
+}
+
+.homeCtaPrimary .homeCtaSubline{
+  font-size:0.92rem;
+  opacity:0.9;
+}
+
+.homeCtaPrimary .homeCtaArrow{
+  margin-left:auto;
+  opacity:0.75;
+}
+
 /* Icon inside CTA */
 .homeActions .btnPrimary.btnLg{
   display: inline-flex;
