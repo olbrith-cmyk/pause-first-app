@@ -106,7 +106,7 @@ export default function Dashboard({
       </p>
 
       <div className="homeActions">
-        <button onClick={handlePrepareClick} className="btn btnPrimary btnLg homeCtaShort">
+        <button onClick={handlePrepareClick} className="btn btnPrimary btnLg homeCtaClipboard">
   <div className="homeCtaContent">
     <div className="homeCtaMain">
       <span>{lang === "da" ? "Forbered besøg" : "Prepare visit"}</span>
@@ -118,6 +118,7 @@ export default function Dashboard({
   </div>
 
   <span className="homeCtaArrow" aria-hidden="true">→</span>
+          <span className="homeCtaClipNotch" aria-hidden="true" />
 </button>
         <button onClick={() => setMode("pets")} className="btn btnSecondary">
           {t.myPets}
