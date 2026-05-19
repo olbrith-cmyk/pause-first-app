@@ -109,41 +109,30 @@ export default function Dashboard({
         <button onClick={handlePrepareClick} className="btn btnPrimary btnLg homeCtaPill">
           <div className="homeCtaContent">
             <div className="homeCtaArt" aria-hidden="true">
-              <svg className="homeCtaAnimals" viewBox="0 0 120 220" focusable="false">
-                <path d="M18 22 C30 10, 55 10, 68 22 C78 31, 78 45, 64 52 C52 58, 40 56, 34 50 C28 44, 26 36, 30 30"
-                  fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M30 30 C26 26, 22 24, 18 24"
-                  fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-
-                <path d="M22 60 C34 52, 56 52, 70 62 C80 70, 78 84, 64 90 C50 96, 36 94, 28 86 C22 80, 20 70, 26 66"
-                  fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M62 58 L72 52"
-                  fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-
-                <path d="M26 108 C34 98, 52 98, 62 108 C70 116, 70 130, 58 136 C46 142, 34 140, 28 132 C22 126, 20 116, 26 112"
-                  fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M58 104 C64 100, 70 100, 74 104"
-                  fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-
-                <path d="M28 148 C34 142, 44 140, 54 144 C64 148, 70 158, 66 168 C62 178, 50 184, 38 180 C28 176, 22 166, 26 156"
-                  fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M38 144 L34 138"
-                  fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-                <path d="M46 144 L50 138"
-                  fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-                <path d="M64 170 C76 168, 82 176, 74 186"
-                  fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-
-                <path d="M30 194 C36 186, 50 184, 60 190 C70 196, 72 210, 62 216 C52 222, 38 220, 32 210 C28 204, 28 198, 30 194"
-                  fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M50 186 C48 176, 54 170, 60 178"
-                  fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-                <path d="M56 186 C58 176, 66 172, 68 182"
-                  fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-
-                <path d="M78 204 C92 194, 104 198, 108 210 C100 206, 92 210, 86 218 C84 212, 80 208, 78 204"
-                  fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+              <svg
+  className="homeCtaAnimals"
+  viewBox="0 0 120 220"
+  aria-hidden="true"
+  focusable="false"
+>
+  {/* Silhouette stack: horse, cow, dog, cat, rabbit, bird */}
+  <g fill="currentColor">
+    {/* Horse */}
+    <path d="M26 18c10-8 26-8 36 2 6 6 6 14 0 20-5 5-12 7-19 6l-6 8-10-2 7-10c-6-4-10-10-8-16 1-3 3-6 0-8z" />
+    {/* Cow (slight overlap / bigger head) */}
+    <path d="M24 54c10-7 28-7 40 2 7 5 8 14 2 20-6 7-18 9-30 6l-6 7-12-3 8-9c-5-4-8-9-6-14 1-4 3-6 4-9z" />
+    {/* Dog */}
+    <path d="M28 92c8-7 22-7 32 1 6 5 7 13 2 19-5 6-15 8-25 6l-5 6-10-2 6-7c-4-3-7-7-6-12 1-4 3-7 6-11z" />
+    {/* Cat (below dog, clear ears + tail) */}
+    <path d="M30 126c7-6 18-6 26-1 7 4 9 12 6 18-3 7-12 11-22 9-6-1-10-4-12-8-2-4-1-9 2-13z" />
+    <path d="M64 146c10-2 16 6 10 14-2 3-6 6-10 7 4-6 3-10 0-12 2-3 2-6 0-9z" />
+    {/* Rabbit */}
+    <path d="M30 164c6-6 16-7 24-2 8 5 10 14 5 21-5 7-16 10-26 6-8-3-12-12-9-19 1-2 3-4 6-6z" />
+    <path d="M52 158c-2-10 6-14 12-7 2 3 2 8 0 12-4-3-8-4-12-5z" />
+    {/* Bird (iconic) */}
+    <path d="M78 186c16-10 30-4 34 10-10-6-20-4-28 4-2-6-4-10-6-14z" />
+  </g>
+</svg>
             </div>
 
             <div className="homeCtaText">
