@@ -1,3 +1,4 @@
+import logo from "../assets/pausefirst-logo.png";
 import { useState } from "react";
 import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
@@ -86,9 +87,18 @@ export default function Dashboard({
         {mode === "home" && (
           <div className="pageContent">
             <section className="homeHero">
-              <div className="homeIcon" aria-hidden="true">
-                <Icon name="pause_circle_filled" />
-              </div>
+             <div className="homeIcon" aria-hidden="true">
+  <img
+    src={logo}
+    alt=""
+    style={{
+      width: 96,
+      height: 96,
+      display: "block",
+      objectFit: "contain"
+    }}
+  />
+</div>
 
               <h2 className="homeTitle">
                 {lang === "da" ? "Lad os gøre jer klar" : "Let’s get ready"}
