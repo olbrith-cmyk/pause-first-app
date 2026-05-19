@@ -815,6 +815,145 @@ body {
   gap: 10px;
 }
 
+.homeCtaClipboard{
+  width: 100%;
+  padding: 20px 18px;
+  border-radius: 18px;         /* less “pill”, more “clipboard” */
+  position: relative;
+  text-align: left;
+
+  /* make it the hero */
+  box-shadow:
+    0 22px 46px rgba(63,127,99,0.34),
+    inset 0 1px 0 rgba(255,255,255,0.22);
+}
+
+/* Clipboard “clip” at the top center */
+.homeCtaClipboard::before{
+  content:"";
+  position:absolute;
+  top:-10px;
+  left:50%;
+  transform:translateX(-50%);
+  width: 86px;
+  height: 26px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.18); /* subtle highlight */
+  border: 1px solid rgba(255,255,255,0.22);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.10);
+}
+
+/* Little inner notch to make it feel like a real clip */
+.homeCtaClipboard::after{
+  content:"";
+  position:absolute;
+  top:-4px;
+  left:50%;
+  transform:translateX(-50%);
+  width: 44px;
+  height: 12px;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.10);
+}
+
+/* Make CTA text pop */
+.homeCtaClipboard .homeCtaMain{
+  font-size: 17px;
+  font-weight: 900;
+  color: rgba(255,255,255,0.98);
+}
+
+.homeCtaClipboard .homeCtaSubline{
+  font-size: 13px;
+  color: rgba(255,255,255,0.90);
+}
+
+/* Literal clipboard-style primary CTA */
+.homeCtaClipboard{
+  width: 100%;
+  padding: 22px 18px;
+  position: relative;
+  text-align: left;
+
+  /* clipboard shape: slightly squared bottom, rounder top */
+  border-radius: 18px 18px 12px 12px;
+
+  /* keep your green primary feel */
+  background: linear-gradient(180deg, #56a382 0%, var(--green) 100%);
+  border: 1px solid rgba(0,0,0,0.06);
+
+  box-shadow:
+    0 22px 46px rgba(63,127,99,0.34),
+    inset 0 1px 0 rgba(255,255,255,0.22);
+
+  overflow: hidden; /* needed for inset paper */
+}
+
+/* “Paper” inset inside the clipboard */
+.homeCtaClipboard::before{
+  content:"";
+  position:absolute;
+  inset: 10px 12px 10px 12px;  /* paper margins */
+  border-radius: 14px 14px 10px 10px;
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.18);
+  pointer-events: none;
+}
+
+/* Top clip */
+.homeCtaClipboard::after{
+  content:"";
+  position:absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 92px;
+  height: 30px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.22);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+  pointer-events: none;
+}
+
+/* Optional: tiny notch in the clip (more “real”) */
+.homeCtaClipboard .homeCtaClipNotch{
+  position:absolute;
+  top: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 46px;
+  height: 12px;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.10);
+  pointer-events: none;
+}
+
+/* Ensure content sits above the paper layer */
+.homeCtaClipboard > *{
+  position: relative;
+  z-index: 1;
+}
+
+/* Text contrast */
+.homeCtaClipboard .homeCtaMain{
+  font-size: 17px;
+  font-weight: 900;
+  color: rgba(255,255,255,0.98);
+}
+
+.homeCtaClipboard .homeCtaSubline{
+  font-size: 13px;
+  color: rgba(255,255,255,0.90);
+  margin-left: 0; /* in case old indent exists */
+}
+
+/* Arrow */
+.homeCtaClipboard .homeCtaArrow{
+  color: rgba(255,255,255,0.90);
+  opacity: 0.95;
+}
+
 /* Pill CTA with animal column */
 .homeCtaPill{
   width: 100%;
@@ -895,12 +1034,12 @@ body {
     inset 0 1px 0 rgba(255,255,255,0.18);
 }
 
-/* Shorter (width) CTA on home */
-.homeCtaShort{
-  width: 100%;
-  max-width: 320px;     /* ~half on desktop/tablet */
-  margin: 0 auto;       /* center it */
-  padding: 12px 16px;   /* shorter height than before */
+.homeActions{
+  gap: 14px; /* slightly more separation */
+}
+
+.homeCtaClipboard{
+  margin: 6px 0 10px;
 }
 
 /* Make the subline align nicely without the old icon indent */
