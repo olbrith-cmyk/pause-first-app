@@ -89,11 +89,6 @@ export default function PrepareWizard({
     onNavigateAfterClose?.("myVisits");
   };
 
-  const closeToHome = () => {
-    onClose();
-    onNavigateAfterClose?.("home");
-  };
-
   // Init: either load existing visit (edit) or create new draft (new)
   useEffect(() => {
     if (didInit.current) return;
@@ -313,9 +308,6 @@ const handleSaveDraftAndClose = async () => {
     }
   };
 
-  const handleEmail = () => alert("Email feature coming soon!");
-  const handlePdf = () => alert("PDF download feature coming soon!");
-
   const triLabel = (v: TriState) => {
     if (lang === "da") {
       if (v === "normal") return "Som normalt";
@@ -368,24 +360,24 @@ const buildVisitBriefText = () => {
   if (draft.visitDate) lines.push(`${lang === "da" ? "Besøgsdato" : "Visit date"}: ${draft.visitDate}`);
   lines.push("");
 
-  // 1) Chief concern
+  // ## Chief concern
   if (draft.mainConcern?.trim()) {
-    lines.push(lang === "da" ? "## 1) Hovedbekymring" : "## 1) Chief concern");
+    lines.push(lang === "da" ? "## Hovedbekymring" : "## Chief concern");
     lines.push(draft.mainConcern.trim());
     lines.push("");
   }
 
-  // 2) Timeline / change (only show filled lines)
+  // ## Timeline / change (only show filled lines)
   const started = (draft.whenStart ?? "").trim();
   const change = (draft.howProgressing ?? "").trim();
   if (started || change) {
-    lines.push(lang === "da" ? "## 2) Tidslinje / ændring" : "## 2) Timeline / change");
+    lines.push(lang === "da" ? "## Tidslinje / ændring" : "## Timeline / change");
     if (started) lines.push(`**${lang === "da" ? "Start" : "Started"}:** ${started}`);
     if (change) lines.push(`**${lang === "da" ? "Udvikling" : "Change"}:** ${change}`);
     lines.push("");
   }
 
-  // 3) Current status (exceptions first)
+  // ## Current status (exceptions first)
   const statusItems: Array<{
     key: keyof CurrentStatus;
     labelDa: string;
@@ -442,63 +434,57 @@ const buildVisitBriefText = () => {
       );
       lines.push("");
     }
-
-    if (otherNotes) {
-      lines.push(lang === "da" ? "**Andre noter:**" : "**Other notes:**");
-      lines.push(otherNotes);
-      lines.push("");
-    }
   }
 
  const additionalNotes = ((draft.currentStatus?.otherNotes as string) ?? "").trim();
 if (additionalNotes) {
-  lines.push(lang === "da" ? "## 7) Yderligere noter (ejer-observationer)" : "## 7) Additional notes (owner observations)");
+  lines.push(lang === "da" ? "## Yderligere noter (ejer-observationer)" : "## Additional notes (owner observations)");
   lines.push(additionalNotes);
   lines.push("");
 } 
   
-  // 4) Patterns / triggers
+  // ## Patterns / triggers
   if (draft.patterns?.trim()) {
-    lines.push(lang === "da" ? "## 4) Mønstre / triggere" : "## 4) Patterns / triggers");
+    lines.push(lang === "da" ? "##  Mønstre / triggere" : "##  Patterns / triggers");
     lines.push(draft.patterns.trim());
     lines.push("");
   }
 
-  // 5) Meds / supplements
+  // ## Meds / supplements
   const meds = (((draft as any).medicationsSupplements as string) ?? "").trim();
   if (meds) {
-    lines.push(lang === "da" ? "## 5) Medicin / tilskud" : "## 5) Meds / supplements");
+    lines.push(lang === "da" ? "## Medicin / tilskud" : "## Meds / supplements");
     lines.push(meds);
     lines.push("");
   }
 
-  // 6) Known conditions (vet-diagnosed)
+  // ## Known conditions (vet-diagnosed)
   const cond = (((draft as any).knownConditions as string) ?? "").trim();
   if (cond) {
-    lines.push(lang === "da" ? "## 6) Kendte tilstande (diagnosticeret)" : "## 6) Known conditions (vet-diagnosed)");
+    lines.push(lang === "da" ? "## Kendte tilstande (diagnosticeret)" : "## Known conditions (vet-diagnosed)");
     lines.push(cond);
     lines.push("");
   }
 
-  // 7) Recent tests/results
+  // ## Recent tests/results
   const tests = (((draft as any).recentTests as string) ?? "").trim();
   if (tests) {
-    lines.push(lang === "da" ? "## 7) Nylige tests/resultater" : "## 7) Recent tests/results");
+    lines.push(lang === "da" ? "## Nylige tests/resultater" : "## Recent tests/results");
     lines.push(tests);
     lines.push("");
   }
 
-  // 8) Other details (facts)
+  // ## Other details (facts)
   const od = (draft.otherDetails ?? "").trim();
   if (od) {
-    lines.push(lang === "da" ? "## 8) Andre detaljer (fakta)" : "## 8) Other details (facts)");
+    lines.push(lang === "da" ? "## Andre detaljer (fakta)" : "## Other details (facts)");
     lines.push(od);
     lines.push("");
   }
 
-  // 9) Top questions
+  // ## Top questions
   if (draft.questionsVet?.trim()) {
-    lines.push(lang === "da" ? "## 9) Topspørgsmål til dyrlægen" : "## 9) Top questions for the vet");
+    lines.push(lang === "da" ? "## Topspørgsmål til dyrlægen" : "## Top questions for the vet");
     lines.push(draft.questionsVet.trim());
     lines.push("");
   }
@@ -663,7 +649,6 @@ if (additionalNotes) {
   
   const renderStatusReview = () => {
   const cs = draft.currentStatus ?? makeEmptyStatus();
-  if (!cs) return null;
 
   const items: Array<{
     key: keyof CurrentStatus;
@@ -1318,17 +1303,10 @@ hideLabel
               </div>
 
               <div className="row" style={{ gap: 8, flexDirection: "column" as const }}>
-                <button className="btn btnPrimary" onClick={closeToHome}>
+                <button className="btn btnPrimary" onClick={closeToMyVisits}>
                   {lang === "da" ? "Færdig" : "Done"}
                 </button>
 
-                <button className="btn btnSecondary" onClick={handleEmail}>
-                  {lang === "da" ? "Email til mig selv (kommer snart)" : "Email to myself (coming soon)"}
-                </button>
-
-                <button className="btn btnSecondary" onClick={handlePdf}>
-                  {lang === "da" ? "Download som PDF (kommer snart)" : "Download as PDF (coming soon)"}
-                </button>
               </div>
             </>
           )}
