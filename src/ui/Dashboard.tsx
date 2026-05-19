@@ -106,7 +106,7 @@ export default function Dashboard({
       </p>
 
       <div className="homeActions">
-        <button onClick={handlePrepareClick} className="btn btnPrimary btnLg homeCtaPrimary">
+        <button onClick={handlePrepareClick} className="btn btnPrimary btnLg homeCtaPill">
           <div className="homeCtaContent">
             <div className="homeCtaArt" aria-hidden="true">
               <svg className="homeCtaAnimals" viewBox="0 0 120 220" focusable="false">
