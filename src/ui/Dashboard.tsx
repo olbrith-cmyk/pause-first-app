@@ -106,48 +106,19 @@ export default function Dashboard({
       </p>
 
       <div className="homeActions">
-        <button onClick={handlePrepareClick} className="btn btnPrimary btnLg homeCtaPill">
-          <div className="homeCtaContent">
-            <div className="homeCtaArt" aria-hidden="true">
-              <svg
-  className="homeCtaAnimals"
-  viewBox="0 0 120 220"
-  aria-hidden="true"
-  focusable="false"
->
-  {/* Silhouette stack: horse, cow, dog, cat, rabbit, bird */}
-  <g fill="currentColor">
-    {/* Horse */}
-    <path d="M26 18c10-8 26-8 36 2 6 6 6 14 0 20-5 5-12 7-19 6l-6 8-10-2 7-10c-6-4-10-10-8-16 1-3 3-6 0-8z" />
-    {/* Cow (slight overlap / bigger head) */}
-    <path d="M24 54c10-7 28-7 40 2 7 5 8 14 2 20-6 7-18 9-30 6l-6 7-12-3 8-9c-5-4-8-9-6-14 1-4 3-6 4-9z" />
-    {/* Dog */}
-    <path d="M28 92c8-7 22-7 32 1 6 5 7 13 2 19-5 6-15 8-25 6l-5 6-10-2 6-7c-4-3-7-7-6-12 1-4 3-7 6-11z" />
-    {/* Cat (below dog, clear ears + tail) */}
-    <path d="M30 126c7-6 18-6 26-1 7 4 9 12 6 18-3 7-12 11-22 9-6-1-10-4-12-8-2-4-1-9 2-13z" />
-    <path d="M64 146c10-2 16 6 10 14-2 3-6 6-10 7 4-6 3-10 0-12 2-3 2-6 0-9z" />
-    {/* Rabbit */}
-    <path d="M30 164c6-6 16-7 24-2 8 5 10 14 5 21-5 7-16 10-26 6-8-3-12-12-9-19 1-2 3-4 6-6z" />
-    <path d="M52 158c-2-10 6-14 12-7 2 3 2 8 0 12-4-3-8-4-12-5z" />
-    {/* Bird (iconic) */}
-    <path d="M78 186c16-10 30-4 34 10-10-6-20-4-28 4-2-6-4-10-6-14z" />
-  </g>
-</svg>
-            </div>
+        <button onClick={handlePrepareClick} className="btn btnPrimary btnLg homeCtaShort">
+  <div className="homeCtaContent">
+    <div className="homeCtaMain">
+      <span>{lang === "da" ? "Forbered besøg" : "Prepare visit"}</span>
+    </div>
 
-            <div className="homeCtaText">
-              <div className="homeCtaMain">
-                <span>{lang === "da" ? "Forbered besøg" : "Prepare visit"}</span>
-              </div>
-              <div className="homeCtaSubline">
-                {lang === "da" ? "Lav en Visit Brief på 5–10 min" : "Create a Visit Brief in 5–10 min"}
-              </div>
-            </div>
-          </div>
+    <div className="homeCtaSubline">
+      {lang === "da" ? "Lav en Visit Brief på 5–10 min" : "Create a Visit Brief in 5–10 min"}
+    </div>
+  </div>
 
-          <span className="homeCtaArrow" aria-hidden="true">→</span>
-        </button>
-
+  <span className="homeCtaArrow" aria-hidden="true">→</span>
+</button>
         <button onClick={() => setMode("pets")} className="btn btnSecondary">
           {t.myPets}
         </button>
