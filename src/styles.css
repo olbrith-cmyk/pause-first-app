@@ -815,6 +815,35 @@ body {
   gap: 10px;
 }
 
+/* Home: navigation card buttons */
+.homeActions .btnSecondary {
+  text-align: left;
+  padding: 14px 14px;
+  border-radius: 16px;
+  background: #fffdf8;
+  border: 2px solid rgba(47, 74, 99, 0.22);
+  box-shadow: 0 8px 18px rgba(47, 74, 99, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.homeActions .btnSecondary:hover:not(:disabled) {
+  background: var(--lightBlue);
+  border-color: rgba(47, 74, 99, 0.30);
+}
+
+.homeActions .btnSecondary:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.homeActions .btnSecondary::after {
+  content: "›";
+  font-size: 22px;
+  line-height: 1;
+  color: rgba(47, 74, 99, 0.55);
+}
+
 /* Bottom dock */
 .bottomDock {
   position: fixed;
