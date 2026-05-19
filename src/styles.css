@@ -848,8 +848,8 @@ body {
 
 /* Constrain the SVG so it can’t explode */
 .homeCtaPill .homeCtaAnimals{
-  width: 54px;
-  height: 54px;          /* key: fixed height */
+  width: 74px;
+  height: 74px;          /* key: fixed height */
   display: block;
   color: rgba(255,255,255,0.92); /* elegant light lines on green */
 }
