@@ -1,4 +1,7 @@
 import logo from "../assets/pausefirst-logo.png";
+import dogSil from "../assets/silhouettes/dog.png";
+import catBirdSil from "../assets/silhouettes/cat-bird.png";
+import cowSil from "../assets/silhouettes/cow.png";
 import { useState } from "react";
 import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
@@ -88,8 +91,13 @@ export default function Dashboard({
   <div className="pageContent">
     <section className="homeHero homeHeroV2">
   {/* Background silhouettes */}
-  <div className="homeSilhouettes" aria-hidden="true">
-</div>
+<div
+  className="homeSilhouettes"
+  aria-hidden="true"
+  style={{
+    backgroundImage: `url(${dogSil}), url(${catBirdSil}), url(${cowSil})`,
+  }}
+/>
 
   {/* Your existing pause logo (keep this) */}
   <div className="homeIcon homeIconV2" aria-hidden="true">
