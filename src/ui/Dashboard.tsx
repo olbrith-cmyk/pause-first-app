@@ -89,66 +89,6 @@ export default function Dashboard({
     <section className="homeHero homeHeroV2">
   {/* Background silhouettes */}
   <div className="homeSilhouettes" aria-hidden="true">
-  <svg
-    className="homeSilhouettesSvg"
-    viewBox="0 0 390 740"
-    preserveAspectRatio="none"
-    aria-hidden="true"
-  >
-    {/* One opacity for all silhouettes */}
-    <g className="silGroup">
-      {/* Dog (left) */}
-      <path
-        d="M70 310
-           C55 300, 48 285, 52 270
-           C57 250, 78 240, 98 244
-           C112 220, 140 214, 160 226
-           C175 238, 180 258, 172 274
-           C190 282, 200 300, 196 320
-           C192 344, 170 360, 145 358
-           C130 372, 110 380, 92 372
-           C80 366, 74 352, 76 340
-           C62 334, 54 322, 70 310 Z"
-      />
-
-      {/* Bird (top right) */}
-      <path
-        d="M292 160
-           C310 142, 335 138, 356 150
-           C338 152, 322 160, 308 172
-           C326 168, 346 172, 360 186
-           C338 182, 318 188, 300 202
-           C292 192, 286 178, 292 160 Z"
-      />
-
-      {/* Cat (right) */}
-      <path
-        d="M285 330
-           C272 320, 268 304, 274 290
-           C280 276, 296 268, 312 272
-           C320 252, 340 240, 360 246
-           C352 262, 352 278, 360 294
-           C368 312, 362 334, 346 346
-           C332 356, 314 358, 300 350
-           C294 366, 280 376, 264 372
-           C268 360, 270 346, 266 332
-           C270 334, 276 336, 285 330 Z"
-      />
-
-      {/* Cow (bottom left / large) */}
-      <path
-        d="M-10 650
-           C30 600, 92 580, 150 596
-           C170 570, 210 560, 242 578
-           C270 594, 282 624, 270 652
-           C292 668, 300 700, 280 722
-           C260 744, 220 748, 194 730
-           C168 748, 128 746, 104 724
-           C78 700, 80 666, 104 648
-           C70 634, 28 634, -10 650 Z"
-      />
-    </g>
-  </svg>
 </div>
 
   {/* Your existing pause logo (keep this) */}
