@@ -1,10 +1,12 @@
+import { useEffect, useState } from "react";
 import logo from "../assets/pausefirst-logo.png";
 import dogSil from "../assets/silhouettes/dog.png";
 import catBirdSil from "../assets/silhouettes/cat-bird.png";
 import cowSil from "../assets/silhouettes/cow.png";
-import { useState } from "react";
+
 import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
+
 import PetsScreen from "./PetsScreen";
 import VisitsScreen from "./VisitsScreen";
 import HamburgerMenu from "./HamburgerMenu";
@@ -24,14 +26,12 @@ function Icon({ name }: { name: string }) {
 export default function Dashboard({
   lang,
   userId,
-  email,
   onLangChange,
   onLogout,
-  onDeleteAccount
+  onDeleteAccount,
 }: {
   lang: Lang;
   userId: string;
-  email?: string;
   onLangChange?: (next: Lang) => void;
   onLogout: () => void;
   onDeleteAccount: () => void;
@@ -60,6 +60,16 @@ export default function Dashboard({
     onLangChange(lang === "en" ? "da" : "en");
   };
 
+  // This makes your CSS rule `.keyboardOpen .bottomDock { display: none; }` actually work.
+  useEffect(() => {
+    if (wizardOpen) document.body.classList.add("keyboardOpen");
+    else document.body.classList.remove("keyboardOpen");
+
+    return () => {
+      document.body.classList.remove("keyboardOpen");
+    };
+  }, [wizardOpen]);
+
   return (
     <div className="appShell">
       {/* TOP HEADER */}
@@ -87,68 +97,82 @@ export default function Dashboard({
       {/* CONTENT AREA */}
       <main className={`appMain ${mode === "home" ? "appMainHome" : ""}`}>
         {/* HOME PAGE */}
-       {mode === "home" && (
-  <div className="pageContent">
-    <section className="homeHero homeHeroV2">
-  {/* Background silhouettes */}
-<div
-  className="homeSilhouettes"
-  aria-hidden="true"
-  style={{
-    backgroundImage: `url(${dogSil}), url(${catBirdSil}), url(${cowSil})`,
-  }}
-/>
+        {mode === "home" && (
+          <div className="pageContent">
+            <section className="homeHero homeHeroV2">
+              {/* Background silhouettes */}
+              <div
+                className="homeSilhouettes"
+                aria-hidden="true"
+                style={{
+                  backgroundImage: `url(${dogSil}), url(${catBirdSil}), url(${cowSil})`,
+                }}
+              />
 
-  {/* Your existing pause logo (keep this) */}
-  <div className="homeIcon homeIconV2" aria-hidden="true">
-    <img
-      src={logo}
-      alt=""
-      style={{ width: 110, height: 110, display: "block", objectFit: "contain" }}
-    />
-  </div>
+              {/* Pause logo */}
+              <div className="homeIcon homeIconV2" aria-hidden="true">
+                <img
+                  src={logo}
+                  alt=""
+                  style={{ width: 110, height: 110, display: "block", objectFit: "contain" }}
+                />
+              </div>
 
-  <h2 className="homeTitle homeTitleV2">
-    {lang === "da" ? "Lad os gøre jer klar" : "Let’s get ready"}
-  </h2>
+              <h2 className="homeTitle homeTitleV2">
+                {lang === "da" ? "Lad os gøre jer klar" : "Let’s get ready"}
+              </h2>
 
-  <p className="homeLead homeLeadV2">
-    {lang === "da"
-      ? "Vælg et dyr (eller tilføj et) og skriv dine observationer ned. Gå ind til besøget rolig, klar og forberedt."
-      : "Choose an animal (or add one) and write down your observations. Walk into the visit calm, clear, and prepared."}
-  </p>
+              <p className="homeLead homeLeadV2">
+                {lang === "da"
+                  ? "Vælg et dyr (eller tilføj et) og skriv dine observationer ned. Gå ind til besøget rolig, klar og forberedt."
+                  : "Choose an animal (or add one) and write down your observations. Walk into the visit calm, clear, and prepared."}
+              </p>
 
-  <div className="homeActions homeActionsV2">
-    <button onClick={handlePrepareClick} className="btn btnPrimary btnLg homeCtaHero">
-      <span className="material-symbols-outlined homeCtaHeroIcon" aria-hidden="true">
-        assignment
-      </span>
+              <div className="homeActions homeActionsV2">
+                <button
+                  onClick={handlePrepareClick}
+                  className="btn btnPrimary btnLg homeCtaHero"
+                >
+                  <span
+                    className="material-symbols-outlined homeCtaHeroIcon"
+                    aria-hidden="true"
+                  >
+                    assignment
+                  </span>
 
-      <div className="homeCtaHeroText">
-        <div className="homeCtaHeroMain">
-          {lang === "da" ? "Start en Visit Brief" : "Start a Visit Brief"}
-        </div>
-        <div className="homeCtaHeroSub">
-          {lang === "da" ? "5–10 minutter" : "5–10 minutes"}
-        </div>
-      </div>
+                  <div className="homeCtaHeroText">
+                    <div className="homeCtaHeroMain">
+                      {lang === "da" ? "Start en Visit Brief" : "Start a Visit Brief"}
+                    </div>
+                    <div className="homeCtaHeroSub">
+                      {lang === "da" ? "5–10 minutter" : "5–10 minutes"}
+                    </div>
+                  </div>
 
-      <span className="homeCtaHeroGo" aria-hidden="true">›</span>
-    </button>
+                  <span className="homeCtaHeroGo" aria-hidden="true">
+                    ›
+                  </span>
+                </button>
 
-    <div className="homeSecondaryRow">
-      <button onClick={() => setMode("pets")} className="btn btnSecondary homeSecondaryPill">
-        {lang === "da" ? "Mine dyr" : "My animals"}
-      </button>
+                <div className="homeSecondaryRow">
+                  <button
+                    onClick={() => setMode("pets")}
+                    className="btn btnSecondary homeSecondaryPill"
+                  >
+                    {lang === "da" ? "Mine dyr" : "My animals"}
+                  </button>
 
-      <button onClick={() => setMode("myVisits")} className="btn btnSecondary homeSecondaryPill">
-        {lang === "da" ? "Visit briefs" : "Visit briefs"}
-      </button>
-    </div>
-  </div>
-</section>
-  </div>
-)} 
+                  <button
+                    onClick={() => setMode("myVisits")}
+                    className="btn btnSecondary homeSecondaryPill"
+                  >
+                    {lang === "da" ? "Visit briefs" : "Visit briefs"}
+                  </button>
+                </div>
+              </div>
+            </section>
+          </div>
+        )}
 
         {mode === "pets" && <PetsScreen lang={lang} userId={userId} />}
 
@@ -190,7 +214,10 @@ export default function Dashboard({
                 {lang === "da" ? "Mine besøg" : "My visits"}
               </button>
 
-              <button onClick={() => setMode("home")} className="btn btnSecondary bottomDockHome">
+              <button
+                onClick={() => setMode("home")}
+                className="btn btnSecondary bottomDockHome"
+              >
                 {lang === "da" ? "Hjem" : "Home"}
               </button>
             </div>
