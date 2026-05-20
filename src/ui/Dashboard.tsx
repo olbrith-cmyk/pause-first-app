@@ -86,49 +86,63 @@ export default function Dashboard({
         {/* HOME PAGE */}
        {mode === "home" && (
   <div className="pageContent">
-    <section className="homeHero">
-      <div className="homeIcon" aria-hidden="true">
-        <img
-          src={logo}
-          alt=""
-          style={{ width: 96, height: 96, display: "block", objectFit: "contain" }}
-        />
-      </div>
-
-      <h2 className="homeTitle">
-        {lang === "da" ? "Lad os gøre jer klar" : "Let’s get ready"}
-      </h2>
-
-      <p className="homeLead">
-        {lang === "da"
-          ? "Vælg et dyr (eller tilføj et) og skriv dine observationer ned. Så kan du gå ind til besøget rolig og forberedt."
-          : "Choose a pet (or add one) and write down your observations. Walk into the visit calm, clear, and prepared."}
-      </p>
-
-      <div className="homeActions">
-        <button onClick={handlePrepareClick} className="btn btnPrimary btnLg homeCtaClipboard">
-  <div className="homeCtaContent">
-    <div className="homeCtaMain">
-      <span>{lang === "da" ? "Forbered besøg" : "Prepare visit"}</span>
-    </div>
-
-    <div className="homeCtaSubline">
-      {lang === "da" ? "Lav en Visit Brief på 5–10 min" : "Create a Visit Brief in 5–10 min"}
-    </div>
+    <section className="homeHero homeHeroV2">
+  {/* Background silhouettes */}
+  <div className="homeSilhouettes" aria-hidden="true">
+    <div className="sil silDog" />
+    <div className="sil silCat" />
+    <div className="sil silBird" />
+    <div className="sil silCow" />
   </div>
 
-  <span className="homeCtaArrow" aria-hidden="true">→</span>
-          <span className="homeCtaClipNotch" aria-hidden="true" />
-</button>
-        <button onClick={() => setMode("pets")} className="btn btnSecondary">
-          {t.myPets}
-        </button>
+  {/* Your existing pause logo (keep this) */}
+  <div className="homeIcon homeIconV2" aria-hidden="true">
+    <img
+      src={logo}
+      alt=""
+      style={{ width: 110, height: 110, display: "block", objectFit: "contain" }}
+    />
+  </div>
 
-        <button onClick={() => setMode("myVisits")} className="btn btnSecondary">
-          {lang === "da" ? "Mine besøg" : "My visits"}
-        </button>
+  <h2 className="homeTitle homeTitleV2">
+    {lang === "da" ? "Lad os gøre jer klar" : "Let’s get ready"}
+  </h2>
+
+  <p className="homeLead homeLeadV2">
+    {lang === "da"
+      ? "Vælg et dyr (eller tilføj et) og skriv dine observationer ned. Gå ind til besøget rolig, klar og forberedt."
+      : "Choose an animal (or add one) and write down your observations. Walk into the visit calm, clear, and prepared."}
+  </p>
+
+  <div className="homeActions homeActionsV2">
+    <button onClick={handlePrepareClick} className="btn btnPrimary btnLg homeCtaHero">
+      <span className="material-symbols-outlined homeCtaHeroIcon" aria-hidden="true">
+        assignment
+      </span>
+
+      <div className="homeCtaHeroText">
+        <div className="homeCtaHeroMain">
+          {lang === "da" ? "Start en Visit Brief" : "Start a Visit Brief"}
+        </div>
+        <div className="homeCtaHeroSub">
+          {lang === "da" ? "5–10 minutter" : "5–10 minutes"}
+        </div>
       </div>
-    </section>
+
+      <span className="homeCtaHeroGo" aria-hidden="true">›</span>
+    </button>
+
+    <div className="homeSecondaryRow">
+      <button onClick={() => setMode("pets")} className="btn btnSecondary homeSecondaryPill">
+        {lang === "da" ? "Mine dyr" : "My animals"}
+      </button>
+
+      <button onClick={() => setMode("myVisits")} className="btn btnSecondary homeSecondaryPill">
+        {lang === "da" ? "Visit briefs" : "Visit briefs"}
+      </button>
+    </div>
+  </div>
+</section>
   </div>
 )} 
 
