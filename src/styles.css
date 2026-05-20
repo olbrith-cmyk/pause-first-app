@@ -31,7 +31,6 @@ body {
   background:
     radial-gradient(1200px 700px at 50% 20%, rgba(255,255,255,0.8), rgba(255,255,255,0) 60%),
     radial-gradient(900px 600px at 20% 80%, rgba(47,74,99,0.06), rgba(255,255,255,0) 55%),
-    var(--bg);
 }
 
 body {
@@ -200,11 +199,6 @@ body {
 
 .input, .textarea, button {
   scroll-margin-bottom: 140px;
-}
-
-/* Reserve space so fixed bottom dock never covers modal content */
-.modalBody {
-  padding-bottom: 140px; /* adjust if your dock height changes */
 }
 
 @media (max-width: 640px) {
@@ -815,12 +809,6 @@ body {
   gap: 10px;
 }
 
-  /* make it the hero */
-  box-shadow:
-    0 22px 46px rgba(63,127,99,0.34),
-    inset 0 1px 0 rgba(255,255,255,0.22);
-}
-
 /* ===== Home V2 (silhouette hero) ===== */
 .homeHeroV2{
   position: relative;
@@ -856,26 +844,25 @@ body {
   z-index: 0;
   pointer-events: none;
 
-  opacity: 0.22; /* one value for ALL silhouettes */
+  opacity: 0.26;
 
   background-repeat: no-repeat;
   background-image:
-  url("./assets/silhouettes/dog.png"),
-  url("./assets/silhouettes/cat-bird.png"),
-  url("./assets/silhouettes/cow.png");
+    url("./assets/silhouettes/dog.png"),
+    url("./assets/silhouettes/cat-bird.png"),
+    url("./assets/silhouettes/cow.png");
 
-background-position:
-  18% 36%,
-  82% 18%,
-  50% 92%;
+  background-position:
+    18% 36%,
+    82% 18%,
+    50% 98%;
 
-background-size:
-  150px auto,
-  170px auto,
-  520px auto;
+  background-size:
+    150px auto,
+    170px auto,
+    560px auto;
 
-  /* unify tone */
-  filter: grayscale(1) brightness(0.55);
+  filter: grayscale(1) brightness(0.55) contrast(0.95);
 }
 
 /* Make sure hero content stays above silhouettes */
@@ -962,10 +949,6 @@ background-size:
 
 .homeActions{
   gap: 14px; /* slightly more separation */
-}
-
-.homeCtaClipboard{
-  margin: 6px 0 10px;
 }
 
 /* Icon inside CTA */
