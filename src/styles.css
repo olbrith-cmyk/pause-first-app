@@ -841,33 +841,19 @@ body {
 .homeSilhouettes{
   position: absolute;
   inset: 0;
-  z-index: 0;
+  z-index: 5;              /* put it ABOVE everything for debugging */
   pointer-events: none;
 
-  opacity: 0.26; /* B: clearly visible */
-
+  opacity: 1 !important;   /* force visible */
+  filter: none !important; /* remove tinting */
   background-repeat: no-repeat;
 
-  /* background-image is set inline in Dashboard.tsx via style={{ backgroundImage: ... }} */
+  background-position: 20% 30%, 80% 20%, 50% 90%;
+  background-size: 180px auto, 180px auto, 600px auto;
 
-  background-position:
-    18% 36%,  /* dog left */
-    82% 18%,  /* cat+bird right/top */
-    50% 98%;  /* cow bottom */
-
-  background-size:
-    150px auto,
-    170px auto,
-    560px auto;
-
-  filter: grayscale(1) brightness(0.55) contrast(0.95);
+  outline: 3px solid red;  /* so we can see the layer exists */
 }
 
-/* Make sure hero content stays above silhouettes */
-.homeHeroV2 > *{
-  position: relative;
-  z-index: 1;
-}
 
 /* CTA hero button */
 .homeCtaHero{
