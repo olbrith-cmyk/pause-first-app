@@ -841,19 +841,29 @@ body {
 .homeSilhouettes{
   position: absolute;
   inset: 0;
-  z-index: 5;              /* put it ABOVE everything for debugging */
+  z-index: 0;
   pointer-events: none;
 
-  opacity: 1 !important;   /* force visible */
-  filter: none !important; /* remove tinting */
+  opacity: 0.26;
   background-repeat: no-repeat;
 
-  background-position: 20% 30%, 80% 20%, 50% 90%;
-  background-size: 180px auto, 180px auto, 600px auto;
+  background-position:
+    18% 36%,
+    82% 18%,
+    50% 98%;
 
-  outline: 3px solid red;  /* so we can see the layer exists */
+  background-size:
+    150px auto,
+    170px auto,
+    560px auto;
+
+  filter: grayscale(1) brightness(0.55) contrast(0.95);
 }
 
+.homeHeroV2 > *{
+  position: relative;
+  z-index: 1;
+}
 
 /* CTA hero button */
 .homeCtaHero{
