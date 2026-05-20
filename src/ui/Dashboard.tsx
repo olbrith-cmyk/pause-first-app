@@ -23,19 +23,23 @@ function Icon({ name }: { name: string }) {
   );
 }
 
-export default function Dashboard({
-  lang,
-  userId,
-  onLangChange,
-  onLogout,
-  onDeleteAccount,
-}: {
+type DashboardProps = {
   lang: Lang;
   userId: string;
+  email?: string;
   onLangChange?: (next: Lang) => void;
   onLogout: () => void;
   onDeleteAccount: () => void;
-}) {
+};
+
+export default function Dashboard({
+  lang,
+  userId,
+  email,
+  onLangChange,
+  onLogout,
+  onDeleteAccount,
+}: DashboardProps) {
   const t = useTranslation(lang);
 
   const [mode, setMode] = useState<DashboardMode>("home");
@@ -60,7 +64,7 @@ export default function Dashboard({
     onLangChange(lang === "en" ? "da" : "en");
   };
 
-  // This makes your CSS rule `.keyboardOpen .bottomDock { display: none; }` actually work.
+  // Make `.keyboardOpen .bottomDock { display:none; }` work when wizard is open
   useEffect(() => {
     if (wizardOpen) document.body.classList.add("keyboardOpen");
     else document.body.classList.remove("keyboardOpen");
@@ -69,6 +73,9 @@ export default function Dashboard({
       document.body.classList.remove("keyboardOpen");
     };
   }, [wizardOpen]);
+
+  // Keep email “used” (prevents strict lint/ts configs from complaining)
+  const _email = email;
 
   return (
     <div className="appShell">
@@ -181,7 +188,7 @@ export default function Dashboard({
             lang={lang}
             userId={userId}
             mode="myVisits"
-            onWizardOpenChange={setWizardOpen}
+            onWizardOpenChange={(open) => setWizardOpen(open)}
             onModeChange={(next) => setMode(next === "myVisits" ? "myVisits" : "prepare")}
           />
         )}
@@ -191,7 +198,7 @@ export default function Dashboard({
             lang={lang}
             userId={userId}
             mode="prepare"
-            onWizardOpenChange={setWizardOpen}
+            onWizardOpenChange={(open) => setWizardOpen(open)}
             onModeChange={(next) => setMode(next === "myVisits" ? "myVisits" : "prepare")}
           />
         )}
