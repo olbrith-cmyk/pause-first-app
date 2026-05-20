@@ -589,6 +589,7 @@ const handleDeleteVisit = async (visitId: string) => {
       </div>
     );
   }
+  
   // -------------------------
   // PREPARE MODE
   // -------------------------
@@ -604,12 +605,15 @@ const handleDeleteVisit = async (visitId: string) => {
             zIndex: 9999,
             display: "flex",
             alignItems: "center",
-            justifyContent: "center"
+            justifyContent: "center",
           }}
         >
           <div
             className="modalOverlay"
-            onClick={() => setShowChoosePetModal(false)}
+            onClick={() => {
+              setShowChoosePetModal(false);
+              onGoHome?.();
+            }}
             style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.5)" }}
           />
 
@@ -624,7 +628,7 @@ const handleDeleteVisit = async (visitId: string) => {
               maxWidth: "500px",
               maxHeight: "90vh",
               overflow: "auto",
-              boxShadow: "0 4px 6px rgba(0,0,0,0.1)"
+              boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
             }}
           >
             <div
@@ -634,13 +638,16 @@ const handleDeleteVisit = async (visitId: string) => {
                 borderBottom: "1px solid var(--border)",
                 display: "flex",
                 justifyContent: "space-between",
-                alignItems: "center"
+                alignItems: "center",
               }}
             >
               <h3 style={{ margin: 0 }}>{lang === "da" ? "Vælg kæledyr" : "Choose a Pet"}</h3>
               <button
                 className="btnClose"
-                onClick={() => setShowChoosePetModal(false)}
+                onClick={() => {
+                  setShowChoosePetModal(false);
+                  onGoHome?.();
+                }}
                 style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer" }}
               >
                 ✕
@@ -656,6 +663,7 @@ const handleDeleteVisit = async (visitId: string) => {
                   <h4 style={{ marginTop: 0, marginBottom: 12 }}>
                     {lang === "da" ? "Dine kæledyr" : "Your Pets"}
                   </h4>
+
                   <div className="stack" style={{ marginBottom: 20 }}>
                     {pets.map((pet) => (
                       <button
@@ -691,49 +699,15 @@ const handleDeleteVisit = async (visitId: string) => {
                   {lang === "da" ? "Fortsæt uden kæledyrsprofil" : "Continue without pet profile"}
                 </button>
 
-                justifyContent: "center"
-          }}
-        >
-          <div
-            className="modalOverlay"
-            onClick={() => {
-              setShowAddPetForm(false);
-              setShowChoosePetModal(true);
-            }}
-            style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.5)" }}
-          />
-
-          <div
-            className="modalContent"
-            style={{
-              position: "relative",
-              zIndex: 10000,
-              backgroundColor: "white",
-              borderRadius: "8px",
-              width: "90%",
-              maxWidth: "500px",
-              maxHeight: "90vh",
-              overflow: "auto",
-              boxShadow: "0 4px 6px rgba(0,0,0,0.1)"
-            }}
-          >
-            <div
-              className="modalHeader"
-              style={{
-                padding: "16px",
-                borderBottom: "1px solid var(--border)",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center"
-              }}
-            >
-              <h3 style={{ margin: 0 }}>{lang === "da" ? "Tilføj kæledyr" : "Add Pet"}</h3>
-              <button
-                className="btnClose"
-                onClick={() => {
-                  setShowAddPetForm(false);
-                  setShowChoosePetModal(true);
-                }}
+                <button
+                  className="btn btnSecondary"
+                  onClick={() => {
+                    setShowChoosePetModal(false);
+                    onGoHome?.();
+                  }}
+                >
+                  {t.cancel}
+                </button>
               </div>
             </div>
           </div>
@@ -750,7 +724,7 @@ const handleDeleteVisit = async (visitId: string) => {
             zIndex: 9999,
             display: "flex",
             alignItems: "center",
-            justifyContent: "center"
+            justifyContent: "center",
           }}
         >
           <div
@@ -773,7 +747,7 @@ const handleDeleteVisit = async (visitId: string) => {
               maxWidth: "500px",
               maxHeight: "90vh",
               overflow: "auto",
-              boxShadow: "0 4px 6px rgba(0,0,0,0.1)"
+              boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
             }}
           >
             <div
@@ -783,7 +757,7 @@ const handleDeleteVisit = async (visitId: string) => {
                 borderBottom: "1px solid var(--border)",
                 display: "flex",
                 justifyContent: "space-between",
-                alignItems: "center"
+                alignItems: "center",
               }}
             >
               <h3 style={{ margin: 0 }}>{lang === "da" ? "Tilføj kæledyr" : "Add Pet"}</h3>
@@ -888,40 +862,33 @@ const handleDeleteVisit = async (visitId: string) => {
       )}
 
       {/* Wizard */}
-{showWizard && selectedPetForWizard?.id && (
-  <PrepareWizard
-    lang={lang}
-    userId={userId}
-    mode="prepare"
-    petId={selectedPetForWizard.id}
-    petName={selectedPetForWizard.name || "(Unnamed)"}
-    visitId={editingVisitId ?? undefined}
-    onClose={async () => {
-      setShowWizard(false);
-      setEditingVisitId(null);
-      setSelectedPetForWizard(null);
-      setShowChoosePetModal(false);
-      setShowAddPetForm(false);
-      await load();
-    }}
-    onComplete={async () => {
-      setShowWizard(false);
-      setEditingVisitId(null);
-      setSelectedPetForWizard(null);
-      setShowChoosePetModal(false);
-      setShowAddPetForm(false);
-      await load();
-    }}
-    onNavigateAfterClose={(target) => {
-      if (target === "myVisits") {
-        onModeChange?. ("myVisits");
-      } else {
-        // optional: parent-level navigation to Home
-      }
-    }}
-  />
-)}
-      
+      {showWizard && selectedPetForWizard?.id && (
+        <PrepareWizard
+          lang={lang}
+          userId={userId}
+          mode="prepare"
+          petId={selectedPetForWizard.id}
+          petName={selectedPetForWizard.name || "(Unnamed)"}
+          visitId={editingVisitId ?? undefined}
+          onClose={async () => {
+            setShowWizard(false);
+            setEditingVisitId(null);
+            setSelectedPetForWizard(null);
+            setShowChoosePetModal(false);
+            setShowAddPetForm(false);
+            await load();
+          }}
+          onComplete={async () => {
+            setShowWizard(false);
+            setEditingVisitId(null);
+            setSelectedPetForWizard(null);
+            setShowChoosePetModal(false);
+            setShowAddPetForm(false);
+            await load();
+          }}
+        />
+      )}
+
       {/* Fallback (if wizard not open) */}
       {!showWizard && !showChoosePetModal && !showAddPetForm && (
         <div className="panel">
@@ -936,7 +903,12 @@ const handleDeleteVisit = async (visitId: string) => {
               {lang === "da" ? "Vælg kæledyr" : "Choose Pet"}
             </button>
 
-            <button className="btn btnSecondary" onClick={() => setShowChoosePetModal(false)}>
+            <button
+              className="btn btnSecondary"
+              onClick={() => {
+                onGoHome?.();
+              }}
+            >
               {t.cancel}
             </button>
           </div>
