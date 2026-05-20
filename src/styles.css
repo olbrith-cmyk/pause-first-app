@@ -1,11 +1,11 @@
 :root {
   /* Brand accents (kept, but softened) */
   --blue: #2f4a63;   /* muted slate-blue */
-  --green: #3f7f63;  /* muted sage */
+  --green: #6f8f4a;  /* warmer sage (updated) */
   --red: #b44a4a;    /* muted brick */
 
   /* Warm beige base */
-  --bg: #fbf7f0;     /* warm paper */
+  --bg: #f2f0e6;     /* warm paper (updated) */
   --card: #ffffff;   /* keep cards clean */
 
   --text: #2b2a27;   /* warm charcoal */
@@ -15,6 +15,9 @@
   --lightBlue: #eef3f6;   /* subtle cool for info states */
   --lightGreen: #eef6f1;  /* subtle sage */
   --lightRed: #fbefef;    /* subtle blush */
+
+  /* Bottom dock height buffer so content can scroll above it */
+  --bottomDockSpace: 220px; /* adjust if needed */
 }
 
 * {
@@ -31,6 +34,7 @@ body {
   background:
     radial-gradient(1200px 700px at 50% 20%, rgba(255,255,255,0.8), rgba(255,255,255,0) 60%),
     radial-gradient(900px 600px at 20% 80%, rgba(47,74,99,0.06), rgba(255,255,255,0) 55%),
+    var(--bg);
 }
 
 body {
@@ -61,6 +65,7 @@ body {
   max-width: 920px;
   margin: 0 auto;
   width: 100%;
+  padding-bottom: var(--bottomDockSpace);
 }
 
 .header {
@@ -197,14 +202,10 @@ body {
   min-height: 96px;
 }
 
-.input, .textarea, button {
+.input,
+.textarea,
+button {
   scroll-margin-bottom: 140px;
-}
-
-@media (max-width: 640px) {
-  .modalBody {
-    padding-bottom: 160px;
-  }
 }
 
 /* Notebook-style fields */
@@ -260,26 +261,26 @@ body {
 
 /* Primary: warmer + subtle depth */
 .btnPrimary {
-  background: linear-gradient(180deg, #4a8f71 0%, var(--green) 100%);
-  color: white;
-  border: 1px solid rgba(0,0,0,0.06);
+  background: linear-gradient(180deg, #7ea356 0%, var(--green) 100%);
+  color: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(0, 0, 0, 0.06);
   box-shadow:
-    0 10px 22px rgba(63, 127, 99, 0.22),
-    inset 0 1px 0 rgba(255,255,255,0.25);
+    0 10px 22px rgba(111, 143, 74, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
 .btnPrimary:hover:not(:disabled) {
   filter: brightness(1.03);
   box-shadow:
-    0 12px 26px rgba(63, 127, 99, 0.26),
-    inset 0 1px 0 rgba(255,255,255,0.25);
+    0 12px 26px rgba(111, 143, 74, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
 .btnPrimary:active:not(:disabled) {
   filter: brightness(0.99);
   box-shadow:
-    0 7px 16px rgba(63, 127, 99, 0.22),
-    inset 0 1px 0 rgba(255,255,255,0.18);
+    0 7px 16px rgba(111, 143, 74, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
 /* Secondary: soft tinted surface (less “boring white”) */
@@ -289,7 +290,7 @@ body {
   color: var(--blue);
   box-shadow:
     0 6px 14px rgba(47, 74, 99, 0.08),
-    inset 0 1px 0 rgba(255,255,255,0.7);
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
 .btnSecondary:hover:not(:disabled) {
@@ -434,13 +435,17 @@ body {
   .textarea {
     font-size: 16px; /* prevents iOS zoom */
   }
+
+  :root {
+    --bottomDockSpace: 240px;
+  }
 }
 
 /* Modal */
-.modalOverlay{
+.modalOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(17,24,39,0.55);
+  background: rgba(17, 24, 39, 0.55);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -448,12 +453,12 @@ body {
   z-index: 50;
 }
 
-.modalCard{
+.modalCard {
   width: min(720px, 100%);
   background: var(--card);
   border-radius: 14px;
   border: 1px solid var(--border);
-  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
   overflow: hidden;
 
   display: flex;
@@ -461,23 +466,23 @@ body {
   max-height: calc(100vh - 36px);
 }
 
-.modalHeader{
-  display:flex;
-  align-items:flex-start;
+.modalHeader {
+  display: flex;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
   padding: 14px 16px;
   border-bottom: 1px solid var(--border);
 }
 
-.modalTitle{
-  margin:0;
+.modalTitle {
+  margin: 0;
   color: var(--blue);
   font-size: 22px;
   font-weight: 800;
 }
 
-.modalClose{
+.modalClose {
   border: none;
   background: transparent;
   font-size: 18px;
@@ -487,7 +492,7 @@ body {
   color: var(--muted);
 }
 
-.modalClose:hover{
+.modalClose:hover {
   background: var(--bg);
 }
 
@@ -498,11 +503,17 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 
-.list{
+@media (max-width: 640px) {
+  .modalBody {
+    padding-bottom: 160px;
+  }
+}
+
+.list {
   padding-left: 18px;
 }
 
-.list li{
+.list li {
   margin: 8px 0;
 }
 
@@ -545,42 +556,6 @@ body {
 .vo-row:last-child { border-bottom: none; }
 .vo-label { font-size: 12px; color: var(--muted); }
 .vo-value { white-space: pre-wrap; line-height: 1.35; }
-
-/* Discreet top links (old app style) */
-.topLinks {
-  display: flex;
-  gap: 14px;
-  align-items: center;
-  flex-wrap: wrap;
-  margin-bottom: 10px;
-}
-
-.topLinksSpacer {
-  flex: 1;
-}
-
-.topLink {
-  border: none;
-  background: none;
-  padding: 0;
-  font: inherit;
-  font-size: 14px;
-  color: var(--muted);
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-.topLink:hover {
-  color: var(--blue);
-}
-
-.topLinkDanger {
-  color: var(--red);
-}
-
-.topLinkDanger:hover {
-  color: var(--red);
-}
 
 /* Top bar: links + language switch */
 .topBar {
@@ -666,7 +641,7 @@ body {
   border-radius: 999px;
   background: white;
   transform: translateY(-50%);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
   transition: left 0.2s;
 }
 
@@ -858,6 +833,7 @@ body {
     560px auto;
 
   filter: grayscale(1) brightness(0.55) contrast(0.95);
+  mix-blend-mode: multiply; /* NEW: better blending into beige */
 }
 
 .homeHeroV2 > *{
@@ -1030,13 +1006,6 @@ body {
   grid-column: 1 / span 2;
 }
 
-/* Ensure modal content can scroll past bottom UI on small screens */
-@media (max-width: 640px) {
-  .modalBody {
-    padding-bottom: 160px;
-  }
-}
-
 /* When keyboard is open, don't let the fixed bottom dock cover inputs/buttons */
 .keyboardOpen .bottomDock {
   display: none;
@@ -1045,27 +1014,6 @@ body {
 /* Also reduce bottom padding when dock is hidden */
 .keyboardOpen .appMain {
   padding-bottom: 16px;
-}
-
-/* Bottom dock height buffer so content can scroll above it */
-:root {
-  --bottomDockSpace: 220px; /* adjust if needed */
-}
-
-/* Most of your screens use this wrapper */
-.pageContent {
-  padding-bottom: var(--bottomDockSpace);
-}
-
-/* Safety: if some screens don't use .pageContent */
-.appMain {
-  padding-bottom: var(--bottomDockSpace);
-}
-
-@media (max-width: 640px) {
-  :root { --bottomDockSpace: 240px; }
-  .pageContent { padding-bottom: var(--bottomDockSpace); }
-  .appMain { padding-bottom: var(--bottomDockSpace); }
 }
 
 /* =========================================================
