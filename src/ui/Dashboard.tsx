@@ -184,24 +184,26 @@ export default function Dashboard({
         {mode === "pets" && <PetsScreen lang={lang} userId={userId} />}
 
         {mode === "myVisits" && (
-          <VisitsScreen
-            lang={lang}
-            userId={userId}
-            mode="myVisits"
-            onWizardOpenChange={(open) => setWizardOpen(open)}
-            onModeChange={(next) => setMode(next === "myVisits" ? "myVisits" : "prepare")}
-          />
-        )}
+  <VisitsScreen
+    lang={lang}
+    userId={userId}
+    mode="myVisits"
+    onWizardOpenChange={(open) => setWizardOpen(open)}
+    onModeChange={(next) => setMode(next === "myVisits" ? "myVisits" : "prepare")}
+    onGoHome={() => setMode("home")}
+  />
+)}
 
-        {mode === "prepare" && (
-          <VisitsScreen
-            lang={lang}
-            userId={userId}
-            mode="prepare"
-            onWizardOpenChange={(open) => setWizardOpen(open)}
-            onModeChange={(next) => setMode(next === "myVisits" ? "myVisits" : "prepare")}
-          />
-        )}
+{mode === "prepare" && (
+  <VisitsScreen
+    lang={lang}
+    userId={userId}
+    mode="prepare"
+    onWizardOpenChange={(open) => setWizardOpen(open)}
+    onModeChange={(next) => setMode(next === "myVisits" ? "myVisits" : "prepare")}
+    onGoHome={() => setMode("home")}
+  />
+)}
       </main>
 
       {/* BOTTOM NAV (hide on home, and hide when any modal/menu/wizard is open) */}
