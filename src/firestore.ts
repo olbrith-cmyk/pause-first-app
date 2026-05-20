@@ -22,30 +22,79 @@ const db = getFirestore(firebaseApp);
 // Types
 // --------------------
 
+export interface PetMedicationItem {
+  name: string;
+  dose?: string;
+  howOften?: string;
+  notes?: string;
+  unsureDose?: boolean;
+}
+
+export interface PetVaccineItem {
+  vaccine: string;
+  dateGiven?: string;
+  notes?: string;
+  unsureName?: boolean;
+}
+
+export interface PetPreventativeItem {
+  type: string; // Flea/Tick/Deworming/etc (free text or dropdown values)
+  productName?: string;
+  howOften?: string;
+  lastGiven?: string;
+  notes?: string;
+}
+
 export interface Pet {
   id?: string;
   userId: string;
+
+  // About your pet
   name: string;
   species: string;
+
+  // Legacy field (keep for backwards compatibility; we will stop showing it in UI)
   age: string;
+
+  // NEW (optional) — v2 basic info
+  breedType?: string;
+  dateOfBirth?: string; // "DD/MM/YYYY (or approximate)"
   sex: string;
+  neuteredStatus?: string; // "Neutered / Spayed / Not neutered / Not sure" (stored as string)
+
+  // Health basics
   weight: string;
-  microchip: string;
   allergies: string;
+
+  // Legacy field (keep for backwards compatibility; we will stop showing it in UI)
   medications: string;
+
   diet: string;
+
+  // NEW (optional) — structured lists
+  medsSupplements?: PetMedicationItem[];
+  vaccinations?: PetVaccineItem[];
+  preventativesList?: PetPreventativeItem[];
+
+  // Clinic / admin
   clinic: string;
   emergencyContact: string;
+
+  // IDs & notes
+  microchip: string;
   notes: string;
 
-  // NEW (optional) — Pet Snapshot / background
+  // Existing optional snapshot fields (keep)
   vaccinationStatus?: "up_to_date" | "not_up_to_date" | "unknown";
   vaccinationLastDate?: string;
-  preventatives?: string; // v1 free text (later split into flea/tick/worm/heartworm)
+
+  // v1 free text (keep)
+  preventatives?: string;
+
   surgeries?: string;
   lifestyle?: string; // indoor/outdoor, other animals, travel, etc.
-  updatedAt?: Timestamp;
 
+  updatedAt?: Timestamp;
   createdAt?: Timestamp;
 }
 
