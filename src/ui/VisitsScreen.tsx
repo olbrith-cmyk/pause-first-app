@@ -51,13 +51,15 @@ export default function VisitsScreen({
   userId,
   mode,
   onWizardOpenChange,
-  onModeChange
+  onModeChange,
+  onGoHome, //
 }: {
   lang: Lang;
   userId: string;
   mode: Mode;
   onWizardOpenChange?: (open: boolean) => void;
   onModeChange?: (mode: Mode) => void;
+  onGoHome?: () => void; //
 }) {
   
   const t = useTranslation(lang);
@@ -689,9 +691,49 @@ const handleDeleteVisit = async (visitId: string) => {
                   {lang === "da" ? "Fortsæt uden kæledyrsprofil" : "Continue without pet profile"}
                 </button>
 
-                <button className="btn btnSecondary" onClick={() => setShowChoosePetModal(false)}>
-                  {t.cancel}
-                </button>
+                justifyContent: "center"
+          }}
+        >
+          <div
+            className="modalOverlay"
+            onClick={() => {
+              setShowAddPetForm(false);
+              setShowChoosePetModal(true);
+            }}
+            style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.5)" }}
+          />
+
+          <div
+            className="modalContent"
+            style={{
+              position: "relative",
+              zIndex: 10000,
+              backgroundColor: "white",
+              borderRadius: "8px",
+              width: "90%",
+              maxWidth: "500px",
+              maxHeight: "90vh",
+              overflow: "auto",
+              boxShadow: "0 4px 6px rgba(0,0,0,0.1)"
+            }}
+          >
+            <div
+              className="modalHeader"
+              style={{
+                padding: "16px",
+                borderBottom: "1px solid var(--border)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center"
+              }}
+            >
+              <h3 style={{ margin: 0 }}>{lang === "da" ? "Tilføj kæledyr" : "Add Pet"}</h3>
+              <button
+                className="btnClose"
+                onClick={() => {
+                  setShowAddPetForm(false);
+                  setShowChoosePetModal(true);
+                }}
               </div>
             </div>
           </div>
