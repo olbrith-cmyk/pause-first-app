@@ -849,18 +849,36 @@ body {
   margin-right: auto;
 }
 
-/* Silhouette layer */
+/* One layer, multiple silhouettes */
 .homeSilhouettes{
   position: absolute;
   inset: 0;
-  pointer-events: none;
   z-index: 0;
+  pointer-events: none;
+
+  opacity: 0.22; /* one value for ALL silhouettes */
+
+  background-repeat: no-repeat;
+  background-image:
+  url("./assets/silhouettes/dog.png"),
+  url("./assets/silhouettes/cat-bird.png"),
+  url("./assets/silhouettes/cow.png");
+
+background-position:
+  18% 36%,
+  82% 18%,
+  50% 92%;
+
+background-size:
+  150px auto,
+  170px auto,
+  520px auto;
+
+  /* unify tone */
+  filter: grayscale(1) brightness(0.55);
 }
 
-.homeSilhouettesSvg{ width:100%; height:100%; display:block; }
-.homeSilhouettesSvg .silGroup{ opacity:0.22; fill: rgba(47,74,99,0.55); }
-
-/* Ensure content sits above silhouettes */
+/* Make sure hero content stays above silhouettes */
 .homeHeroV2 > *{
   position: relative;
   z-index: 1;
