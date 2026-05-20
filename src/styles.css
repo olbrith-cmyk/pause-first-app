@@ -844,18 +844,16 @@ body {
   z-index: 0;
   pointer-events: none;
 
-  opacity: 0.26;
+  opacity: 0.26; /* B: clearly visible */
 
   background-repeat: no-repeat;
-  background-image:
-    url("./assets/silhouettes/dog.png"),
-    url("./assets/silhouettes/cat-bird.png"),
-    url("./assets/silhouettes/cow.png");
+
+  /* background-image is set inline in Dashboard.tsx via style={{ backgroundImage: ... }} */
 
   background-position:
-    18% 36%,
-    82% 18%,
-    50% 98%;
+    18% 36%,  /* dog left */
+    82% 18%,  /* cat+bird right/top */
+    50% 98%;  /* cow bottom */
 
   background-size:
     150px auto,
