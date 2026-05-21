@@ -1010,9 +1010,9 @@ if (additionalNotes) {
   };
 
   // Modal: use your global modal styles for consistent scrolling
-  return (
-    <div className="modalOverlay">
-      <div className="modalCard" onClick={(e) => e.stopPropagation()}>
+return (
+  <div className="modalOverlay">
+    <div className="modalCard" onClick={(e) => e.stopPropagation()}>
         <div className="modalHeader">
           <div style={{ flex: 1 }}>
             <h3 className="modalTitle" style={{ margin: 0 }}>
