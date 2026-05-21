@@ -167,7 +167,7 @@ const [animalsStartInAddMode, setAnimalsStartInAddMode] = useState(false);
 
                 <div className="homeSecondaryRow">
                   <button
-                    onClick={() => setMode("pets")}
+                    onClick={() => goToAnimals(false)}
                     className="btn btnSecondary homeSecondaryPill"
                   >
                     {lang === "da" ? "Mine dyr" : "My animals"}
