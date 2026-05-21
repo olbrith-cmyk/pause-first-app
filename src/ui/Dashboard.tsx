@@ -191,6 +191,7 @@ const [animalsStartInAddMode, setAnimalsStartInAddMode] = useState(false);
     userId={userId}
     startInAddMode={animalsStartInAddMode}
     onEnteredAddMode={() => setAnimalsStartInAddMode(false)}
+    onGoHome={() => setMode("hoe")}
   />
 )}
 
