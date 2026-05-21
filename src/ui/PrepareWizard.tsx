@@ -56,7 +56,7 @@ export default function PrepareWizard({
   const [visitId, setVisitId] = useState<string | null>(null);
   const didInit = useRef(false);
   const autosaveTimer = useRef<number | null>(null);
-
+  const [toast, setToast] = useState<string | null>(null);
   const [draft, setDraft] = useState<Visit>(
    {
   userId,
@@ -147,6 +147,13 @@ export default function PrepareWizard({
     };
   }, [draft, visitId]);
 
+  setToast(
+  lang === "da"
+    ? "Kladde gemt. Du kan fortsætte under Mine besøg."
+    : "Draft saved. You can continue from My visits."
+);
+  
+window.setTimeout(() => setToast(null), 2200);
   // Step model (fixed flow + preview)
       const stepData = useMemo(
     () => [
@@ -1004,7 +1011,7 @@ if (additionalNotes) {
 
   // Modal: use your global modal styles for consistent scrolling
   return (
-    <div className="modalOverlay" onClick={closeToMyVisits}>
+    <div className="modalOverlay">
       <div className="modalCard" onClick={(e) => e.stopPropagation()}>
         <div className="modalHeader">
           <div style={{ flex: 1 }}>
@@ -1014,6 +1021,8 @@ if (additionalNotes) {
               {mode === "done" && (lang === "da" ? "Klar!" : "Your prep is ready!")}
             </h3>
 
+            {toast && <div className="toast">{toast}</div>}
+            
             {mode === "wizard" && (
               <p style={{ margin: "6px 0 0 0", fontSize: 12, color: "var(--muted)" }}>
                 {lang === "da" ? "Trin" : "Step"} {step + 1} {lang === "da" ? "af" : "of"} {stepData.length}
@@ -1021,7 +1030,7 @@ if (additionalNotes) {
             )}
           </div>
 
-          <button className="modalClose" onClick={closeToMyVisits} aria-label={lang === "da" ? "Luk" : "Close"}>
+          <button className="modalClose" onClick={handleSaveDraftAndClose} aria-label={lang === "da" ? "Luk" : "Close"}>
             ✕
           </button>
         </div>
