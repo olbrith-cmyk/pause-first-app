@@ -189,8 +189,6 @@ const [animalsStartInAddMode, setAnimalsStartInAddMode] = useState(false);
   <PetsScreen
     lang={lang}
     userId={userId}
-    startInAddMode={animalsStartInAddMode}
-    onEnteredAddMode={() => setAnimalsStartInAddMode(false)}
     onGoHome={() => setMode("home")}
   />
 )}
