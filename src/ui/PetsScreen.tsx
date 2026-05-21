@@ -60,6 +60,17 @@ const blankPreventative = (): PetPreventativeItem => ({
   notes: ""
 });
 
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="panel" style={{ marginBottom: 12 }}>
+      <div className="panelHeader">
+        <h4 style={{ margin: 0 }}>{title}</h4>
+      </div>
+      {children}
+    </div>
+  );
+}
+
 export default function PetsScreen({
   lang,
   userId,
@@ -225,15 +236,6 @@ export default function PetsScreen({
       setViewingVisitNote(null);
     }
   };
-
-  const Section = ({ title, children }: { title: string; children: any }) => (
-    <div className="panel" style={{ marginBottom: 12 }}>
-      <div className="panelHeader">
-        <h4 style={{ margin: 0 }}>{title}</h4>
-      </div>
-      {children}
-    </div>
-  );
 
   return (
     <div className="pageContent">
