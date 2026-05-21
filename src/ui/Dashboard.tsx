@@ -185,13 +185,15 @@ const [animalsStartInAddMode, setAnimalsStartInAddMode] = useState(false);
           </div>
         )}
 
-        {mode === "pets" && (
+       {mode === "pets" && (
   <PetsScreen
     lang={lang}
     userId={userId}
+    startInAddMode={animalsStartInAddMode}
+    onEnteredAddMode={() => setAnimalsStartInAddMode(false)}
     onGoHome={() => setMode("home")}
   />
-)}
+)} 
 
         {mode === "myVisits" && (
   <VisitsScreen
