@@ -83,6 +83,7 @@ export default function PetsScreen({
   onFirstPetSaved?: () => void;
   startInAddMode?: boolean;
   onEnteredAddMode?: () => void;
+  onGoHome?: () => void;
 }) {
   
   const t = useTranslation(lang);
@@ -256,7 +257,12 @@ export default function PetsScreen({
   <h3 style={{ margin: 0 }}>{lang === "da" ? "Mine dyr" : "My animals"}</h3>
 
   {mode === "edit" ? (
-    <button className="btn btnSecondary" onClick={cancel}>
+    <button className="btn btnSecondary" 
+      onClick={() => {
+  cancel();
+  onGoHome?.();
+}}
+      >
       {lang === "da" ? "Annuller" : "Cancel"}
     </button>
   ) : (
