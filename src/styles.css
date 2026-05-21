@@ -517,6 +517,27 @@ button {
   margin: 8px 0;
 }
 
+/* Toast (draft saved) */
+.toast{
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 18px;
+  z-index: 9999;
+
+  background: #14324a;          /* deep calm blue */
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.35;
+  max-width: min(92vw, 520px);
+  text-align: center;
+
+  box-shadow: 0 10px 24px rgba(20,40,60,0.18);
+  border: 1px solid rgba(255,255,255,0.18);
+}
+
 /* Callout box (like Emergency Guide top box) */
 .calloutBox {
   background: var(--lightBlue);
