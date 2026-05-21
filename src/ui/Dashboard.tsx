@@ -59,8 +59,6 @@ export default function Dashboard({
 
   const handlePrepareClick = () => setMode("prepare");
   
-const goToAnimals = () => setMode("pets");
-  
   const toggleLang = () => {
     if (!onLangChange) return;
     onLangChange(lang === "en" ? "da" : "en");
@@ -192,6 +190,7 @@ const goToAnimals = () => setMode("pets");
     mode="myVisits"
     onWizardOpenChange={(open) => setWizardOpen(open)}
     onGoToAnimals={goToAnimals}
+    onGoToAnimals={() => setMode("pets")}
     onGoHome={() => setMode("home")}
   />
 )}
@@ -203,6 +202,7 @@ const goToAnimals = () => setMode("pets");
     mode="prepare"
     onWizardOpenChange={(open) => setWizardOpen(open)}
     onGoToAnimals={goToAnimals}
+    onGoToAnimals={() => setMode("pets")}
     onGoHome={() => setMode("home")}
   />
 )}
