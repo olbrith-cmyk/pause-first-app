@@ -56,7 +56,11 @@ export default function VisitsScreen({
   const [openNote, setOpenNote] = useState<VisitNote | null>(null);
   const [editingNote, setEditingNote] = useState<VisitNote | null>(null);
   const [noteVisitId, setNoteVisitId] = useState<string | null>(null);
-
+  const [toast, setToast] = useState<string | null>(null);
+  const showToast = (message: string) => {
+  setToast(message);
+  window.setTimeout(() => setToast(null), 2200);
+};
   // Prepare flow
   const [showChoosePetModal, setShowChoosePetModal] = useState(false);
   const [selectedPetForWizard, setSelectedPetForWizard] = useState<Pet | null>(null);
@@ -537,8 +541,10 @@ const handleDeleteVisit = async (visitId: string) => {
               setSelectedPetForWizard(null);
               await load();
             }}
+            onToast={showToast}
           />
         )}
+        {toast && <div className="toast">{toast}</div>}
       </div>
     );
   }
@@ -688,6 +694,7 @@ const handleDeleteVisit = async (visitId: string) => {
             setShowChoosePetModal(false);
             await load();
           }}
+          onToast={showToast}
         />
       )}
 
@@ -716,6 +723,7 @@ const handleDeleteVisit = async (visitId: string) => {
           </div>
         </div>
       )}
+     {toast && <div className="toast">{toast}</div>} 
     </div>
   );
 }
