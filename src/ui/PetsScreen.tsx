@@ -935,17 +935,16 @@ export default function PetsScreen({
 
       {/* Wizard Modal */}
       {showWizard && selected && (
-        <PrepareWizard
-          lang={lang}
-          userId={userId}
-          petId={selected.id!}
-          petName={selected.name || "Your pet"}
-          onClose={async () => {
-            setShowWizard(false);
-            await load();
-          }}
-        />
-      )}
+  <PrepareWizard
+    lang={lang}
+    userId={userId}
+    petId={selected.id!}
+    petName={selected.name || "Your pet"}
+    onClose={() => {
+      setShowWizard(false);
+    }}
+  />
+)}
     </div>
   );
 }
