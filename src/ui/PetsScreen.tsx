@@ -253,17 +253,24 @@ export default function PetsScreen({
     <div className="pageContent">
       <div className="stack">
         <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
-          <h3 style={{ margin: 0 }}>{t.myPets}</h3>
-          <button className="btn btnPrimary" onClick={startNew}>
-            {pets.length === 0
-              ? lang === "da"
-                ? "+ Tilføj dit første kæledyr"
-                : "+ Add Your First Pet"
-              : lang === "da"
-                ? "+ Tilføj endnu et kæledyr"
-                : "+ Add Another Pet"}
-          </button>
-        </div>
+  <h3 style={{ margin: 0 }}>{lang === "da" ? "Mine dyr" : "My animals"}</h3>
+
+  {mode === "edit" ? (
+    <button className="btn btnSecondary" onClick={cancel}>
+      {lang === "da" ? "Annuller" : "Cancel"}
+    </button>
+  ) : (
+    <button className="btn btnPrimary" onClick={startNew}>
+      {pets.length === 0
+        ? lang === "da"
+          ? "+ Tilføj dit første dyr"
+          : "+ Add your first animal"
+        : lang === "da"
+          ? "+ Tilføj endnu et dyr"
+          : "+ Add another animal"}
+    </button>
+  )}
+</div>
 
         {/* List of pets (when nothing selected and not editing) */}
         {!selected && mode !== "edit" && (
