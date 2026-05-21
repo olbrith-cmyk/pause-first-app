@@ -51,14 +51,17 @@ export default function Dashboard({
 
   // Tracks PrepareWizard open state (even when launched from My Visits)
   const [wizardOpen, setWizardOpen] = useState(false);
-
+const [animalsStartInAddMode, setAnimalsStartInAddMode] = useState(false);
   const anyModalOpen = showEmergencyGuide || showPrivacyPolicy || showMedicalDisclaimer;
 
   const hideBottomDock =
     mode === "home" || mode === "prepare" || anyModalOpen || menuOpen || wizardOpen;
 
   const handlePrepareClick = () => setMode("prepare");
-  const goToAnimals = () => setMode("pets");
+  const goToAnimals = (openForm?: boolean) => {
+  setAnimalsStartInAddMode(!!openForm);
+  setMode("pets");
+};
   
   const toggleLang = () => {
     if (!onLangChange) return;
@@ -182,7 +185,14 @@ export default function Dashboard({
           </div>
         )}
 
-        {mode === "pets" && <PetsScreen lang={lang} userId={userId} />}
+        {mode === "pets" && (
+  <PetsScreen
+    lang={lang}
+    userId={userId}
+    startInAddMode={animalsStartInAddMode}
+    onEnteredAddMode={() => setAnimalsStartInAddMode(false)}
+  />
+)}
 
         {mode === "myVisits" && (
   <VisitsScreen
@@ -190,7 +200,7 @@ export default function Dashboard({
     userId={userId}
     mode="myVisits"
     onWizardOpenChange={(open) => setWizardOpen(open)}
-    onGoToAnimals={goToAnimals}
+    onGoToAnimals={() => goToAnimals(true)}
     onGoHome={() => setMode("home")}
   />
 )}
@@ -201,7 +211,7 @@ export default function Dashboard({
     userId={userId}
     mode="prepare"
     onWizardOpenChange={(open) => setWizardOpen(open)}
-    onGoToAnimals={goToAnimals}
+    onGoToAnimals={() => goToAnimals(true)}
     onGoHome={() => setMode("home")}
   />
 )}
@@ -216,7 +226,7 @@ export default function Dashboard({
             </button>
 
             <div className="bottomDockGrid">
-              <button onClick={() => setMode("pets")} className="btn btnSecondary">
+              <button onClick={() => goToAnimals(false)}  className="btn btnSecondary">
                 {t.myPets}
               </button>
 
