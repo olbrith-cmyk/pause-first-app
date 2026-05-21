@@ -30,22 +30,6 @@ const emptyNote = (userId: string, visitId: string): VisitNote => ({
   followUp: ""
 });
 
-const emptyPet = (userId: string): Pet => ({
-  userId,
-  name: "",
-  species: "",
-  age: "",
-  sex: "",
-  weight: "",
-  microchip: "",
-  allergies: "",
-  medications: "",
-  diet: "",
-  clinic: "",
-  emergencyContact: "",
-  notes: ""
-});
-
 export default function VisitsScreen({
   lang,
   userId,
@@ -261,20 +245,6 @@ const handleDeleteVisit = async (visitId: string) => {
     } catch (e: any) {
       alert(t.error + ": " + (e?.message ?? String(e)));
     }
-  };
-
-      await addPet(editingNewPet);
-      await load();
-
-      const updated = await getUserPets(userId);
-      const newPet = updated.find((p) => p.name === editingNewPet.name) ?? null;
-
-      if (newPet?.id) {
-        setSelectedPetForWizard(newPet);
-        setShowChoosePetModal(false);
-        setEditingNewPet(emptyPet(userId));
-        setShowWizard(true);
-      }
   };
 
   // -------------------------
@@ -709,7 +679,6 @@ const handleDeleteVisit = async (visitId: string) => {
             setEditingVisitId(null);
             setSelectedPetForWizard(null);
             setShowChoosePetModal(false);
-            setShowAddPetForm(false);
             await load();
           }}
           onComplete={async () => {
@@ -717,7 +686,6 @@ const handleDeleteVisit = async (visitId: string) => {
             setEditingVisitId(null);
             setSelectedPetForWizard(null);
             setShowChoosePetModal(false);
-            setShowAddPetForm(false);
             await load();
           }}
         />
