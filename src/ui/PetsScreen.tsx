@@ -77,6 +77,7 @@ export default function PetsScreen({
   onFirstPetSaved,
   startInAddMode,
   onEnteredAddMode,
+  onGoHome,
 }: {
   lang: Lang;
   userId: string;
