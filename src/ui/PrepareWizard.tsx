@@ -17,6 +17,7 @@ type Props = {
 
   // NEW: lets the wizard tell the parent where to go after close/delete/save
   onNavigateAfterClose?: (target: "home" | "myVisits") => void;
+  onToast?: (message: string) => void;
 };
 
 function makeEmptyStatus(): CurrentStatus {
@@ -42,7 +43,8 @@ export default function PrepareWizard({
   visitId: visitIdProp,
   onClose,
   onComplete,
-  onNavigateAfterClose
+  onNavigateAfterClose,
+  onToast,
 }: Props) {
   const t = useTranslation(lang);
 
@@ -147,13 +149,6 @@ export default function PrepareWizard({
     };
   }, [draft, visitId]);
 
-  setToast(
-  lang === "da"
-    ? "Kladde gemt. Du kan fortsætte under Mine besøg."
-    : "Draft saved. You can continue from My visits."
-);
-  
-window.setTimeout(() => setToast(null), 2200);
   // Step model (fixed flow + preview)
       const stepData = useMemo(
     () => [
@@ -286,7 +281,13 @@ const handleSaveDraftAndClose = async () => {
   try {
     // Force a write right now (even though autosave exists)
     await updateVisit(visitId, { ...draft, status: "draft" });
-
+    onToast?.(
+  lang === "da"
+    ? "Kladde gemt. Du kan fortsætte under Mine besøg."
+    : "Draft saved. You can continue from My visits."
+);
+    
+window.setTimeout(() => setToast(null), 2200);
     // Close wizard and go to My Visits
     closeToMyVisits();
   } catch (e: any) {
