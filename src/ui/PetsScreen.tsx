@@ -74,12 +74,17 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 export default function PetsScreen({
   lang,
   userId,
-  onFirstPetSaved
+  onFirstPetSaved,
+  startInAddMode,
+  onEnteredAddMode,
 }: {
   lang: Lang;
   userId: string;
   onFirstPetSaved?: () => void;
+  startInAddMode?: boolean;
+  onEnteredAddMode?: () => void;
 }) {
+  
   const t = useTranslation(lang);
 
   const [pets, setPets] = useState<Pet[]>([]);
@@ -109,6 +114,13 @@ export default function PetsScreen({
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
+
+  useEffect(() => {
+  if (!startInAddMode) return;
+  startNew();
+  onEnteredAddMode?.();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [startInAddMode]);
 
   const selectedPetVisits = useMemo(() => {
     if (!selected?.id) return [];
