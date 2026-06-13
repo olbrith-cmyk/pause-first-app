@@ -65,7 +65,7 @@ export default function HamburgerMenu({
     {
       icon: "event_note",
       title: lang === "da" ? "Mine besøg" : "My visits",
-      hint: lang === "da" ? "Kladder, Visit Briefs og noter" : "Drafts, Visit Briefs, and notes",
+      hint: lang === "da" ? "Kladder, besøgsnotater og noter" : "Drafts, Visit Briefs, and notes",
       onClick: onMyVisits
     },
     {
