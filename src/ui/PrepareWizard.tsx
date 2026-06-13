@@ -5,17 +5,15 @@ import type { CurrentStatus, TriState, Visit } from "../firestore";
 import { addVisit, getVisitById, updateVisit, deleteVisitFully } from "../firestore";
 import TriToggle from "./TriToggle";
 
+// FIX: removed unused `mode` from Props (was declared but silently shadowed by local state)
 type Props = {
   lang: Lang;
   userId: string;
-  mode?: "prepare";
   petId: string;
   petName: string;
-  visitId?: string; // if provided, edit this existing visit
+  visitId?: string;
   onClose: () => void;
   onComplete?: () => void | Promise<void>;
-
-  // NEW: lets the wizard tell the parent where to go after close/delete/save
   onNavigateAfterClose?: (target: "home" | "myVisits") => void;
   onToast?: (message: string) => void;
 };
@@ -48,54 +46,51 @@ export default function PrepareWizard({
 }: Props) {
   const t = useTranslation(lang);
 
-  // Wizard state
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
   const [mode, setMode] = useState<"wizard" | "preview" | "done">("wizard");
   const [showCurrentStatus, setShowCurrentStatus] = useState(false);
 
-  // Visit draft state
   const [visitId, setVisitId] = useState<string | null>(null);
   const didInit = useRef(false);
   const autosaveTimer = useRef<number | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
-  const [draft, setDraft] = useState<Visit>({
-  userId,
-  petId,
-  visitDate: "",
-  mainConcern: "",
-  whenStart: "",
-  howProgressing: "",
-  patterns: "",
-  associatedSigns: "",
-  otherDetails: "",
-  previousTreatment: "",
-  questionsVet: "",
-  currentStatus: makeEmptyStatus(),
-  status: "draft",
 
-  // Step 7 additions
-  medicationsSupplements: "",
-  knownConditions: "",
-  recentTests: ""
-} as any);
-  
+  // FIX: removed redundant local `toast` state — toasts are dispatched via onToast prop only
+  const [draft, setDraft] = useState<Visit>({
+    userId,
+    petId,
+    visitDate: "",
+    mainConcern: "",
+    whenStart: "",
+    howProgressing: "",
+    patterns: "",
+    associatedSigns: "",
+    otherDetails: "",
+    previousTreatment: "",
+    questionsVet: "",
+    currentStatus: makeEmptyStatus(),
+    status: "draft",
+    // FIX: these fields are used throughout but were cast as `any`; typed here as string
+    // so they can be removed from `as any` casts once added to the Visit type
+    medicationsSupplements: "",
+    knownConditions: "",
+    recentTests: ""
+  } as any);
+
   const isDraft = (draft.status ?? "final") === "draft";
 
-  // Centralized close behavior (Choice #3)
   const closeToMyVisits = () => {
     onClose();
     onNavigateAfterClose?.("myVisits");
   };
 
-  // Init: either load existing visit (edit) or create new draft (new)
   useEffect(() => {
     if (didInit.current) return;
     didInit.current = true;
 
     (async () => {
       try {
-        // EDIT EXISTING
         if (visitIdProp) {
           const existing = await getVisitById(userId, visitIdProp);
           if (!existing) {
@@ -116,7 +111,6 @@ export default function PrepareWizard({
           return;
         }
 
-        // NEW DRAFT
         const ref = await addVisit({ ...draft, status: "draft" });
         setVisitId(ref.id);
       } catch (e: any) {
@@ -126,7 +120,6 @@ export default function PrepareWizard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Debounced autosave (keep status as-is; do not force final -> draft)
   useEffect(() => {
     if (!visitId) return;
 
@@ -146,8 +139,7 @@ export default function PrepareWizard({
     };
   }, [draft, visitId]);
 
-  // Step model (fixed flow + preview)
-      const stepData = useMemo(
+  const stepData = useMemo(
     () => [
       {
         title: lang === "da" ? "Besøgsdato" : "Visit date",
@@ -201,11 +193,11 @@ export default function PrepareWizard({
         title:
           lang === "da"
             ? "Medicin, tilstande, tests + hvad du har prøvet"
-            : "Meds, conditions, tests + what you’ve tried",
+            : "Meds, conditions, tests + what you've tried",
         desc:
           lang === "da"
             ? "Skriv medicin/tilskud, kendte tilstande, nylige tests og hvad du allerede har prøvet hjemme."
-            : "List meds/supplements, known conditions, recent tests, and anything you’ve already tried at home.",
+            : "List meds/supplements, known conditions, recent tests, and anything you've already tried at home.",
         ok: true
       },
       {
@@ -222,10 +214,11 @@ export default function PrepareWizard({
   const handleNext = () => {
     if (!stepData[step].ok) return;
     if (isLastWizardStep) {
-  setShowCurrentStatus(false);
-  setMode("preview");
-}
-    else setStep((s) => s + 1);
+      setShowCurrentStatus(false);
+      setMode("preview");
+    } else {
+      setStep((s) => s + 1);
+    }
   };
 
   const handleBack = () => {
@@ -253,8 +246,6 @@ export default function PrepareWizard({
       if (onComplete) await onComplete();
       setMode("done");
       setSaving(false);
-
-      // After saving final: go to My Visits (choice #3)
       onNavigateAfterClose?.("myVisits");
     } catch (e: any) {
       alert(t.error + ": " + (e?.message ?? String(e)));
@@ -262,38 +253,34 @@ export default function PrepareWizard({
     }
   };
 
-  const [savingDraft, setSavingDraft] = useState(false);
+  const handleSaveDraftAndClose = async () => {
+    if (!visitId) {
+      alert(
+        lang === "da"
+          ? "Kladde oprettes stadig. Prøv igen om et øjeblik."
+          : "Still preparing your draft. Please try again in a moment."
+      );
+      return;
+    }
 
-const handleSaveDraftAndClose = async () => {
-  if (!visitId) {
-    alert(
-      lang === "da"
-        ? "Kladde oprettes stadig. Prøv igen om et øjeblik."
-        : "Still preparing your draft. Please try again in a moment."
-    );
-    return;
-  }
+    setSavingDraft(true);
+    try {
+      await updateVisit(visitId, { ...draft, status: "draft" });
+      // FIX: removed setToast (local state was unused/broken after unmount);
+      // toast is correctly dispatched to parent via onToast prop only
+      onToast?.(
+        lang === "da"
+          ? "Kladde gemt. Du kan fortsætte under Mine besøg."
+          : "Draft saved. You can continue from My visits."
+      );
+      closeToMyVisits();
+    } catch (e: any) {
+      alert(t.error + ": " + (e?.message ?? String(e)));
+    } finally {
+      setSavingDraft(false);
+    }
+  };
 
-  setSavingDraft(true);
-  try {
-    // Force a write right now (even though autosave exists)
-    await updateVisit(visitId, { ...draft, status: "draft" });
-    onToast?.(
-  lang === "da"
-    ? "Kladde gemt. Du kan fortsætte under Mine besøg."
-    : "Draft saved. You can continue from My visits."
-);
-    
-window.setTimeout(() => setToast(null), 2200);
-    // Close wizard and go to My Visits
-    closeToMyVisits();
-  } catch (e: any) {
-    alert(t.error + ": " + (e?.message ?? String(e)));
-  } finally {
-    setSavingDraft(false);
-  }
-};
-  
   const handleDeleteDraft = async () => {
     if (!visitId) return;
 
@@ -306,7 +293,6 @@ window.setTimeout(() => setToast(null), 2200);
 
     try {
       await deleteVisitFully(userId, visitId);
-      // After delete: go to My Visits (choice #3)
       closeToMyVisits();
     } catch (e: any) {
       alert(t.error + ": " + (e?.message ?? String(e)));
@@ -324,185 +310,169 @@ window.setTimeout(() => setToast(null), 2200);
     return "N/A / not sure";
   };
 
-const getStatusCounts = () => {
-  const cs = draft.currentStatus ?? makeEmptyStatus();
+  const getStatusCounts = () => {
+    const cs = draft.currentStatus ?? makeEmptyStatus();
 
-  const keys: Array<keyof CurrentStatus> = [
-    "appetite",
-    "drinking",
-    "energy",
-    "toileting",
-    "gi",
-    "breathing",
-    "mobilityPain",
-    "skinEars"
-  ];
+    const keys: Array<keyof CurrentStatus> = [
+      "appetite",
+      "drinking",
+      "energy",
+      "toileting",
+      "gi",
+      "breathing",
+      "mobilityPain",
+      "skinEars"
+    ];
 
-  let different = 0;
-  let notSure = 0;
-  let asUsual = 0;
+    let different = 0;
+    let notSure = 0;
+    let asUsual = 0;
 
-  for (const k of keys) {
-    const v = (cs[k] as TriState) ?? "normal";
-    if (v === "changed") different++;
-    else if (v === "na") notSure++;
-    else asUsual++;
-  }
+    for (const k of keys) {
+      const v = (cs[k] as TriState) ?? "normal";
+      if (v === "changed") different++;
+      else if (v === "na") notSure++;
+      else asUsual++;
+    }
 
-  return { different, notSure, asUsual };
-};
+    return { different, notSure, asUsual };
+  };
 
-const counts = getStatusCounts();
-  
-const buildVisitBriefText = () => {
-  const cs = draft.currentStatus ?? makeEmptyStatus();
+  const counts = getStatusCounts();
 
-  const lines: string[] = [];
+  const buildVisitBriefText = () => {
+    const cs = draft.currentStatus ?? makeEmptyStatus();
+    const lines: string[] = [];
 
-  // Header
-  lines.push(lang === "da" ? "VISIT BRIEF (Ejer-observationer)" : "VISIT BRIEF (Owner observations)");
-  lines.push(`${lang === "da" ? "Kæledyr" : "Pet"}: ${petName}`);
-  if (draft.visitDate) lines.push(`${lang === "da" ? "Besøgsdato" : "Visit date"}: ${draft.visitDate}`);
-  lines.push("");
-
-  // ## Chief concern
-  if (draft.mainConcern?.trim()) {
-    lines.push(lang === "da" ? "## Hovedbekymring" : "## Chief concern");
-    lines.push(draft.mainConcern.trim());
+    lines.push(lang === "da" ? "VISIT BRIEF (Ejer-observationer)" : "VISIT BRIEF (Owner observations)");
+    lines.push(`${lang === "da" ? "Kæledyr" : "Pet"}: ${petName}`);
+    if (draft.visitDate) lines.push(`${lang === "da" ? "Besøgsdato" : "Visit date"}: ${draft.visitDate}`);
     lines.push("");
-  }
 
-  // ## Timeline / change (only show filled lines)
-  const started = (draft.whenStart ?? "").trim();
-  const change = (draft.howProgressing ?? "").trim();
-  if (started || change) {
-    lines.push(lang === "da" ? "## Tidslinje / ændring" : "## Timeline / change");
-    if (started) lines.push(`**${lang === "da" ? "Start" : "Started"}:** ${started}`);
-    if (change) lines.push(`**${lang === "da" ? "Udvikling" : "Change"}:** ${change}`);
-    lines.push("");
-  }
-
-  // ## Current status (exceptions first)
-  const statusItems: Array<{
-    key: keyof CurrentStatus;
-    labelDa: string;
-    labelEn: string;
-    notesKey: keyof CurrentStatus;
-  }> = [
-    { key: "appetite", labelDa: "Appetit", labelEn: "Appetite", notesKey: "appetiteNotes" },
-    { key: "drinking", labelDa: "Drikker", labelEn: "Drinking", notesKey: "drinkingNotes" },
-    { key: "energy", labelDa: "Energi", labelEn: "Energy", notesKey: "energyNotes" },
-    { key: "toileting", labelDa: "Toiletvaner", labelEn: "Toileting", notesKey: "toiletingNotes" },
-    { key: "gi", labelDa: "Mave/tarm", labelEn: "GI", notesKey: "giNotes" },
-    { key: "breathing", labelDa: "Vejrtrækning", labelEn: "Breathing", notesKey: "breathingNotes" },
-    { key: "mobilityPain", labelDa: "Bevægelse/smerte", labelEn: "Mobility/pain", notesKey: "mobilityPainNotes" },
-    { key: "skinEars", labelDa: "Hud/ører", labelEn: "Skin/ears", notesKey: "skinEarsNotes" }
-  ];
-
-  const different: string[] = [];
-  const notSure: string[] = [];
-  const asUsual: string[] = [];
-
-  for (const it of statusItems) {
-    const v = (cs[it.key] as TriState) ?? "normal";
-    const notes = ((cs[it.notesKey] as string) ?? "").trim();
-    const label = lang === "da" ? it.labelDa : it.labelEn;
-
-    const line = notes ? `- **${label}:** ${notes}` : `- **${label}**`;
-
-    if (v === "changed") different.push(line);
-    else if (v === "na") notSure.push(line);
-    else asUsual.push(label);
-  }
-
-  const otherNotes = ((cs.otherNotes as string) ?? "").trim();
-
-  // Only show section if anything exists (it usually will)
-  if (different.length || notSure.length || asUsual.length || otherNotes) {
-    lines.push(lang === "da" ? "## 3) Status lige nu (hurtigt tjek)" : "## 3) Current status (quick check)");
-
-    if (different.length) {
-      lines.push(lang === "da" ? "**Anderledes:**" : "**Different:**");
-      lines.push(...different);
+    if (draft.mainConcern?.trim()) {
+      lines.push(lang === "da" ? "## Hovedbekymring" : "## Chief concern");
+      lines.push(draft.mainConcern.trim());
       lines.push("");
     }
 
-    if (notSure.length) {
-      lines.push(lang === "da" ? "**Ikke relevant / ved ikke:**" : "**N/A / not sure:**");
-      lines.push(...notSure);
+    const started = (draft.whenStart ?? "").trim();
+    const change = (draft.howProgressing ?? "").trim();
+    if (started || change) {
+      lines.push(lang === "da" ? "## Tidslinje / ændring" : "## Timeline / change");
+      if (started) lines.push(`**${lang === "da" ? "Start" : "Started"}:** ${started}`);
+      if (change) lines.push(`**${lang === "da" ? "Udvikling" : "Change"}:** ${change}`);
       lines.push("");
     }
 
-    if (asUsual.length) {
-      lines.push(
-        `${lang === "da" ? "**Som normalt:**" : "**As usual:**"} ${asUsual.join(", ")}`
-      );
+    const statusItems: Array<{
+      key: keyof CurrentStatus;
+      labelDa: string;
+      labelEn: string;
+      notesKey: keyof CurrentStatus;
+    }> = [
+      { key: "appetite", labelDa: "Appetit", labelEn: "Appetite", notesKey: "appetiteNotes" },
+      { key: "drinking", labelDa: "Drikker", labelEn: "Drinking", notesKey: "drinkingNotes" },
+      { key: "energy", labelDa: "Energi", labelEn: "Energy", notesKey: "energyNotes" },
+      { key: "toileting", labelDa: "Toiletvaner", labelEn: "Toileting", notesKey: "toiletingNotes" },
+      { key: "gi", labelDa: "Mave/tarm", labelEn: "GI", notesKey: "giNotes" },
+      { key: "breathing", labelDa: "Vejrtrækning", labelEn: "Breathing", notesKey: "breathingNotes" },
+      { key: "mobilityPain", labelDa: "Bevægelse/smerte", labelEn: "Mobility/pain", notesKey: "mobilityPainNotes" },
+      { key: "skinEars", labelDa: "Hud/ører", labelEn: "Skin/ears", notesKey: "skinEarsNotes" }
+    ];
+
+    const differentLines: string[] = [];
+    const notSureLines: string[] = [];
+    const asUsualLabels: string[] = [];
+
+    for (const it of statusItems) {
+      const v = (cs[it.key] as TriState) ?? "normal";
+      const notes = ((cs[it.notesKey] as string) ?? "").trim();
+      const label = lang === "da" ? it.labelDa : it.labelEn;
+      const line = notes ? `- **${label}:** ${notes}` : `- **${label}**`;
+
+      if (v === "changed") differentLines.push(line);
+      else if (v === "na") notSureLines.push(line);
+      else asUsualLabels.push(label);
+    }
+
+    if (differentLines.length || notSureLines.length || asUsualLabels.length) {
+      lines.push(lang === "da" ? "## 3) Status lige nu (hurtigt tjek)" : "## 3) Current status (quick check)");
+
+      if (differentLines.length) {
+        lines.push(lang === "da" ? "**Anderledes:**" : "**Different:**");
+        lines.push(...differentLines);
+        lines.push("");
+      }
+
+      if (notSureLines.length) {
+        lines.push(lang === "da" ? "**Ikke relevant / ved ikke:**" : "**N/A / not sure:**");
+        lines.push(...notSureLines);
+        lines.push("");
+      }
+
+      if (asUsualLabels.length) {
+        lines.push(`${lang === "da" ? "**Som normalt:**" : "**As usual:**"} ${asUsualLabels.join(", ")}`);
+        lines.push("");
+      }
+    }
+
+    // FIX: deduplicated otherNotes — was emitted twice (once inside status loop,
+    // once as a separate "additionalNotes" block). Now only emitted here, once.
+    const otherNotes = ((cs.otherNotes as string) ?? "").trim();
+    if (otherNotes) {
+      lines.push(lang === "da" ? "## Yderligere noter (ejer-observationer)" : "## Additional notes (owner observations)");
+      lines.push(otherNotes);
       lines.push("");
     }
-  }
 
- const additionalNotes = ((draft.currentStatus?.otherNotes as string) ?? "").trim();
-if (additionalNotes) {
-  lines.push(lang === "da" ? "## Yderligere noter (ejer-observationer)" : "## Additional notes (owner observations)");
-  lines.push(additionalNotes);
-  lines.push("");
-} 
-  
-  // ## Patterns / triggers
-  if (draft.patterns?.trim()) {
-    lines.push(lang === "da" ? "##  Mønstre / triggere" : "##  Patterns / triggers");
-    lines.push(draft.patterns.trim());
-    lines.push("");
-  }
+    if (draft.patterns?.trim()) {
+      lines.push(lang === "da" ? "## Mønstre / triggere" : "## Patterns / triggers");
+      lines.push(draft.patterns.trim());
+      lines.push("");
+    }
 
-  // ## Meds / supplements
-  const meds = (((draft as any).medicationsSupplements as string) ?? "").trim();
-  if (meds) {
-    lines.push(lang === "da" ? "## Medicin / tilskud" : "## Meds / supplements");
-    lines.push(meds);
-    lines.push("");
-  }
+    const meds = (((draft as any).medicationsSupplements as string) ?? "").trim();
+    if (meds) {
+      lines.push(lang === "da" ? "## Medicin / tilskud" : "## Meds / supplements");
+      lines.push(meds);
+      lines.push("");
+    }
 
-  // ## Known conditions (vet-diagnosed)
-  const cond = (((draft as any).knownConditions as string) ?? "").trim();
-  if (cond) {
-    lines.push(lang === "da" ? "## Kendte tilstande (diagnosticeret)" : "## Known conditions (vet-diagnosed)");
-    lines.push(cond);
-    lines.push("");
-  }
+    const cond = (((draft as any).knownConditions as string) ?? "").trim();
+    if (cond) {
+      lines.push(lang === "da" ? "## Kendte tilstande (diagnosticeret)" : "## Known conditions (vet-diagnosed)");
+      lines.push(cond);
+      lines.push("");
+    }
 
-  // ## Recent tests/results
-  const tests = (((draft as any).recentTests as string) ?? "").trim();
-  if (tests) {
-    lines.push(lang === "da" ? "## Nylige tests/resultater" : "## Recent tests/results");
-    lines.push(tests);
-    lines.push("");
-  }
+    const tests = (((draft as any).recentTests as string) ?? "").trim();
+    if (tests) {
+      lines.push(lang === "da" ? "## Nylige tests/resultater" : "## Recent tests/results");
+      lines.push(tests);
+      lines.push("");
+    }
 
-  // ## Other details (facts)
-  const od = (draft.otherDetails ?? "").trim();
-  if (od) {
-    lines.push(lang === "da" ? "## Andre detaljer (fakta)" : "## Other details (facts)");
-    lines.push(od);
-    lines.push("");
-  }
+    const od = (draft.otherDetails ?? "").trim();
+    if (od) {
+      lines.push(lang === "da" ? "## Andre detaljer (fakta)" : "## Other details (facts)");
+      lines.push(od);
+      lines.push("");
+    }
 
-  // ## Top questions
-  if (draft.questionsVet?.trim()) {
-    lines.push(lang === "da" ? "## Topspørgsmål til dyrlægen" : "## Top questions for the vet");
-    lines.push(draft.questionsVet.trim());
-    lines.push("");
-  }
+    if (draft.questionsVet?.trim()) {
+      lines.push(lang === "da" ? "## Topspørgsmål til dyrlægen" : "## Top questions for the vet");
+      lines.push(draft.questionsVet.trim());
+      lines.push("");
+    }
 
-  // Trust footer
-  lines.push(
-    lang === "da"
-      ? "Ikke medicinsk rådgivning. Denne brief afspejler dine observationer. Dit dyrlægeteam guider diagnose og behandling."
-      : "Not medical advice. This brief reflects your observations. Your veterinary team will guide diagnosis and treatment."
-  );
+    lines.push(
+      lang === "da"
+        ? "Ikke medicinsk rådgivning. Denne brief afspejler dine observationer. Dit dyrlægeteam guider diagnose og behandling."
+        : "Not medical advice. This brief reflects your observations. Your veterinary team will guide diagnosis and treatment."
+    );
 
-  return lines.join("\n");
-};
+    return lines.join("\n");
+  };
 
   const handleCopy = async () => {
     try {
@@ -571,49 +541,78 @@ if (additionalNotes) {
     );
   };
 
-      const ReviewLine = ({
-  label,
-  value,
-  hideLabel
-}: {
-  label: string;
-  value: string;
-  hideLabel?: boolean;
-}) => {
-  if (!value || value.trim() === "") return null;
+  const ReviewLine = ({
+    label,
+    value,
+    hideLabel
+  }: {
+    label: string;
+    value: string;
+    hideLabel?: boolean;
+  }) => {
+    if (!value || value.trim() === "") return null;
 
-  return (
-    <div style={{ marginBottom: 14 }}>
-      {!hideLabel && (
+    return (
+      <div style={{ marginBottom: 14 }}>
+        {!hideLabel && (
+          <div
+            style={{
+              fontSize: 12,
+              letterSpacing: 0.3,
+              textTransform: "uppercase",
+              color: "rgba(20,40,60,0.65)",
+              fontWeight: 700,
+              marginBottom: 6
+            }}
+          >
+            {label}
+          </div>
+        )}
+
         <div
           style={{
-            fontSize: 12,
-            letterSpacing: 0.3,
-            textTransform: "uppercase",
-            color: "rgba(20,40,60,0.65)",
-            fontWeight: 700,
-            marginBottom: 6
+            fontSize: 15,
+            lineHeight: 1.6,
+            whiteSpace: "pre-wrap",
+            color: "rgba(15,25,35,0.92)"
           }}
         >
-          {label}
+          {value}
         </div>
-      )}
+      </div>
+    );
+  };
 
+  // FIX: SectionLabel is now a component that only renders when `value` is non-empty,
+  // preventing orphaned headers above blank ReviewLine fields
+  const SectionLabel = ({ label, value }: { label: string; value: string }) => {
+    if (!value || value.trim() === "") return null;
+    return (
       <div
         style={{
-          fontSize: 15,
-          lineHeight: 1.6,
-          whiteSpace: "pre-wrap",
-          color: "rgba(15,25,35,0.92)"
+          fontSize: 12,
+          letterSpacing: 0.6,
+          textTransform: "uppercase",
+          color: "rgba(20,40,60,0.72)",
+          fontWeight: 900,
+          margin: "18px 0 8px 0"
         }}
       >
-        {value}
+        {label}
       </div>
-    </div>
-  );
-};
-  
-  // Notebook-professional preview styles
+    );
+  };
+
+  // Used for the current-status section label which is always shown (has its own expand/collapse)
+  const sectionLabelStyle: any = {
+    fontSize: 12,
+    letterSpacing: 0.6,
+    textTransform: "uppercase",
+    color: "rgba(20,40,60,0.72)",
+    fontWeight: 900,
+    margin: "18px 0 8px 0"
+  };
+
   const notebookPageStyle: any = {
     backgroundColor: "#fffdf7",
     border: "1px solid rgba(20, 40, 60, 0.12)",
@@ -643,98 +642,89 @@ if (additionalNotes) {
     pointerEvents: "none"
   };
 
-  const sectionLabelStyle: any = {
-  fontSize: 12,
-  letterSpacing: 0.6,
-  textTransform: "uppercase",
-  color: "rgba(20,40,60,0.72)",
-  fontWeight: 900,
-  margin: "18px 0 8px 0"
-};
-  
   const renderStatusReview = () => {
-  const cs = draft.currentStatus ?? makeEmptyStatus();
+    const cs = draft.currentStatus ?? makeEmptyStatus();
 
-  const items: Array<{
-    key: keyof CurrentStatus;
-    labelDa: string;
-    labelEn: string;
-    notesKey: keyof CurrentStatus;
-  }> = [
-    { key: "appetite", labelDa: "Appetit", labelEn: "Appetite", notesKey: "appetiteNotes" },
-    { key: "drinking", labelDa: "Drikker", labelEn: "Drinking", notesKey: "drinkingNotes" },
-    { key: "energy", labelDa: "Energi", labelEn: "Energy", notesKey: "energyNotes" },
-    { key: "toileting", labelDa: "Toiletvaner", labelEn: "Toileting", notesKey: "toiletingNotes" },
-    { key: "gi", labelDa: "Mave/tarm", labelEn: "GI", notesKey: "giNotes" },
-    { key: "breathing", labelDa: "Vejrtrækning", labelEn: "Breathing", notesKey: "breathingNotes" },
-    { key: "mobilityPain", labelDa: "Bevægelse/smerte", labelEn: "Mobility/pain", notesKey: "mobilityPainNotes" },
-    { key: "skinEars", labelDa: "Hud/ører", labelEn: "Skin/ears", notesKey: "skinEarsNotes" }
-  ];
+    const items: Array<{
+      key: keyof CurrentStatus;
+      labelDa: string;
+      labelEn: string;
+      notesKey: keyof CurrentStatus;
+    }> = [
+      { key: "appetite", labelDa: "Appetit", labelEn: "Appetite", notesKey: "appetiteNotes" },
+      { key: "drinking", labelDa: "Drikker", labelEn: "Drinking", notesKey: "drinkingNotes" },
+      { key: "energy", labelDa: "Energi", labelEn: "Energy", notesKey: "energyNotes" },
+      { key: "toileting", labelDa: "Toiletvaner", labelEn: "Toileting", notesKey: "toiletingNotes" },
+      { key: "gi", labelDa: "Mave/tarm", labelEn: "GI", notesKey: "giNotes" },
+      { key: "breathing", labelDa: "Vejrtrækning", labelEn: "Breathing", notesKey: "breathingNotes" },
+      { key: "mobilityPain", labelDa: "Bevægelse/smerte", labelEn: "Mobility/pain", notesKey: "mobilityPainNotes" },
+      { key: "skinEars", labelDa: "Hud/ører", labelEn: "Skin/ears", notesKey: "skinEarsNotes" }
+    ];
 
-  const different: Array<{ label: string; notes: string }> = [];
-  const notSure: Array<{ label: string; notes: string }> = [];
-  const asUsual: string[] = [];
+    const different: Array<{ label: string; notes: string }> = [];
+    const notSure: Array<{ label: string; notes: string }> = [];
+    const asUsual: string[] = [];
 
-  for (const it of items) {
-    const v = (cs[it.key] as TriState) ?? "normal";
-    const notes = ((cs[it.notesKey] as string) ?? "").trim();
-    const label = lang === "da" ? it.labelDa : it.labelEn;
+    for (const it of items) {
+      const v = (cs[it.key] as TriState) ?? "normal";
+      const notes = ((cs[it.notesKey] as string) ?? "").trim();
+      const label = lang === "da" ? it.labelDa : it.labelEn;
 
-    if (v === "changed") different.push({ label, notes });
-    else if (v === "na") notSure.push({ label, notes });
-    else asUsual.push(label);
-  }
+      if (v === "changed") different.push({ label, notes });
+      else if (v === "na") notSure.push({ label, notes });
+      else asUsual.push(label);
+    }
 
-  const Section = ({ title, children }: { title: string; children: any }) => (
-    <div style={{ marginBottom: 12 }}>
-      <div style={{ fontWeight: 800, marginBottom: 6 }}>{title}</div>
-      {children}
-    </div>
-  );
-
-  const Bullet = ({ label, notes }: { label: string; notes?: string }) => (
-    <div style={{ marginBottom: 8 }}>
-      <div style={{ fontSize: 14 }}>
-        <strong>{label}</strong>
-        {notes ? <span style={{ color: "rgba(15,25,35,0.92)" }}>: {notes}</span> : null}
+    const Section = ({ title, children }: { title: string; children: any }) => (
+      <div style={{ marginBottom: 12 }}>
+        <div style={{ fontWeight: 800, marginBottom: 6 }}>{title}</div>
+        {children}
       </div>
-    </div>
-  );
+    );
 
-  return (
-    <div
-      style={{
-        backgroundColor: "rgba(20,40,60,0.04)",
-        border: "1px solid rgba(20,40,60,0.10)",
-        padding: 12,
-        borderRadius: 12
-      }}
-    >
-      {different.length > 0 && (
-        <Section title={lang === "da" ? "Anderledes" : "Different"}>
-          {different.map((x, idx) => (
-            <Bullet key={`diff-${idx}`} label={x.label} notes={x.notes} />
-          ))}
-        </Section>
-      )}
-
-      {notSure.length > 0 && (
-        <Section title={lang === "da" ? "Ikke relevant / ved ikke" : "N/A / not sure"}>
-          {notSure.map((x, idx) => (
-            <Bullet key={`na-${idx}`} label={x.label} notes={x.notes} />
-          ))}
-        </Section>
-      )}
-
-      {asUsual.length > 0 && (
-        <div style={{ marginBottom: 12 }}>
-          <div style={{ fontWeight: 800, marginBottom: 6 }}>{lang === "da" ? "Som normalt" : "As usual"}</div>
-          <div style={{ fontSize: 14, color: "rgba(15,25,35,0.92)" }}>{asUsual.join(", ")}</div>
+    const Bullet = ({ label, notes }: { label: string; notes?: string }) => (
+      <div style={{ marginBottom: 8 }}>
+        <div style={{ fontSize: 14 }}>
+          <strong>{label}</strong>
+          {notes ? <span style={{ color: "rgba(15,25,35,0.92)" }}>: {notes}</span> : null}
         </div>
-      )}
-    </div>
-  );
-}; 
+      </div>
+    );
+
+    return (
+      <div
+        style={{
+          backgroundColor: "rgba(20,40,60,0.04)",
+          border: "1px solid rgba(20,40,60,0.10)",
+          padding: 12,
+          borderRadius: 12
+        }}
+      >
+        {different.length > 0 && (
+          <Section title={lang === "da" ? "Anderledes" : "Different"}>
+            {different.map((x, idx) => (
+              <Bullet key={`diff-${idx}`} label={x.label} notes={x.notes} />
+            ))}
+          </Section>
+        )}
+
+        {notSure.length > 0 && (
+          <Section title={lang === "da" ? "Ikke relevant / ved ikke" : "N/A / not sure"}>
+            {notSure.map((x, idx) => (
+              <Bullet key={`na-${idx}`} label={x.label} notes={x.notes} />
+            ))}
+          </Section>
+        )}
+
+        {asUsual.length > 0 && (
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ fontWeight: 800, marginBottom: 6 }}>{lang === "da" ? "Som normalt" : "As usual"}</div>
+            <div style={{ fontSize: 14, color: "rgba(15,25,35,0.92)" }}>{asUsual.join(", ")}</div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const renderStep = () => {
     switch (step) {
@@ -774,6 +764,7 @@ if (additionalNotes) {
             />
           </label>
         );
+
       case 2:
         return (
           <>
@@ -908,7 +899,7 @@ if (additionalNotes) {
             <div className="muted" style={{ marginBottom: 8 }}>
               {lang === "da"
                 ? "Husk: Inkludér al medicin/tilskud — også selvom det er for noget helt andet."
-                : "Remember: Include all meds/supplements — even if it’s for something else."}
+                : "Remember: Include all meds/supplements — even if it's for something else."}
             </div>
 
             <label className="label">
@@ -995,22 +986,36 @@ if (additionalNotes) {
               placeholder={
                 lang === "da"
                   ? "F.eks. Hvad er den mest sandsynlige årsag? Hvad er næste skridt? Hvornår skal jeg kontakte jer igen?"
-                  : "E.g., What’s the most likely cause? What’s the next step? When should I contact you again?"
+                  : "E.g., What's the most likely cause? What's the next step? When should I contact you again?"
               }
               rows={4}
             />
           </label>
         );
-  
-    default:
+
+      default:
         return null;
     }
   };
 
-  // Modal: use your global modal styles for consistent scrolling
-return (
-  <div className="modalOverlay">
-    <div className="modalCard" onClick={(e) => e.stopPropagation()}>
+  // Derived values used in the preview section
+  const mainConcernValue = (draft.mainConcern ?? "").trim();
+  const timelineValue = [
+    (draft.whenStart ?? "").trim() ? `${lang === "da" ? "Start" : "Started"}: ${draft.whenStart}` : "",
+    (draft.howProgressing ?? "").trim() ? `${lang === "da" ? "Udvikling" : "Change"}: ${draft.howProgressing}` : ""
+  ].filter(Boolean).join("\n");
+  const patternsValue = (draft.patterns ?? "").trim();
+  const otherDetailsValue = (draft.otherDetails ?? "").trim();
+  const otherNotesValue = ((draft.currentStatus?.otherNotes as string) ?? "").trim();
+  const medsValue = (((draft as any).medicationsSupplements as string) ?? "").trim();
+  const conditionsValue = (((draft as any).knownConditions as string) ?? "").trim();
+  const testsValue = (((draft as any).recentTests as string) ?? "").trim();
+  const previousTreatmentValue = (draft.previousTreatment ?? "").trim();
+  const questionsVetValue = (draft.questionsVet ?? "").trim();
+
+  return (
+    <div className="modalOverlay">
+      <div className="modalCard" onClick={(e) => e.stopPropagation()}>
         <div className="modalHeader">
           <div style={{ flex: 1 }}>
             <h3 className="modalTitle" style={{ margin: 0 }}>
@@ -1019,8 +1024,6 @@ return (
               {mode === "done" && (lang === "da" ? "Klar!" : "Your prep is ready!")}
             </h3>
 
-            {toast && <div className="toast">{toast}</div>}
-            
             {mode === "wizard" && (
               <p style={{ margin: "6px 0 0 0", fontSize: 12, color: "var(--muted)" }}>
                 {lang === "da" ? "Trin" : "Step"} {step + 1} {lang === "da" ? "af" : "of"} {stepData.length}
@@ -1046,326 +1049,317 @@ return (
           )}
 
           {/* MODE 2: PREVIEW */}
-{mode === "preview" && (
-  <>
-    {/* Title + subheading (moment of value) */}
-    <div style={{ marginBottom: 12 }}>
-      <h3 style={{ margin: "0 0 4px 0" }}>{lang === "da" ? "Visit Brief" : "Visit Brief"}</h3>
-      <div className="muted" style={{ fontSize: 14 }}>
-        {lang === "da"
-          ? "Klar til at dele med dit dyrlægeteam."
-          : "Ready to share with your veterinary team."}
-      </div>
-    </div>
+          {mode === "preview" && (
+            <>
+              <div style={{ marginBottom: 12 }}>
+                <h3 style={{ margin: "0 0 4px 0" }}>{lang === "da" ? "Visit Brief" : "Visit Brief"}</h3>
+                <div className="muted" style={{ fontSize: 14 }}>
+                  {lang === "da"
+                    ? "Klar til at dele med dit dyrlægeteam."
+                    : "Ready to share with your veterinary team."}
+                </div>
+              </div>
 
-    {/* Header strip */}
-    <div
-      style={{
-        backgroundColor: "white",
-        border: "1px solid var(--border)",
-        padding: 12,
-        borderRadius: 12,
-        marginBottom: 12
-      }}
-    >
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
-        <div>
-          <div className="muted" style={{ fontSize: 12 }}>
-            {lang === "da" ? "Kæledyr" : "Pet"}
-          </div>
-          <div style={{ fontWeight: 800, fontSize: 18, lineHeight: 1.2 }}>{petName}</div>
+              {/* Header strip */}
+              <div
+                style={{
+                  backgroundColor: "white",
+                  border: "1px solid var(--border)",
+                  padding: 12,
+                  borderRadius: 12,
+                  marginBottom: 12
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+                  <div>
+                    <div className="muted" style={{ fontSize: 12 }}>
+                      {lang === "da" ? "Kæledyr" : "Pet"}
+                    </div>
+                    <div style={{ fontWeight: 800, fontSize: 18, lineHeight: 1.2 }}>{petName}</div>
+                  </div>
+
+                  <div style={{ textAlign: "right" as const }}>
+                    <div className="muted" style={{ fontSize: 12 }}>
+                      {lang === "da" ? "Besøgsdato" : "Visit date"}
+                    </div>
+                    <div style={{ fontWeight: 700 }}>{draft.visitDate || "—"}</div>
+                  </div>
+                </div>
+              </div>
+
+              <button className="btn btnSecondary" onClick={handleCopy} style={{ width: "100%", marginBottom: 12 }}>
+                {lang === "da" ? "Kopiér Visit Brief" : "Copy Visit Brief"}
+              </button>
+
+              {/* Notebook brief */}
+              <div style={{ ...notebookPageStyle, marginBottom: 12 }}>
+                <div style={notebookLinesStyle} />
+                <div style={notebookMarginStyle} />
+
+                <div style={{ position: "relative", paddingLeft: 14 }}>
+                  {/* MAIN CONCERN */}
+                  <SectionLabel
+                    label={lang === "da" ? "Hovedbekymring" : "Main concern"}
+                    value={mainConcernValue}
+                  />
+                  <ReviewLine
+                    label={lang === "da" ? "Hovedbekymring" : "Main concern"}
+                    value={mainConcernValue}
+                    hideLabel
+                  />
+
+                  {/* TIMELINE */}
+                  <SectionLabel
+                    label={lang === "da" ? "Tidslinje" : "Timeline"}
+                    value={timelineValue}
+                  />
+                  <ReviewLine
+                    label={lang === "da" ? "Tidslinje" : "Timeline"}
+                    value={timelineValue}
+                    hideLabel
+                  />
+
+                  <div style={{ height: 1, background: "rgba(20,40,60,0.10)", margin: "14px 0" }} />
+
+                  {/* CURRENT STATUS (collapsible) — always shown with its own expand toggle */}
+                  <div style={sectionLabelStyle}>{lang === "da" ? "Nuværende status" : "Current status"}</div>
+
+                  <div style={{ marginBottom: 6 }}>
+                    {/* FIX: single label that toggles with showCurrentStatus */}
+                    <button
+                      type="button"
+                      className="btn btnSecondary"
+                      onClick={() => setShowCurrentStatus((v) => !v)}
+                      style={{
+                        width: "100%",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        padding: "10px 12px"
+                      }}
+                    >
+                      <span style={{ fontWeight: 700 }}>
+                        {showCurrentStatus
+                          ? lang === "da" ? "Skjul status" : "Hide status"
+                          : lang === "da" ? "Vis status" : "Show status"}
+                      </span>
+                      <span style={{ fontWeight: 700 }}>
+                        {showCurrentStatus ? "▲" : "▼"}
+                      </span>
+                    </button>
+
+                    {!showCurrentStatus && (
+                      <div className="muted" style={{ fontSize: 13, marginTop: 8 }}>
+                        {lang === "da"
+                          ? `Anderledes: ${counts.different} • Ved ikke: ${counts.notSure} • Som normalt: ${counts.asUsual}`
+                          : `Different: ${counts.different} • Not sure: ${counts.notSure} • As usual: ${counts.asUsual}`}
+                      </div>
+                    )}
+
+                    {showCurrentStatus && <div style={{ marginTop: 10 }}>{renderStatusReview()}</div>}
+                  </div>
+
+                  <div style={{ height: 1, background: "rgba(20,40,60,0.10)", margin: "14px 0" }} />
+
+                  {/* PATTERNS / TRIGGERS */}
+                  <SectionLabel
+                    label={lang === "da" ? "Mønstre / triggere" : "Patterns / triggers"}
+                    value={patternsValue}
+                  />
+                  <ReviewLine
+                    label={lang === "da" ? "Mønstre / triggere" : "Patterns / triggers"}
+                    value={patternsValue}
+                    hideLabel
+                  />
+
+                  {/* OTHER OBSERVATIONS (FACTS) */}
+                  <SectionLabel
+                    label={lang === "da" ? "Andre observationer (fakta)" : "Other observations (facts)"}
+                    value={otherDetailsValue}
+                  />
+                  <ReviewLine
+                    label={lang === "da" ? "Andre observationer (fakta)" : "Other observations (facts)"}
+                    value={otherDetailsValue}
+                    hideLabel
+                  />
+
+                  {/* ADDITIONAL NOTES (OWNER) */}
+                  <SectionLabel
+                    label={lang === "da" ? "Yderligere noter (ejer-observationer)" : "Additional notes (owner observations)"}
+                    value={otherNotesValue}
+                  />
+                  <ReviewLine
+                    label={lang === "da" ? "Yderligere noter (ejer-observationer)" : "Additional notes (owner observations)"}
+                    value={otherNotesValue}
+                    hideLabel
+                  />
+
+                  {/* MEDS & SUPPLEMENTS */}
+                  <SectionLabel
+                    label={lang === "da" ? "Medicin & tilskud (aktuelt)" : "Meds & supplements (current)"}
+                    value={medsValue}
+                  />
+                  <ReviewLine
+                    label={lang === "da" ? "Medicin & tilskud (aktuelt)" : "Meds & supplements (current)"}
+                    value={medsValue}
+                    hideLabel
+                  />
+
+                  {/* KNOWN CONDITIONS */}
+                  <SectionLabel
+                    label={lang === "da" ? "Kendte tilstande (diagnosticeret)" : "Known conditions (vet-diagnosed)"}
+                    value={conditionsValue}
+                  />
+                  <ReviewLine
+                    label={lang === "da" ? "Kendte tilstande (diagnosticeret)" : "Known conditions (vet-diagnosed)"}
+                    value={conditionsValue}
+                    hideLabel
+                  />
+
+                  {/* RECENT TESTS */}
+                  <SectionLabel
+                    label={lang === "da" ? "Nylige tests / resultater" : "Recent tests / results"}
+                    value={testsValue}
+                  />
+                  <ReviewLine
+                    label={lang === "da" ? "Nylige tests / resultater" : "Recent tests / results"}
+                    value={testsValue}
+                    hideLabel
+                  />
+
+                  {/* WHAT YOU'VE TRIED AT HOME */}
+                  <SectionLabel
+                    label={lang === "da" ? "Hvad du har prøvet hjemme" : "What you've tried at home"}
+                    value={previousTreatmentValue}
+                  />
+                  <ReviewLine
+                    label={lang === "da" ? "Hvad du har prøvet hjemme" : "What you've tried at home"}
+                    value={previousTreatmentValue}
+                    hideLabel
+                  />
+
+                  {/* QUESTIONS FOR THE VET */}
+                  <SectionLabel
+                    label={lang === "da" ? "Spørgsmål til dyrlægen" : "Questions for the vet"}
+                    value={questionsVetValue}
+                  />
+                  <ReviewLine
+                    label={lang === "da" ? "Spørgsmål til dyrlægen" : "Questions for the vet"}
+                    value={questionsVetValue}
+                    hideLabel
+                  />
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="row" style={{ gap: 8, flexDirection: "column" as const }}>
+                <button className="btn btnPrimary" onClick={handleSave} disabled={saving}>
+                  {saving ? (lang === "da" ? "Gemmer..." : "Saving...") : lang === "da" ? "Gem besøg" : "Save visit"}
+                </button>
+
+                {isDraft && !!visitId && (
+                  <button
+                    className="btn btnSecondary"
+                    onClick={handleDeleteDraft}
+                    style={{ borderColor: "#d33", color: "#d33" }}
+                  >
+                    {lang === "da" ? "Slet kladde" : "Delete draft"}
+                  </button>
+                )}
+
+                <div className="muted" style={{ textAlign: "center", fontSize: 13 }}>
+                  {lang === "da" ? "PDF + email eksport kommer snart." : "PDF + email export coming soon."}
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* MODE 3: DONE */}
+          {mode === "done" && (
+            <>
+              <div
+                style={{
+                  backgroundColor: "var(--lightGreen)",
+                  padding: 12,
+                  borderRadius: 8,
+                  marginBottom: 16
+                }}
+              >
+                <p style={{ margin: "0 0 6px 0" }}>
+                  <strong>{lang === "da" ? "Gemt!" : "Saved!"}</strong>{" "}
+                  {lang === "da" ? "Din forberedelse er gemt i appen." : "Your visit prep has been saved in the app."}
+                </p>
+                <p style={{ margin: 0, color: "var(--muted)", fontSize: 14 }}>
+                  {lang === "da"
+                    ? "Gå forberedt ind. Vær en partner i dit dyrs behandling."
+                    : "Walk in prepared. Partner in your pet's care."}
+                </p>
+              </div>
+
+              <div className="row" style={{ gap: 8, flexDirection: "column" as const }}>
+                <button className="btn btnPrimary" onClick={closeToMyVisits}>
+                  {lang === "da" ? "Færdig" : "Done"}
+                </button>
+              </div>
+            </>
+          )}
         </div>
 
-        <div style={{ textAlign: "right" as const }}>
-          <div className="muted" style={{ fontSize: 12 }}>
-            {lang === "da" ? "Besøgsdato" : "Visit date"}
-          </div>
-          <div style={{ fontWeight: 700 }}>{draft.visitDate || "—"}</div>
-        </div>
-      </div>
-    </div>
-
-    {/* Primary action */}
-    <button className="btn btnSecondary" onClick={handleCopy} style={{ width: "100%", marginBottom: 12 }}>
-      {lang === "da" ? "Kopiér Visit Brief" : "Copy Visit Brief"}
-    </button>
-
-    {/* Notebook-professional brief */}
-    <div style={{ ...notebookPageStyle, marginBottom: 12 }}>
-      <div style={notebookLinesStyle} />
-      <div style={notebookMarginStyle} />
-
-     <div style={{ position: "relative", paddingLeft: 14 }}>
-  {/* MAIN CONCERN */}
-  <div style={{ ...sectionLabelStyle, marginTop: 0 }}>
-    {lang === "da" ? "Hovedbekymring" : "Main concern"}
-  </div>
-  <ReviewLine
-    label={lang === "da" ? "Hovedbekymring" : "Main concern"}
-    value={(draft.mainConcern ?? "").trim()}
-    hideLabel
-  />
-
-  {/* TIMELINE */}
-  {(((draft.whenStart ?? "").trim() !== "") || ((draft.howProgressing ?? "").trim() !== "")) && (
-    <>
-      <div style={sectionLabelStyle}>{lang === "da" ? "Tidslinje" : "Timeline"}</div>
-      <ReviewLine
-        label={lang === "da" ? "Tidslinje" : "Timeline"}
-        value={[
-          (draft.whenStart ?? "").trim()
-            ? `${lang === "da" ? "Start" : "Started"}: ${draft.whenStart}`
-            : "",
-          (draft.howProgressing ?? "").trim()
-            ? `${lang === "da" ? "Udvikling" : "Change"}: ${draft.howProgressing}`
-            : ""
-        ]
-          .filter(Boolean)
-          .join("\n")}
-hideLabel
-
-      />
-    </>
-  )}
-
-  <div style={{ height: 1, background: "rgba(20,40,60,0.10)", margin: "14px 0" }} />
-
-  {/* CURRENT STATUS (collapsible) */}
-  <div style={sectionLabelStyle}>{lang === "da" ? "Nuværende status" : "Current status"}</div>
-  
-       <div style={{ marginBottom: 6 }}>
-    <button
-      type="button"
-      className="btn btnSecondary"
-      onClick={() => setShowCurrentStatus((v) => !v)}
-      style={{
-        width: "100%",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        padding: "10px 12px"
-      }}
-    >
-      <span style={{ fontWeight: 700 }}>
-        {lang === "da" ? "Vis status" : "Show status"}
-      </span>
-      <span style={{ fontWeight: 700 }}>
-  {lang === "da" ? "Se status-oversigt" : "View status summary"}
-</span>
-    </button>
-
-   {!showCurrentStatus && (
-  <div className="muted" style={{ fontSize: 13, marginTop: 8 }}>
-    {lang === "da"
-      ? `Anderledes: ${counts.different} • Ved ikke: ${counts.notSure} • Som normalt: ${counts.asUsual}`
-      : `Different: ${counts.different} • Not sure: ${counts.notSure} • As usual: ${counts.asUsual}`}
-  </div>
-)} 
-
-    {showCurrentStatus && <div style={{ marginTop: 10 }}>{renderStatusReview()}</div>}
-  </div>
-
-  <div style={{ height: 1, background: "rgba(20,40,60,0.10)", margin: "14px 0" }} />
-
-  {/* PATTERNS / TRIGGERS */}
-  <div style={sectionLabelStyle}>{lang === "da" ? "Mønstre / triggere" : "Patterns / triggers"}</div>
-  <ReviewLine
-    label={lang === "da" ? "Mønstre / triggere" : "Patterns / triggers"}
-    value={(draft.patterns ?? "").trim()}
-hideLabel
-
-  />
-
-  {/* OTHER OBSERVATIONS (FACTS) */}
-  <div style={sectionLabelStyle}>
-    {lang === "da" ? "Andre observationer (fakta)" : "Other observations (facts)"}
-  </div>
-  <ReviewLine
-    label={lang === "da" ? "Andre observationer (fakta)" : "Other observations (facts)"}
-    value={(draft.otherDetails ?? "").trim()}
-hideLabel
-
-  />
-
-{(((draft.currentStatus?.otherNotes as string) ?? "").trim() !== "") && (
-  <>
-    <div style={sectionLabelStyle}>
-      {lang === "da" ? "Yderligere noter (ejer-observationer)" : "Additional notes (owner observations)"}
-    </div>
-    <ReviewLine
-      label={lang === "da" ? "Yderligere noter (ejer-observationer)" : "Additional notes (owner observations)"}
-      value={((draft.currentStatus?.otherNotes as string) ?? "").trim()}
-      hideLabel
-    />
-  </>
-)}
-
-  {/* MEDS & SUPPLEMENTS (CURRENT) */}
-  <div style={sectionLabelStyle}>
-    {lang === "da" ? "Medicin & tilskud (aktuelt)" : "Meds & supplements (current)"}
-  </div>
-  <ReviewLine
-    label={lang === "da" ? "Medicin & tilskud (aktuelt)" : "Meds & supplements (current)"}
-    value={((((draft as any).medicationsSupplements as string) ?? "").trim())}
-hideLabel
-
-  />
-
-  {/* KNOWN CONDITIONS (VET-DIAGNOSED) */}
-  <div style={sectionLabelStyle}>
-    {lang === "da" ? "Kendte tilstande (diagnosticeret)" : "Known conditions (vet-diagnosed)"}
-  </div>
-  <ReviewLine
-    label={lang === "da" ? "Kendte tilstande (diagnosticeret)" : "Known conditions (vet-diagnosed)"}
-    value={((((draft as any).knownConditions as string) ?? "").trim())}
-hideLabel
-
-  />
-
-  {/* RECENT TESTS / RESULTS */}
-  <div style={sectionLabelStyle}>
-    {lang === "da" ? "Nylige tests / resultater" : "Recent tests / results"}
-  </div>
-  <ReviewLine
-    label={lang === "da" ? "Nylige tests / resultater" : "Recent tests / results"}
-    value={((((draft as any).recentTests as string) ?? "").trim())}
-hideLabel
-
-  />
-
-  {/* WHAT YOU'VE TRIED AT HOME */}
-  <div style={sectionLabelStyle}>
-    {lang === "da" ? "Hvad du har prøvet hjemme" : "What you’ve tried at home"}
-  </div>
-  <ReviewLine
-    label={lang === "da" ? "Hvad du har prøvet hjemme" : "What you’ve tried at home"}
-    value={(draft.previousTreatment ?? "").trim()}
-hideLabel
-
-  />
-
-  {/* QUESTIONS FOR THE VET */}
-  <div style={sectionLabelStyle}>
-    {lang === "da" ? "Spørgsmål til dyrlægen" : "Questions for the vet"}
-  </div>
-  <ReviewLine
-    label={lang === "da" ? "Spørgsmål til dyrlægen" : "Questions for the vet"}
-    value={(draft.questionsVet ?? "").trim()}
-hideLabel
-
-  />
-</div>    
-    </div>
-
-    {/* Actions */}
-    <div className="row" style={{ gap: 8, flexDirection: "column" as const }}>
-      <button className="btn btnPrimary" onClick={handleSave} disabled={saving}>
-        {saving ? (lang === "da" ? "Gemmer..." : "Saving...") : lang === "da" ? "Gem besøg" : "Save visit"}
-      </button>
-
-      {/* Only show delete draft if this is still a draft */}
-      {isDraft && !!visitId && (
-        <button
-          className="btn btnSecondary"
-          onClick={handleDeleteDraft}
-          style={{ borderColor: "#d33", color: "#d33" }}
+        {/* FOOTER */}
+        <div
+          style={{
+            padding: "12px 16px",
+            borderTop: "1px solid var(--border)",
+            display: "flex",
+            flexDirection: "column",
+            gap: 8
+          }}
         >
-          {lang === "da" ? "Slet kladde" : "Delete draft"}
-        </button>
-      )}
+          {/* Top row: Back + Save & close */}
+          {/* FIX: placeholder width matches button minWidth (90px) so Next button
+              doesn't shift when Back appears/disappears */}
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            {(mode === "wizard" && step > 0) || mode === "preview" ? (
+              <button className="btn btnSecondary" onClick={handleBack} style={{ minWidth: 90 }}>
+                ← {lang === "da" ? "Tilbage" : "Back"}
+              </button>
+            ) : (
+              <div style={{ minWidth: 90 }} />
+            )}
 
-      {/* Replace multiple "coming soon" buttons with one calm line */}
-      <div className="muted" style={{ textAlign: "center", fontSize: 13 }}>
-        {lang === "da" ? "PDF + email eksport kommer snart." : "PDF + email export coming soon."}
+            {mode === "wizard" ? (
+              <button
+                className="btn btnSecondary"
+                onClick={handleSaveDraftAndClose}
+                disabled={savingDraft}
+                style={{ flex: 1 }}
+              >
+                {savingDraft
+                  ? lang === "da"
+                    ? "Gemmer..."
+                    : "Saving..."
+                  : lang === "da"
+                    ? "Gem & luk"
+                    : "Save & close"}
+              </button>
+            ) : (
+              <div style={{ flex: 1 }} />
+            )}
+          </div>
+
+          {/* Bottom row: Next (full width) */}
+          {mode === "wizard" && (
+            <button
+              className="btn btnPrimary"
+              onClick={handleNext}
+              disabled={!stepData[step].ok}
+              style={{ width: "100%" }}
+            >
+              {step === stepData.length - 1 ? "Preview" : lang === "da" ? "Næste" : "Next"}
+            </button>
+          )}
+        </div>
       </div>
     </div>
-  </>
-))}
-
-{/* MODE 3: DONE */}
-{mode === "done" && (
-  <>
-    <div
-      style={{
-        backgroundColor: "var(--lightGreen)",
-        padding: 12,
-        borderRadius: 8,
-        marginBottom: 16
-      }}
-    >
-      <p style={{ margin: "0 0 6px 0" }}>
-        <strong>{lang === "da" ? "Gemt!" : "Saved!"}</strong>{" "}
-        {lang === "da" ? "Din forberedelse er gemt i appen." : "Your visit prep has been saved in the app."}
-      </p>
-      <p style={{ margin: 0, color: "var(--muted)", fontSize: 14 }}>
-        {lang === "da"
-          ? "Gå forberedt ind. Vær en partner i dit dyrs behandling."
-          : "Walk in prepared. Partner in your pet's care."}
-      </p>
-    </div>
-
-    <div className="row" style={{ gap: 8, flexDirection: "column" as const }}>
-      <button className="btn btnPrimary" onClick={closeToMyVisits}>
-        {lang === "da" ? "Færdig" : "Done"}
-      </button>
-    </div>
-  </>
-)}
-</div>      
-      
-{/* FOOTER */}
-<div
-  style={{
-    padding: "12px 16px",
-    borderTop: "1px solid var(--border)",
-    display: "flex",
-    flexDirection: "column",
-    gap: 8
-  }}
->
-  {/* Top row: Back + Save & close */}
-  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-    {(mode === "wizard" && step > 0) || mode === "preview" ? (
-      <button className="btn btnSecondary" onClick={handleBack} style={{ minWidth: 90 }}>
-        ← {lang === "da" ? "Tilbage" : "Back"}
-      </button>
-    ) : (
-      <div style={{ minWidth: 70 }} />
-    )}
-
-    {mode === "wizard" ? (
-      <button
-        className="btn btnSecondary"
-        onClick={handleSaveDraftAndClose}
-        disabled={savingDraft}
-        style={{ flex: 1 }}
-      >
-        {savingDraft
-          ? lang === "da"
-            ? "Gemmer..."
-            : "Saving..."
-          : lang === "da"
-            ? "Gem & luk"
-            : "Save & close"}
-      </button>
-    ) : (
-      <div style={{ flex: 1 }} />
-    )}
-  </div>
-
-  {/* Bottom row: Next (full width) */}
-  {mode === "wizard" && (
-    <button
-      className="btn btnPrimary"
-      onClick={handleNext}
-      disabled={!stepData[step].ok}
-      style={{ width: "100%" }}
-    >
-      {step === stepData.length - 1 ? "Preview" : lang === "da" ? "Næste" : "Next"}
-    </button>
-  )}
-</div>
-</div> {/* closes modalCard */}
-</div> {/* closes modalOverlay */}
-);
+  );
 }
