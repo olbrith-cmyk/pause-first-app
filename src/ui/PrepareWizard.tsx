@@ -1342,12 +1342,20 @@ hideLabel
           )}
 
           {mode === "wizard" && (
-  <div style={{ display: "flex", gap: 8, flex: 1 }}>
+  <div
+    style={{
+      display: "flex",
+      gap: 8,
+      flex: 1,
+      flexWrap: "wrap",
+      justifyContent: "flex-end"
+    }}
+  >
     <button
       className="btn btnSecondary"
       onClick={handleSaveDraftAndClose}
       disabled={savingDraft}
-      style={{ flex: 0, minWidth: 140 }}
+      style={{ flex: "1 1 160px" }}
     >
       {savingDraft
         ? lang === "da"
@@ -1362,19 +1370,16 @@ hideLabel
       className="btn btnPrimary"
       onClick={handleNext}
       disabled={!stepData[step].ok}
-      style={{ flex: 1, minWidth: 120 }}
+      style={{ flex: "1 1 140px" }}
     >
       {step === stepData.length - 1
-        ? lang === "da"
-          ? "Preview"
-          : "Preview"
+        ? "Preview"
         : lang === "da"
           ? "Næste"
           : "Next"}
     </button>
   </div>
 )}
-
           {mode === "done" && (
             <button className="btn btnPrimary" onClick={closeToMyVisits} style={{ flex: 1, minWidth: 120 }}>
               {lang === "da" ? "Luk" : "Close"}
