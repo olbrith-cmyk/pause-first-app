@@ -1288,7 +1288,7 @@ hideLabel
       </div>
     </div>
   </>
-)}
+))}
 
           {/* MODE 3: DONE */}
           {mode === "done" && (
@@ -1372,7 +1372,7 @@ hideLabel
     >
       {step === stepData.length - 1 ? "Preview" : lang === "da" ? "Næste" : "Next"}
     </button>
-  ))}
+  )}
 </div>
 </div> {/* closes modalCard */}
 </div> {/* closes modalOverlay */}
