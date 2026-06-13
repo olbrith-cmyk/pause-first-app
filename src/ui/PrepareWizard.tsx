@@ -1322,55 +1322,40 @@ hideLabel
           )}
         </div>
 
-        {/* FOOTER */}
-        <div
-          style={{
-            padding: "12px 16px",
-            borderTop: "1px solid var(--border)",
-            display: "flex",
-            gap: 8,
-            justifyContent: "space-between",
-            alignItems: "center"
-          }}
-        >
-          {(mode === "wizard" && step > 0) || mode === "preview" ? (
-            <button className="btn btnSecondary" onClick={handleBack} style={{ flex: 0, minWidth: 80 }}>
-              ← {lang === "da" ? "Tilbage" : "Back"}
-            </button>
-          ) : (
-            <div style={{ flex: 0, minWidth: 80 }} />
-          )}
+        {/* LEFT: Back (only in wizard/preview) */}
+{(mode === "wizard" && step > 0) || mode === "preview" ? (
+  <button className="btn btnSecondary" onClick={handleBack} style={{ minWidth: 90 }}>
+    ← {lang === "da" ? "Tilbage" : "Back"}
+  </button>
+) : (
+  <div style={{ minWidth: 70 }} />
+)}
 
-          {mode === "wizard" && (
-  <div
-    style={{
-      display: "flex",
-      gap: 8,
-      flex: 1,
-      flexWrap: "wrap",
-      justifyContent: "flex-end"
-    }}
-  >
-    <button
-      className="btn btnSecondary"
-      onClick={handleSaveDraftAndClose}
-      disabled={savingDraft}
-      style={{ flex: "1 1 160px" }}
-    >
-      {savingDraft
-        ? lang === "da"
-          ? "Gemmer..."
-          : "Saving..."
-        : lang === "da"
-          ? "Gem & luk"
-          : "Save & close"}
-    </button>
+{/* RIGHT: Wizard actions */}
+{mode === "wizard" && (
+  <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8, alignItems: "stretch" }}>
+    <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+      <button
+        className="btn btnSecondary"
+        onClick={handleSaveDraftAndClose}
+        disabled={savingDraft}
+        style={{ flex: 1 }}
+      >
+        {savingDraft
+          ? lang === "da"
+            ? "Gemmer..."
+            : "Saving..."
+          : lang === "da"
+            ? "Gem & luk"
+            : "Save & close"}
+      </button>
+    </div>
 
     <button
       className="btn btnPrimary"
       onClick={handleNext}
       disabled={!stepData[step].ok}
-      style={{ flex: "1 1 140px" }}
+      style={{ width: "100%" }}
     >
       {step === stepData.length - 1
         ? "Preview"
@@ -1380,13 +1365,9 @@ hideLabel
     </button>
   </div>
 )}
-          {mode === "done" && (
-            <button className="btn btnPrimary" onClick={closeToMyVisits} style={{ flex: 1, minWidth: 120 }}>
-              {lang === "da" ? "Luk" : "Close"}
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
+
+{mode === "done" && (
+  <button className="btn btnPrimary" onClick={closeToMyVisits} style={{ flex: 1, minWidth: 120 }}>
+    {lang === "da" ? "Luk" : "Close"}
+  </button>
+)}
