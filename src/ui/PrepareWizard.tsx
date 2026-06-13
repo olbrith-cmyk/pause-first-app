@@ -1187,23 +1187,18 @@ hideLabel
 
   />
 
-       {(() => {
-  const additionalNotes = ((draft.currentStatus?.otherNotes as string) ?? "").trim();
-  if (!additionalNotes) return null;
-
-  return (
-    <>
-      <div style={sectionLabelStyle}>
-        {lang === "da" ? "Yderligere noter (ejer-observationer)" : "Additional notes (owner observations)"}
-      </div>
-      <ReviewLine
-        label={lang === "da" ? "Yderligere noter (ejer-observationer)" : "Additional notes (owner observations)"}
-        value={additionalNotes}
-        hideLabel
-      />
-    </>
-  );
-})()}
+{(((draft.currentStatus?.otherNotes as string) ?? "").trim() !== "") && (
+  <>
+    <div style={sectionLabelStyle}>
+      {lang === "da" ? "Yderligere noter (ejer-observationer)" : "Additional notes (owner observations)"}
+    </div>
+    <ReviewLine
+      label={lang === "da" ? "Yderligere noter (ejer-observationer)" : "Additional notes (owner observations)"}
+      value={((draft.currentStatus?.otherNotes as string) ?? "").trim()}
+      hideLabel
+    />
+  </>
+)}
 
   {/* MEDS & SUPPLEMENTS (CURRENT) */}
   <div style={sectionLabelStyle}>
