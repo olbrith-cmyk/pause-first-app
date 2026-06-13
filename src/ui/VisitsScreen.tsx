@@ -315,7 +315,7 @@ const handleDeleteVisit = async (visitId: string) => {
         </h4>
         <div className="muted" style={{ marginTop: 4 }}>
           {lang === "da"
-            ? "Færdige Visit Briefs (ikke kladder)"
+            ? "Færdige besøgsnotater (ikke kladder)"
             : "Finished Visit Briefs (not drafts)"}
         </div>
       </div>
@@ -600,7 +600,7 @@ const handleDeleteVisit = async (visitId: string) => {
                 alignItems: "center",
               }}
             >
-              <h3 style={{ margin: 0 }}>{lang === "da" ? "Vælg kæledyr" : "Choose a Pet"}</h3>
+              <h3 style={{ margin: 0 }}>{lang === "da" ? "Vælg et dyr" : "Choose an Animal"}</h3>
               <button
                 className="btnClose"
                 onClick={() => {
@@ -620,7 +620,7 @@ const handleDeleteVisit = async (visitId: string) => {
               {pets.length > 0 && (
                 <>
                   <h4 style={{ marginTop: 0, marginBottom: 12 }}>
-                    {lang === "da" ? "Dine kæledyr" : "Your Pets"}
+                    {lang === "da" ? "Dine dyr" : "Your Animals"}
                   </h4>
 
                   <div className="stack" style={{ marginBottom: 20 }}>
@@ -653,7 +653,7 @@ const handleDeleteVisit = async (visitId: string) => {
 </button>
 
                 <button className="btn btnSecondary" onClick={handleContinueWithoutProfile}>
-                  {lang === "da" ? "Fortsæt uden kæledyrsprofil" : "Continue without pet profile"}
+                  {lang === "da" ? "Fortsæt uden dyreprofil" : "Continue without animal profile"}
                 </button>
 
                 <button
@@ -703,13 +703,13 @@ const handleDeleteVisit = async (visitId: string) => {
         <div className="panel">
           <div className="muted">
             {lang === "da"
-              ? "Vælg et kæledyr for at starte forberedelsen."
-              : "Choose a pet to start preparing."}
+              ? "Vælg et dyr for at starte forberedelsen."
+              : "Choose an animal to start preparing."}
           </div>
 
           <div className="row" style={{ marginTop: 12, gap: 8 }}>
             <button className="btn btnPrimary" onClick={() => setShowChoosePetModal(true)}>
-              {lang === "da" ? "Vælg kæledyr" : "Choose Pet"}
+              {lang === "da" ? "Vælg dyr" : "Choose Animal"}
             </button>
 
             <button
