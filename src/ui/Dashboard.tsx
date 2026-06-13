@@ -153,7 +153,7 @@ const [animalsStartInAddMode, setAnimalsStartInAddMode] = useState(false);
 
                   <div className="homeCtaHeroText">
                     <div className="homeCtaHeroMain">
-                      {lang === "da" ? "Start en Visit Brief" : "Start a Visit Brief"}
+                      {lang === "da" ? "Start et besøgsnotat" : "Start a Visit Brief"}
                     </div>
                     <div className="homeCtaHeroSub">
                       {lang === "da" ? "5–10 minutter" : "5–10 minutes"}
@@ -177,7 +177,7 @@ const [animalsStartInAddMode, setAnimalsStartInAddMode] = useState(false);
                     onClick={() => setMode("myVisits")}
                     className="btn btnSecondary homeSecondaryPill"
                   >
-                    {lang === "da" ? "Visit briefs" : "Visit briefs"}
+                    {lang === "da" ? "Besøgsnotater" : "Visit briefs"}
                   </button>
                 </div>
               </div>
