@@ -60,7 +60,7 @@ export default function PrepareWizard({
   const autosaveTimer = useRef<number | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [draft, setDraft] = useState<Visit>(
-   {
+  const [draft, setDraft] = useState<Visit>({
   userId,
   petId,
   visitDate: "",
@@ -75,12 +75,11 @@ export default function PrepareWizard({
   currentStatus: makeEmptyStatus(),
   status: "draft",
 
-  // Step 7 additions (kept compatible even if Visit type isn't updated yet)
-  ...( {
-    medicationsSupplements: "",
-    knownConditions: "",
-    recentTests: ""
-  } as any )
+  // Step 7 additions
+  medicationsSupplements: "",
+  knownConditions: "",
+  recentTests: ""
+} as any);
 } );
 
   const isDraft = (draft.status ?? "final") === "draft";
