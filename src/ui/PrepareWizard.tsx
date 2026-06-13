@@ -59,7 +59,6 @@ export default function PrepareWizard({
   const didInit = useRef(false);
   const autosaveTimer = useRef<number | null>(null);
   const [toast, setToast] = useState<string | null>(null);
-  const [draft, setDraft] = useState<Visit>(
   const [draft, setDraft] = useState<Visit>({
   userId,
   petId,
@@ -80,8 +79,7 @@ export default function PrepareWizard({
   knownConditions: "",
   recentTests: ""
 } as any);
-} );
-
+  
   const isDraft = (draft.status ?? "final") === "draft";
 
   // Centralized close behavior (Choice #3)
