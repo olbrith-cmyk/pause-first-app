@@ -1319,8 +1319,6 @@ hideLabel
     </div>
   </>
 )}
-</div>
-
 {/* FOOTER */}
 <div
   style={{
