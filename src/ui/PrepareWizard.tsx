@@ -1321,20 +1321,28 @@ hideLabel
             </>
           )}
         </div>
+      
+{/* FOOTER */}
+<div
+  style={{
+    padding: "12px 16px",
+    borderTop: "1px solid var(--border)",
+    display: "flex",
+    flexDirection: "column",
+    gap: 8
+  }}
+>
+  {/* Top row: Back + Save & close */}
+  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+    {(mode === "wizard" && step > 0) || mode === "preview" ? (
+      <button className="btn btnSecondary" onClick={handleBack} style={{ minWidth: 90 }}>
+        ← {lang === "da" ? "Tilbage" : "Back"}
+      </button>
+    ) : (
+      <div style={{ minWidth: 70 }} />
+    )}
 
-        {/* LEFT: Back (only in wizard/preview) */}
-{(mode === "wizard" && step > 0) || mode === "preview" ? (
-  <button className="btn btnSecondary" onClick={handleBack} style={{ minWidth: 90 }}>
-    ← {lang === "da" ? "Tilbage" : "Back"}
-  </button>
-) : (
-  <div style={{ minWidth: 70 }} />
-)}
-
-{/* RIGHT: Wizard actions */}
-{mode === "wizard" && (
-  <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8, alignItems: "stretch" }}>
-    <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+    {mode === "wizard" ? (
       <button
         className="btn btnSecondary"
         onClick={handleSaveDraftAndClose}
@@ -1349,25 +1357,20 @@ hideLabel
             ? "Gem & luk"
             : "Save & close"}
       </button>
-    </div>
+    ) : (
+      <div style={{ flex: 1 }} />
+    )}
+  </div>
 
+  {/* Bottom row: Next (full width) */}
+  {mode === "wizard" && (
     <button
       className="btn btnPrimary"
       onClick={handleNext}
       disabled={!stepData[step].ok}
       style={{ width: "100%" }}
     >
-      {step === stepData.length - 1
-        ? "Preview"
-        : lang === "da"
-          ? "Næste"
-          : "Next"}
+      {step === stepData.length - 1 ? "Preview" : lang === "da" ? "Næste" : "Next"}
     </button>
-  </div>
-)}
-
-{mode === "done" && (
-  <button className="btn btnPrimary" onClick={closeToMyVisits} style={{ flex: 1, minWidth: 120 }}>
-    {lang === "da" ? "Luk" : "Close"}
-  </button>
-)}
+  )
+</div>
