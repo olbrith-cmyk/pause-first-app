@@ -1288,7 +1288,7 @@ hideLabel
       </div>
     </div>
   </>
-)}
+))}
 
 {/* MODE 3: DONE */}
 {mode === "done" && (
