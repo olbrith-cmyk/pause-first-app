@@ -96,7 +96,7 @@ const en: Translations = {
 
   // Auth
   welcome: "Welcome",
-  accountInfo: "Create an account or log in to save your pets and visits.",
+  accountInfo: "Create an account or log in to save your animals and visits.",
   email: "Email",
   password: "Password",
   createPassword: "Create a password",
@@ -107,8 +107,8 @@ const en: Translations = {
   backToLogin: "Back to login",
 
   // Pets
-  myPets: "My Pets",
-  petName: "Pet's Name",
+  myPets: "My Animals",
+  petName: "Animal's Name",
   species: "Species",
   age: "Age",
   sex: "Sex",
@@ -120,8 +120,8 @@ const en: Translations = {
   clinic: "Clinic",
   emergencyContact: "Emergency Contact",
   notes: "Notes",
-  addPet: "Add Pet",
-  savePet: "Save Pet",
+  addPet: "Add Animal",
+  savePet: "Save Animal",
   editPet: "Edit",
   deletePet: "Delete",
 
@@ -138,7 +138,7 @@ const en: Translations = {
   questionsVet: "Questions for Your Veterinarian",
   savePrep: "Save Visit Preparation",
   clearForm: "Clear Form",
-  selectPet: "Select pet",
+  selectPet: "Select animal",
   update: "Update",
   save: "Save",
   delete: "Delete",
@@ -182,7 +182,7 @@ const da: Translations = {
 
   // Auth
   welcome: "Velkommen",
-  accountInfo: "Opret en konto eller log ind for at gemme dine kæledyr og besøg.",
+  accountInfo: "Opret en konto eller log ind for at gemme dine dyr og besøg.",
   email: "E-mail",
   password: "Adgangskode",
   createPassword: "Opret en adgangskode",
@@ -193,8 +193,8 @@ const da: Translations = {
   backToLogin: "Tilbage til login",
 
   // Pets
-  myPets: "Mine kæledyr",
-  petName: "Kæledyrets navn",
+  myPets: "Mine dyr",
+  petName: "Dyrets navn",
   species: "Art",
   age: "Alder",
   sex: "Køn",
@@ -206,8 +206,8 @@ const da: Translations = {
   clinic: "Klinik",
   emergencyContact: "Nødkontakt",
   notes: "Noter",
-  addPet: "Tilføj kæledyr",
-  savePet: "Gem kæledyr",
+  addPet: "Tilføj dyr",
+  savePet: "Gem dyr",
   editPet: "Rediger",
   deletePet: "Slet",
 
@@ -218,13 +218,13 @@ const da: Translations = {
   mainConcern: "Hovedbekymring — Hvad bragte dig herind i dag?",
   whenStart: "Hvornår startede det?",
   howProgressing: "Hvordan udvikler det sig?",
-  patterns: "Mønstre eller triggere",
+  patterns: "Mønstre eller udløsende faktorer",
   associatedSigns: "Tilknyttede tegn (Hvad er anderledes?)",
   previousTreatment: "Tidligere behandling",
   questionsVet: "Spørgsmål til dyrlægen",
   savePrep: "Gem besøgsforberedelse",
   clearForm: "Ryd formular",
-  selectPet: "Vælg kæledyr",
+  selectPet: "Vælg dyr",
   update: "Opdater",
   save: "Gem",
   delete: "Slet",
