@@ -1288,40 +1288,39 @@ hideLabel
       </div>
     </div>
   </>
-))}
+)}
 
-          {/* MODE 3: DONE */}
-          {mode === "done" && (
-            <>
-              <div
-                style={{
-                  backgroundColor: "var(--lightGreen)",
-                  padding: 12,
-                  borderRadius: 8,
-                  marginBottom: 16
-                }}
-              >
-                <p style={{ margin: "0 0 6px 0" }}>
-                  <strong>{lang === "da" ? "Gemt!" : "Saved!"}</strong>{" "}
-                  {lang === "da" ? "Din forberedelse er gemt i appen." : "Your visit prep has been saved in the app."}
-                </p>
-                <p style={{ margin: 0, color: "var(--muted)", fontSize: 14 }}>
-                  {lang === "da"
-                    ? "Gå forberedt ind. Vær en partner i dit dyrs behandling."
-                    : "Walk in prepared. Partner in your pet's care."}
-                </p>
-              </div>
+{/* MODE 3: DONE */}
+{mode === "done" && (
+  <>
+    <div
+      style={{
+        backgroundColor: "var(--lightGreen)",
+        padding: 12,
+        borderRadius: 8,
+        marginBottom: 16
+      }}
+    >
+      <p style={{ margin: "0 0 6px 0" }}>
+        <strong>{lang === "da" ? "Gemt!" : "Saved!"}</strong>{" "}
+        {lang === "da" ? "Din forberedelse er gemt i appen." : "Your visit prep has been saved in the app."}
+      </p>
+      <p style={{ margin: 0, color: "var(--muted)", fontSize: 14 }}>
+        {lang === "da"
+          ? "Gå forberedt ind. Vær en partner i dit dyrs behandling."
+          : "Walk in prepared. Partner in your pet's care."}
+      </p>
+    </div>
 
-              <div className="row" style={{ gap: 8, flexDirection: "column" as const }}>
-                <button className="btn btnPrimary" onClick={closeToMyVisits}>
-                  {lang === "da" ? "Færdig" : "Done"}
-                </button>
+    <div className="row" style={{ gap: 8, flexDirection: "column" as const }}>
+      <button className="btn btnPrimary" onClick={closeToMyVisits}>
+        {lang === "da" ? "Færdig" : "Done"}
+      </button>
+    </div>
+  </>
+)}
+</div>
 
-              </div>
-            </>
-          )}
-        </div>
-      
 {/* FOOTER */}
 <div
   style={{
