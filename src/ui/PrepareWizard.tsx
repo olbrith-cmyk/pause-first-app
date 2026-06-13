@@ -5,13 +5,13 @@ import type { CurrentStatus, TriState, Visit } from "../firestore";
 import { addVisit, getVisitById, updateVisit, deleteVisitFully } from "../firestore";
 import TriToggle from "./TriToggle";
 
-// FIX: removed unused `mode` from Props (was declared but silently shadowed by local state)
 type Props = {
   lang: Lang;
   userId: string;
   petId: string;
   petName: string;
   visitId?: string;
+  mode?: "prepare";
   onClose: () => void;
   onComplete?: () => void | Promise<void>;
   onNavigateAfterClose?: (target: "home" | "myVisits") => void;
