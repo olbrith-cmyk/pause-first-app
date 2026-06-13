@@ -177,7 +177,7 @@ const [animalsStartInAddMode, setAnimalsStartInAddMode] = useState(false);
                     onClick={() => setMode("myVisits")}
                     className="btn btnSecondary homeSecondaryPill"
                   >
-                    {lang === "da" ? "Besøgsnotater" : "Visit briefs"}
+                    {lang === "da" ? "Mine Besøg" : "My Visits"}
                   </button>
                 </div>
               </div>
