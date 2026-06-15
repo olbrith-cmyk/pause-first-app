@@ -350,55 +350,39 @@ const handleDeleteVisit = async (visitId: string) => {
 
           {openVisit && (
             <div className="panel">
-              <div className="row rowWrap" style={{ marginBottom: 12 }}>
-                <button
-                  className="btn btnSecondary"
-                  onClick={() => {
-                    setOpenVisitId(null);
-                    setOpenNote(null);
-                  }}
-                >
-                  ← {t.back}
-                </button>
+                <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
+  <button
+    className="btn btnSecondary btnSmall"
+    style={{ flex: 1 }}
+    onClick={() => {
+      setEditingVisitId(openVisit.id!);
+      setSelectedPetForWizard(openPet ?? null);
+      setShowWizard(true);
+    }}
+  >
+    {(openVisit.status ?? "final") === "draft"
+      ? (lang === "da" ? "Fortsæt kladde" : "Continue")
+      : (lang === "da" ? "Redigér" : "Edit")}
+  </button>
 
-                <button
-                  className="btn btnSecondary"
-                  onClick={() => {
-                    setEditingVisitId(openVisit.id!);
-                    setSelectedPetForWizard(openPet ?? null);
-                    setShowWizard(true);
-                  }}
-                >
-                  {(openVisit.status ?? "final") === "draft"
-                    ? lang === "da"
-                      ? "Fortsæt kladde"
-                      : "Continue draft"
-                    : lang === "da"
-                      ? "Redigér forberedelse"
-                      : "Edit Preparation"}
-                </button>
+  <button
+    className="btn btnSecondary btnSmall"
+    style={{ flex: 1 }}
+    onClick={async () => {
+      await loadNoteForVisit(openVisit.id!);
+    }}
+  >
+    {lang === "da" ? "Noter" : "Notes"}
+  </button>
 
-                <button
-                  className="btn btnSecondary"
-                  onClick={async () => {
-                    await loadNoteForVisit(openVisit.id!);
-                  }}
-                >
-                  {lang === "da" ? "Redigér besøgsnoter" : "Edit Visit Notes"}
-                </button>
-              </div>
-
-              <button
-  className="btn btnSecondary"
-  onClick={() => handleDeleteVisit(openVisit.id!)}
-  style={{ borderColor: "#d33", color: "#d33" }}
->
-    {
-  isDraft(openVisit)
-    ? (lang === "da" ? "Slet kladde" : "Delete draft")
-    : (lang === "da" ? "Slet besøg" : "Delete visit")
-}            
-</button>
+  <button
+    className="btn btnSecondary btnSmall btnDanger"
+    style={{ flex: 1 }}
+    onClick={() => handleDeleteVisit(openVisit.id!)}
+  >
+    {lang === "da" ? "Slet" : "Delete"}
+  </button>
+</div>
 
               <div className="panelHeader">
                 <h4 style={{ margin: 0 }}>
