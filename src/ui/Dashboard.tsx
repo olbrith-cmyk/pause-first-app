@@ -51,18 +51,26 @@ export default function Dashboard({
 
   // Tracks PrepareWizard open state (even when launched from My Visits)
   const [wizardOpen, setWizardOpen] = useState(false);
-const [animalsStartInAddMode, setAnimalsStartInAddMode] = useState(false);
+  const [animalsStartInAddMode, setAnimalsStartInAddMode] = useState(false);
+
+  // NEW: track whether a visit detail is open inside VisitsScreen
+  const [openVisitIdFromVisits, setOpenVisitIdFromVisits] = useState<string | null>(null);
+
+  // NEW: signal to VisitsScreen to "go back" (close open visit)
+  const [backSignal, setBackSignal] = useState(0);
+
   const anyModalOpen = showEmergencyGuide || showPrivacyPolicy || showMedicalDisclaimer;
 
   const hideBottomDock =
     mode === "home" || mode === "prepare" || anyModalOpen || menuOpen || wizardOpen;
 
   const handlePrepareClick = () => setMode("prepare");
+
   const goToAnimals = (openForm?: boolean) => {
-  setAnimalsStartInAddMode(!!openForm);
-  setMode("pets");
-};
-  
+    setAnimalsStartInAddMode(!!openForm);
+    setMode("pets");
+  };
+
   const toggleLang = () => {
     if (!onLangChange) return;
     onLangChange(lang === "en" ? "da" : "en");
@@ -80,6 +88,16 @@ const [animalsStartInAddMode, setAnimalsStartInAddMode] = useState(false);
 
   // Keep email “used” (prevents strict lint/ts configs from complaining)
   const _email = email;
+
+  // NEW: unified handler for the footer "My visits" button
+  const handleMyVisitsNav = () => {
+    // If we're already on My Visits AND a visit detail is open, act like Back
+    if (mode === "myVisits" && openVisitIdFromVisits) {
+      setBackSignal((n) => n + 1);
+      return;
+    }
+    setMode("myVisits");
+  };
 
   return (
     <div className="appShell">
@@ -185,37 +203,43 @@ const [animalsStartInAddMode, setAnimalsStartInAddMode] = useState(false);
           </div>
         )}
 
-       {mode === "pets" && (
-  <PetsScreen
-    lang={lang}
-    userId={userId}
-    startInAddMode={animalsStartInAddMode}
-    onEnteredAddMode={() => setAnimalsStartInAddMode(false)}
-    onGoHome={() => setMode("home")}
-  />
-)} 
+        {mode === "pets" && (
+          <PetsScreen
+            lang={lang}
+            userId={userId}
+            startInAddMode={animalsStartInAddMode}
+            onEnteredAddMode={() => setAnimalsStartInAddMode(false)}
+            onGoHome={() => setMode("home")}
+          />
+        )}
 
         {mode === "myVisits" && (
-  <VisitsScreen
-    lang={lang}
-    userId={userId}
-    mode="myVisits"
-    onWizardOpenChange={(open) => setWizardOpen(open)}
-    onGoToAnimals={() => goToAnimals(true)}
-    onGoHome={() => setMode("home")}
-  />
-)}
+          <VisitsScreen
+            lang={lang}
+            userId={userId}
+            mode="myVisits"
+            onWizardOpenChange={(open) => setWizardOpen(open)}
+            onGoToAnimals={() => goToAnimals(true)}
+            onGoHome={() => setMode("home")}
+            // NEW:
+            onOpenVisitChange={setOpenVisitIdFromVisits}
+            backSignal={backSignal}
+          />
+        )}
 
-{mode === "prepare" && (
-  <VisitsScreen
-    lang={lang}
-    userId={userId}
-    mode="prepare"
-    onWizardOpenChange={(open) => setWizardOpen(open)}
-    onGoToAnimals={() => goToAnimals(true)}
-    onGoHome={() => setMode("home")}
-  />
-)}
+        {mode === "prepare" && (
+          <VisitsScreen
+            lang={lang}
+            userId={userId}
+            mode="prepare"
+            onWizardOpenChange={(open) => setWizardOpen(open)}
+            onGoToAnimals={() => goToAnimals(true)}
+            onGoHome={() => setMode("home")}
+            // NEW (safe to pass even if prepare mode doesn't use it much):
+            onOpenVisitChange={setOpenVisitIdFromVisits}
+            backSignal={backSignal}
+          />
+        )}
       </main>
 
       {/* BOTTOM NAV (hide on home, and hide when any modal/menu/wizard is open) */}
@@ -227,66 +251,9 @@ const [animalsStartInAddMode, setAnimalsStartInAddMode] = useState(false);
             </button>
 
             <div className="bottomDockGrid">
-              <button onClick={() => goToAnimals(false)}  className="btn btnSecondary">
+              <button onClick={() => goToAnimals(false)} className="btn btnSecondary">
                 {t.myPets}
               </button>
 
-              <button onClick={() => setMode("myVisits")} className="btn btnSecondary">
-                {lang === "da" ? "Mine besøg" : "My visits"}
-              </button>
-
-              <button
-                onClick={() => setMode("home")}
-                className="btn btnSecondary bottomDockHome"
-              >
-                {lang === "da" ? "Hjem" : "Home"}
-              </button>
-            </div>
-          </div>
-        </footer>
-      )}
-
-      {/* HAMBURGER MENU */}
-      <HamburgerMenu
-        lang={lang}
-        isOpen={menuOpen}
-        onClose={() => setMenuOpen(false)}
-        onLogout={onLogout}
-        onDeleteAccount={onDeleteAccount}
-        onEmergencyGuide={() => {
-          setMenuOpen(false);
-          setShowEmergencyGuide(true);
-        }}
-        onMedicalDisclaimer={() => {
-          setMenuOpen(false);
-          setShowMedicalDisclaimer(true);
-        }}
-        onPrivacyPolicy={() => {
-          setMenuOpen(false);
-          setShowPrivacyPolicy(true);
-        }}
-        onMyPets={() => {
-          setMode("pets");
-          setMenuOpen(false);
-        }}
-        onMyVisits={() => {
-          setMode("myVisits");
-          setMenuOpen(false);
-        }}
-      />
-
-      {/* REAL MODALS */}
-      {showEmergencyGuide && (
-        <EmergencyGuide lang={lang} onClose={() => setShowEmergencyGuide(false)} />
-      )}
-
-      {showMedicalDisclaimer && (
-        <MedicalDisclaimer lang={lang} onClose={() => setShowMedicalDisclaimer(false)} />
-      )}
-
-      {showPrivacyPolicy && (
-        <PrivacyPolicy lang={lang} onClose={() => setShowPrivacyPolicy(false)} />
-      )}
-    </div>
-  );
-}
+              <button onClick={handleMyVisitsNav} className="btn btnSecondary">
+                {lang === "da" ? "Mine besøg" : "My visits
