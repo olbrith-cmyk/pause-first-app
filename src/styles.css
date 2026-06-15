@@ -325,6 +325,20 @@ button {
   color: #0f3460;
 }
 
+/* Compact buttons for crowded areas (top action row) */
+.btnSmall {
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 14px;
+}
+
+/* Danger outline variant (keeps Secondary look but red text/border) */
+.btnDangerOutline {
+  border-color: #d33 !important;
+  color: #d33 !important;
+}
+
 /* Alerts */
 .alert {
   padding: 12px 14px;
