@@ -87,6 +87,16 @@ useEffect(() => {
   onWizardOpenChange?.(showWizard);
 }, [showWizard, onWizardOpenChange]);
 
+  useEffect(() => {
+  if (!backSignal) return;
+  if (!openVisitId) return;
+
+  // Close the open visit details (acts like Back)
+  setOpenVisitId(null);
+  onOpenVisitChange?.(null);
+  setOpenNote(null);
+}, [backSignal]); // intentionally only depends on the signal
+
   // Drafts (for "Continue draft")
   const draftVisits = useMemo(() => {
     return visits
@@ -110,8 +120,9 @@ useEffect(() => {
   }, [visits]);
 
   const openVisitCard = async (visitId: string) => {
-    setOpenVisitId(visitId);
-    try {
+  setOpenVisitId(visitId);
+  onOpenVisitChange?.(visitId);
+  try {
       const note = await getVisitNote(userId, visitId);
       setOpenNote(note ?? null);
     } catch (e) {
@@ -162,6 +173,7 @@ const handleDeleteVisit = async (visitId: string) => {
 
     // Close any open panels/editors
     setOpenVisitId(null);
+    onOpenVisitChange?.(null);
     setOpenNote(null);
     setEditingNote(null);
     setNoteVisitId(null);
