@@ -38,6 +38,8 @@ export default function VisitsScreen({
   onModeChange,
   onGoHome,
   onGoToAnimals,
+  onOpenVisitChange,
+  backSignal,
 }: {
   lang: Lang;
   userId: string;
@@ -46,6 +48,12 @@ export default function VisitsScreen({
   onModeChange?: (mode: Mode) => void;
   onGoHome?: () => void;
   onGoToAnimals?: () => void;
+
+  // NEW: tell Dashboard when a visit detail is open
+  onOpenVisitChange?: (openVisitId: string | null) => void;
+
+  // NEW: Dashboard increments this to request "Back" (close open visit)
+  backSignal?: number;
 }) {
   
   const t = useTranslation(lang);
@@ -90,6 +98,11 @@ useEffect(() => {
   useEffect(() => {
   if (!backSignal) return;
   if (!openVisitId) return;
+
+  setOpenVisitId(null);
+  onOpenVisitChange?.(null);
+  setOpenNote(null);
+}, [backSignal]); // intentionally only depends on the signal
 
   // Close the open visit details (acts like Back)
   setOpenVisitId(null);
