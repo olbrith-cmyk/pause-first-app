@@ -255,5 +255,62 @@ export default function Dashboard({
                 {t.myPets}
               </button>
 
-              <button onClick={handleMyVisitsNav} className="btn btnSecondary">
-                {lang === "da" ? "Mine besøg" : "My visits
+                            <button onClick={handleMyVisitsNav} className="btn btnSecondary">
+                {lang === "da" ? "Mine besøg" : "My visits"}
+              </button>
+
+              <button
+                onClick={() => setMode("home")}
+                className="btn btnSecondary bottomDockHome"
+              >
+                {lang === "da" ? "Hjem" : "Home"}
+              </button>
+            </div>
+          </div>
+        </footer>
+      )}
+
+      {/* HAMBURGER MENU */}
+      <HamburgerMenu
+        lang={lang}
+        isOpen={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        onLogout={onLogout}
+        onDeleteAccount={onDeleteAccount}
+        onEmergencyGuide={() => {
+          setMenuOpen(false);
+          setShowEmergencyGuide(true);
+        }}
+        onMedicalDisclaimer={() => {
+          setMenuOpen(false);
+          setShowMedicalDisclaimer(true);
+        }}
+        onPrivacyPolicy={() => {
+          setMenuOpen(false);
+          setShowPrivacyPolicy(true);
+        }}
+        onMyPets={() => {
+          setMode("pets");
+          setMenuOpen(false);
+        }}
+        onMyVisits={() => {
+          setMode("myVisits");
+          setMenuOpen(false);
+        }}
+      />
+
+      {/* REAL MODALS */}
+      {showEmergencyGuide && (
+        <EmergencyGuide lang={lang} onClose={() => setShowEmergencyGuide(false)} />
+      )}
+
+      {showMedicalDisclaimer && (
+        <MedicalDisclaimer lang={lang} onClose={() => setShowMedicalDisclaimer(false)} />
+      )}
+
+      {showPrivacyPolicy && (
+        <PrivacyPolicy lang={lang} onClose={() => setShowPrivacyPolicy(false)} />
+      )}
+    </div>
+  );
+}
