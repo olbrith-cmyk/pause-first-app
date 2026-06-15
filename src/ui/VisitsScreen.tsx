@@ -95,20 +95,15 @@ useEffect(() => {
   onWizardOpenChange?.(showWizard);
 }, [showWizard, onWizardOpenChange]);
 
-  useEffect(() => {
+useEffect(() => {
   if (!backSignal) return;
   if (!openVisitId) return;
-
-  setOpenVisitId(null);
-  onOpenVisitChange?.(null);
-  setOpenNote(null);
-}, [backSignal]); // intentionally only depends on the signal
 
   // Close the open visit details (acts like Back)
   setOpenVisitId(null);
   onOpenVisitChange?.(null);
   setOpenNote(null);
-}, [backSignal]); // intentionally only depends on the signal
+}, [backSignal]);
 
   // Drafts (for "Continue draft")
   const draftVisits = useMemo(() => {
