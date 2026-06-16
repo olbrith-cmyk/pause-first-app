@@ -31,7 +31,6 @@ const emptyNote = (userId: string, visitId: string): VisitNote => ({
 });
 
 export default function VisitsScreen({
-export default function VisitsScreen({
   lang,
   userId,
   mode,
