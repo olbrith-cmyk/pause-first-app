@@ -31,6 +31,7 @@ const emptyNote = (userId: string, visitId: string): VisitNote => ({
 });
 
 export default function VisitsScreen({
+export default function VisitsScreen({
   lang,
   userId,
   mode,
@@ -40,7 +41,12 @@ export default function VisitsScreen({
   onGoToAnimals,
   onOpenVisitChange,
   backSignal,
+
+  // NEW
+  pendingNav,
+  onPendingNavHandled,
 }: {
+  
   lang: Lang;
   userId: string;
   mode: Mode;
@@ -52,8 +58,12 @@ export default function VisitsScreen({
   // NEW: tell Dashboard when a visit detail is open
   onOpenVisitChange?: (openVisitId: string | null) => void;
 
-  // NEW: Dashboard increments this to request "Back" (close open visit)
+    // NEW: Dashboard increments this to request "Back" (close open visit)
   backSignal?: number;
+
+  // NEW: bottom-nav requested navigation while wizard is open
+  pendingNav?: null | "pets" | "myVisits";
+  onPendingNavHandled?: () => void;
 }) {
   
   const t = useTranslation(lang);
@@ -74,7 +84,46 @@ export default function VisitsScreen({
   const [selectedPetForWizard, setSelectedPetForWizard] = useState<Pet | null>(null);
   const [showWizard, setShowWizard] = useState(false);
   const [editingVisitId, setEditingVisitId] = useState<string | null>(null);
+  // NEW: leave wizard modal
+  const [showLeaveWizardModal, setShowLeaveWizardModal] = useState(false);
+  const [leaveTarget, setLeaveTarget] = useState<null | "pets" | "myVisits">(null);
 
+  const leaveWithoutSaving = () => {
+    setShowWizard(false);
+    setEditingVisitId(null);
+    setSelectedPetForWizard(null);
+    setShowChoosePetModal(false);
+  };
+
+  const saveDraftAndLeave = async () => {
+    showToast(lang === "da" ? "Kladde gemt." : "Draft saved.");
+
+    leaveWithoutSaving();
+
+    if (leaveTarget === "pets") onGoToAnimals?.();
+    else onModeChange?.("myVisits");
+
+    onPendingNavHandled?.();
+    setShowLeaveWizardModal(false);
+    setLeaveTarget(null);
+  };
+
+  const discardAndLeave = () => {
+    leaveWithoutSaving();
+
+    if (leaveTarget === "pets") onGoToAnimals?.();
+    else onModeChange?.("myVisits");
+
+    onPendingNavHandled?.();
+    setShowLeaveWizardModal(false);
+    setLeaveTarget(null);
+  };
+
+  const cancelLeave = () => {
+    setShowLeaveWizardModal(false);
+    setLeaveTarget(null);
+    onPendingNavHandled?.();
+  };
   const load = async () => {
     const [p, v] = await Promise.all([getUserPets(userId), getUserVisits(userId)]);
     setPets(p);
@@ -94,6 +143,23 @@ useEffect(() => {
 useEffect(() => {
   onWizardOpenChange?.(showWizard);
 }, [showWizard, onWizardOpenChange]);
+
+  useEffect(() => {
+  if (!pendingNav) return;
+
+  if (showWizard) {
+    setLeaveTarget(pendingNav);
+    setShowLeaveWizardModal(true);
+    return;
+  }
+
+  // Wizard not open: navigate immediately
+  if (pendingNav === "pets") onGoToAnimals?.();
+  else onModeChange?.("myVisits");
+
+  onPendingNavHandled?.();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [pendingNav]);
 
 useEffect(() => {
   if (!backSignal) return;
@@ -548,6 +614,47 @@ const handleDeleteVisit = async (visitId: string) => {
             onToast={showToast}
           />
         )}
+                {showLeaveWizardModal && (
+          <div className="leaveModalOverlay" onClick={cancelLeave}>
+            <div className="modalCard" onClick={(e) => e.stopPropagation()}>
+              <div className="modalHeader">
+                <h3 className="modalTitle" style={{ margin: 0 }}>
+                  {lang === "da" ? "Forlad kladden?" : "Leave this draft?"}
+                </h3>
+                <button
+                  className="modalClose"
+                  onClick={cancelLeave}
+                  aria-label={lang === "da" ? "Luk" : "Close"}
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="modalBody">
+                <p style={{ marginTop: 0 }}>
+                  {lang === "da"
+                    ? "Vil du gemme kladden, før du går videre?"
+                    : "Do you want to save the draft before leaving?"}
+                </p>
+
+                <div className="stack" style={{ gap: 10 }}>
+                  <button className="btn btnPrimary" onClick={saveDraftAndLeave}>
+                    {lang === "da" ? "Gem kladde & gå videre" : "Save draft & leave"}
+                  </button>
+
+                  <button className="btn btnSecondary" onClick={discardAndLeave}>
+                    {lang === "da" ? "Gå videre uden at gemme" : "Leave without saving"}
+                  </button>
+
+                  <button className="btn btnSecondary" onClick={cancelLeave}>
+                    {lang === "da" ? "Annullér" : "Cancel"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {toast && <div className="toast">{toast}</div>}
       </div>
     );
@@ -727,6 +834,47 @@ const handleDeleteVisit = async (visitId: string) => {
           </div>
         </div>
       )}
+            {showLeaveWizardModal && (
+        <div className="leaveModalOverlay" onClick={cancelLeave}>
+          <div className="modalCard" onClick={(e) => e.stopPropagation()}>
+            <div className="modalHeader">
+              <h3 className="modalTitle" style={{ margin: 0 }}>
+                {lang === "da" ? "Forlad kladden?" : "Leave this draft?"}
+              </h3>
+              <button
+                className="modalClose"
+                onClick={cancelLeave}
+                aria-label={lang === "da" ? "Luk" : "Close"}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="modalBody">
+              <p style={{ marginTop: 0 }}>
+                {lang === "da"
+                  ? "Vil du gemme kladden, før du går videre?"
+                  : "Do you want to save the draft before leaving?"}
+              </p>
+
+              <div className="stack" style={{ gap: 10 }}>
+                <button className="btn btnPrimary" onClick={saveDraftAndLeave}>
+                  {lang === "da" ? "Gem kladde & gå videre" : "Save draft & leave"}
+                </button>
+
+                <button className="btn btnSecondary" onClick={discardAndLeave}>
+                  {lang === "da" ? "Gå videre uden at gemme" : "Leave without saving"}
+                </button>
+
+                <button className="btn btnSecondary" onClick={cancelLeave}>
+                  {lang === "da" ? "Annullér" : "Cancel"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
      {toast && <div className="toast">{toast}</div>} 
     </div>
   );
