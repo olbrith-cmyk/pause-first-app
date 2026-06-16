@@ -56,8 +56,11 @@ export default function Dashboard({
   // NEW: track whether a visit detail is open inside VisitsScreen
   const [openVisitIdFromVisits, setOpenVisitIdFromVisits] = useState<string | null>(null);
 
-  // NEW: signal to VisitsScreen to "go back" (close open visit)
+    // NEW: signal to VisitsScreen to "go back" (close open visit)
   const [backSignal, setBackSignal] = useState(0);
+
+  // NEW: queue nav requests when wizard is open
+  const [pendingNav, setPendingNav] = useState<null | "pets" | "myVisits">(null);
 
   const anyModalOpen = showEmergencyGuide || showPrivacyPolicy || showMedicalDisclaimer;
 
@@ -213,7 +216,7 @@ export default function Dashboard({
           />
         )}
 
-        {mode === "myVisits" && (
+               {mode === "myVisits" && (
           <VisitsScreen
             lang={lang}
             userId={userId}
@@ -221,11 +224,14 @@ export default function Dashboard({
             onWizardOpenChange={(open) => setWizardOpen(open)}
             onGoToAnimals={() => goToAnimals(true)}
             onGoHome={() => setMode("home")}
-            // NEW:
+            onModeChange={(m) => setMode(m)}   // IMPORTANT so VisitsScreen can switch mode
             onOpenVisitChange={setOpenVisitIdFromVisits}
             backSignal={backSignal}
+
+            pendingNav={pendingNav}
+            onPendingNavHandled={() => setPendingNav(null)}
           />
-        )}
+        )} 
 
         {mode === "prepare" && (
           <VisitsScreen
@@ -235,11 +241,15 @@ export default function Dashboard({
             onWizardOpenChange={(open) => setWizardOpen(open)}
             onGoToAnimals={() => goToAnimals(true)}
             onGoHome={() => setMode("home")}
-            // NEW (safe to pass even if prepare mode doesn't use it much):
+            onModeChange={(m) => setMode(m)}
             onOpenVisitChange={setOpenVisitIdFromVisits}
             backSignal={backSignal}
+
+            pendingNav={pendingNav}
+            onPendingNavHandled={() => setPendingNav(null)}
           />
         )}
+        
       </main>
 
       {/* BOTTOM NAV (hide on home, and hide when any modal/menu/wizard is open) */}
@@ -251,13 +261,31 @@ export default function Dashboard({
             </button>
 
             <div className="bottomDockGrid">
-              <button onClick={() => goToAnimals(false)} className="btn btnSecondary">
-                {t.myPets}
-              </button>
+              <button
+  onClick={() => {
+    if (wizardOpen) {
+      setPendingNav("pets");
+      return;
+    }
+    goToAnimals(false);
+  }}
+  className="btn btnSecondary"
+>
+  {t.myPets}
+</button>
 
-                            <button onClick={handleMyVisitsNav} className="btn btnSecondary">
-                {lang === "da" ? "Mine besøg" : "My visits"}
-              </button>
+<button
+  onClick={() => {
+    if (wizardOpen) {
+      setPendingNav("myVisits");
+      return;
+    }
+    handleMyVisitsNav();
+  }}
+  className="btn btnSecondary"
+>
+  {lang === "da" ? "Mine besøg" : "My visits"}
+</button>
 
               <button
                 onClick={() => setMode("home")}
