@@ -5,6 +5,8 @@ import type { CurrentStatus, Pet, TriState, Visit } from "../firestore";
 import { addVisit, getVisitById, updateVisit, deleteVisitFully } from "../firestore";
 import TriToggle from "./TriToggle";
 import PetSnapshotCard from "./PetSnapshotCard";
+import AttachmentManager from "./AttachmentManager";
+import AttachmentGallery from "./AttachmentGallery";
 
 type Props = {
   lang: Lang;
@@ -206,6 +208,14 @@ export default function PrepareWizard({
       {
         title: lang === "da" ? "Topspørgsmål til dyrlægen" : "Top questions for the vet",
         desc: lang === "da" ? "Hvad vil du gerne have svar på?" : "What do you want answered?",
+        ok: true
+      },
+      {
+        title: lang === "da" ? "Foto, video & lyd" : "Photos, video & audio",
+        desc:
+          lang === "da"
+            ? "Valgfrit: vedhæft et billede af det, der bekymrer dig, en kort video eller en lydoptagelse."
+            : "Optional: attach a photo of what's concerning you, a short video, or an audio recording.",
         ok: true
       }
     ],
@@ -985,6 +995,19 @@ export default function PrepareWizard({
           </label>
         );
 
+      case 8:
+        return visitId ? (
+          <AttachmentManager
+            lang={lang}
+            userId={userId}
+            scopeId={visitId}
+            attachments={draft.attachments ?? []}
+            onChange={(next) => setDraft({ ...draft, attachments: next })}
+          />
+        ) : (
+          <div className="muted">{lang === "da" ? "Forbereder…" : "Getting ready…"}</div>
+        );
+
       default:
         return null;
     }
@@ -1242,6 +1265,25 @@ export default function PrepareWizard({
                     value={questionsVetValue}
                     hideLabel
                   />
+
+                  {/* ATTACHMENTS */}
+                  {!!draft.attachments?.length && (
+                    <>
+                      <div
+                        style={{
+                          fontSize: 12,
+                          letterSpacing: 0.6,
+                          textTransform: "uppercase",
+                          color: "rgba(20,40,60,0.72)",
+                          fontWeight: 900,
+                          margin: "18px 0 8px 0"
+                        }}
+                      >
+                        {lang === "da" ? "Foto, video & lyd" : "Photos, video & audio"}
+                      </div>
+                      <AttachmentGallery attachments={draft.attachments} />
+                    </>
+                  )}
                 </div>
               </div>
 

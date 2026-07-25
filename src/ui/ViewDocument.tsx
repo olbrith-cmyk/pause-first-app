@@ -2,6 +2,7 @@ import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
 import type { Pet, Visit, VisitNote } from "../firestore";
 import { exportToPDF, shareWithVet } from "../utils/pdfExport";
+import AttachmentGallery from "./AttachmentGallery";
 
 export default function ViewDocument({
   lang,
@@ -112,6 +113,14 @@ export default function ViewDocument({
           </div>
         )}
 
+        {/* Attachments */}
+        {!!visit.attachments?.length && (
+          <div style={{ marginBottom: "20px" }}>
+            <h4 style={{ margin: "0 0 8px 0", color: "var(--primary)" }}>Photos, Video & Audio</h4>
+            <AttachmentGallery attachments={visit.attachments} />
+          </div>
+        )}
+
         {/* Visit Notes Section */}
         {note && (
           <>
@@ -158,6 +167,13 @@ export default function ViewDocument({
               <div style={{ marginBottom: "16px" }}>
                 <h4 style={{ margin: "0 0 8px 0", color: "var(--primary)" }}>Follow-up Plan</h4>
                 <p style={{ margin: "0", lineHeight: "1.6" }}>{note.followUp}</p>
+              </div>
+            )}
+
+            {!!note.attachments?.length && (
+              <div style={{ marginBottom: "16px" }}>
+                <h4 style={{ margin: "0 0 8px 0", color: "var(--primary)" }}>Photos, Video & Audio</h4>
+                <AttachmentGallery attachments={note.attachments} />
               </div>
             )}
           </>

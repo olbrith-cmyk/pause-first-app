@@ -15,6 +15,7 @@ import {
 
 import ViewDocument from "./ViewDocument";
 import PrepareWizard from "./PrepareWizard";
+import AttachmentManager from "./AttachmentManager";
 
 export type Mode = "myVisits" | "prepare";
 
@@ -549,6 +550,17 @@ const handleDeleteVisit = async (visitId: string) => {
                   onChange={(e) => setEditingNote({ ...editingNote, followUp: e.target.value })}
                   placeholder="Follow-up plan?"
                   rows={3}
+                />
+              </label>
+
+              <label className="label">
+                {lang === "da" ? "Foto, video & lyd" : "Photos, video & audio"}
+                <AttachmentManager
+                  lang={lang}
+                  userId={userId}
+                  scopeId={noteVisitId}
+                  attachments={editingNote.attachments ?? []}
+                  onChange={(next) => setEditingNote({ ...editingNote, attachments: next })}
                 />
               </label>
 
