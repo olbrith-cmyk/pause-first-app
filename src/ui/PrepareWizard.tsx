@@ -1351,7 +1351,7 @@ export default function PrepareWizard({
             gap: 8
           }}
         >
-          {/* Top row: Back + Save & close */}
+          {/* Top row: Back + Next */}
           {/* FIX: placeholder width matches button minWidth (90px) so Next button
               doesn't shift when Back appears/disappears */}
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -1365,33 +1365,33 @@ export default function PrepareWizard({
 
             {mode === "wizard" ? (
               <button
-                className="btn btnSecondary"
-                onClick={handleSaveDraftAndClose}
-                disabled={savingDraft}
+                className="btn btnPrimary"
+                onClick={handleNext}
+                disabled={!stepData[step].ok}
                 style={{ flex: 1 }}
               >
-                {savingDraft
-                  ? lang === "da"
-                    ? "Gemmer..."
-                    : "Saving..."
-                  : lang === "da"
-                    ? "Gem & luk"
-                    : "Save & close"}
+                {step === stepData.length - 1 ? "Preview" : lang === "da" ? "Næste" : "Next"}
               </button>
             ) : (
               <div style={{ flex: 1 }} />
             )}
           </div>
 
-          {/* Bottom row: Next (full width) */}
+          {/* Bottom row: Save & close (full width) */}
           {mode === "wizard" && (
             <button
-              className="btn btnPrimary"
-              onClick={handleNext}
-              disabled={!stepData[step].ok}
+              className="btn btnSecondary"
+              onClick={handleSaveDraftAndClose}
+              disabled={savingDraft}
               style={{ width: "100%" }}
             >
-              {step === stepData.length - 1 ? "Preview" : lang === "da" ? "Næste" : "Next"}
+              {savingDraft
+                ? lang === "da"
+                  ? "Gemmer..."
+                  : "Saving..."
+                : lang === "da"
+                  ? "Gem & luk"
+                  : "Save & close"}
             </button>
           )}
         </div>
