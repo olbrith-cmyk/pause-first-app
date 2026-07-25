@@ -1,4 +1,3 @@
-import React from "react";
 import type { Pet } from "../firestore";
 
 function Row({ label, value }: { label: string; value?: string }) {

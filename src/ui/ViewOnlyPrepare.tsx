@@ -1,4 +1,3 @@
-import React from "react";
 import type { Visit } from "../firestore";
 
 function Row({ label, value }: { label: string; value?: string }) {

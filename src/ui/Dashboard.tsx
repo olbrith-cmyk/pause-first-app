@@ -89,9 +89,6 @@ export default function Dashboard({
     };
   }, [wizardOpen]);
 
-  // Keep email “used” (prevents strict lint/ts configs from complaining)
-  const _email = email;
-
   // NEW: unified handler for the footer "My visits" button
   const handleMyVisitsNav = () => {
     // If we're already on My Visits AND a visit detail is open, act like Back

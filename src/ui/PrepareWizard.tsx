@@ -299,17 +299,6 @@ export default function PrepareWizard({
     }
   };
 
-  const triLabel = (v: TriState) => {
-    if (lang === "da") {
-      if (v === "normal") return "Som normalt";
-      if (v === "changed") return "Anderledes";
-      return "Ikke relevant / ved ikke";
-    }
-    if (v === "normal") return "As usual";
-    if (v === "changed") return "Different";
-    return "N/A / not sure";
-  };
-
   const getStatusCounts = () => {
     const cs = draft.currentStatus ?? makeEmptyStatus();
 

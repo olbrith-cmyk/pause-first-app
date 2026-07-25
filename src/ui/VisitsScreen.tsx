@@ -263,14 +263,6 @@ const handleDeleteVisit = async (visitId: string) => {
     setShowWizard(true);
   };
 
-  const openWizardForVisit = (visitId: string, petId: string) => {
-    const pet = pets.find((p) => p.id === petId) ?? null;
-    setEditingVisitId(visitId);
-    setSelectedPetForWizard(pet);
-    setShowChoosePetModal(false);
-    setShowWizard(true);
-  };
-
   const isDraft = (v: Visit) => (v.status ?? "final") === "draft";
 
   const hasAnyPreparation = (v: Visit) => {

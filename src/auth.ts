@@ -3,7 +3,6 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
-  deleteUser,
   signOut,
   onAuthStateChanged,
   User
@@ -22,12 +21,6 @@ export const resetPassword = (email: string) =>
   sendPasswordResetEmail(auth, email);
 
 export const logOut = () => signOut(auth);
-
-export const deleteCurrentUser = () => {
-  const user = auth.currentUser;
-  if (user) return deleteUser(user);
-  return Promise.reject("No user logged in");
-};
 
 export const onAuthChange = (callback: (user: User | null) => void) =>
   onAuthStateChanged(auth, callback);

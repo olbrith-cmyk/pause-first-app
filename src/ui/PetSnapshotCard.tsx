@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type { Pet } from "../firestore";
 
 function vaccineLabel(lang: "da" | "en", v?: Pet["vaccinationStatus"]) {
