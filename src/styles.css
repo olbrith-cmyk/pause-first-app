@@ -877,8 +877,7 @@ button {
 }
 
 .homeSilhouetteDog{ top: 22%; left: 4%; width: 92px; }
-.homeSilhouetteBird{ top: 0%; right: 12%; width: 54px; }
-.homeSilhouetteTurtle{ top: 46%; right: 8%; width: 64px; }
+.homeSilhouetteBird{ top: 4%; right: 14%; width: 54px; }
 
 /* Cow + cat, placed below the nav buttons */
 .homeBottomSilhouettes{
