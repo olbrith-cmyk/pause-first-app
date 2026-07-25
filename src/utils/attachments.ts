@@ -20,6 +20,24 @@ export function isAttachmentTooLarge(file: File): boolean {
   return file.size > MAX_FILE_BYTES;
 }
 
+const UPLOAD_TIMEOUT_MS = 30_000;
+
+function withTimeout<T>(promise: Promise<T>, ms: number, timeoutMessage: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(timeoutMessage)), ms);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (err) => {
+        clearTimeout(timer);
+        reject(err);
+      }
+    );
+  });
+}
+
 export async function uploadAttachment(params: {
   userId: string;
   scopeId: string;
@@ -37,17 +55,25 @@ export async function uploadAttachment(params: {
   const safeName = file.name.replace(/[^\w.\-]/g, "_");
   const path = `attachments/${userId}/${scopeId}/${id}-${safeName}`;
 
-  const storageRef = ref(storage, path);
-  await uploadBytes(storageRef, file);
-  const url = await getDownloadURL(storageRef);
+  const timeoutMessage =
+    "Upload timed out. This usually means Firebase Storage isn't set up for this project yet, or there's a network issue.";
 
-  return {
-    id,
-    type,
-    url,
-    caption: "",
-    createdAt: new Date().toISOString()
-  };
+  try {
+    const storageRef = ref(storage, path);
+    await withTimeout(uploadBytes(storageRef, file), UPLOAD_TIMEOUT_MS, timeoutMessage);
+    const url = await withTimeout(getDownloadURL(storageRef), UPLOAD_TIMEOUT_MS, timeoutMessage);
+
+    return {
+      id,
+      type,
+      url,
+      caption: "",
+      createdAt: new Date().toISOString()
+    };
+  } catch (e: any) {
+    console.error("Attachment upload failed", e?.code ?? "", e?.message ?? e);
+    throw e;
+  }
 }
 
 export async function deleteAttachment(attachment: Attachment): Promise<void> {
