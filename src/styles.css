@@ -864,7 +864,7 @@ button {
   top: 0;
   left: 0;
   right: 0;
-  height: 120px;
+  height: 160px;
   z-index: 0;
   pointer-events: none;
   opacity: 0.85;
@@ -876,14 +876,14 @@ button {
   height: auto;
 }
 
-.homeSilhouetteDog{ top: 0%; left: 4%; width: 66px; }
+.homeSilhouetteDog{ top: 22%; left: 4%; width: 92px; }
 .homeSilhouetteBird{ top: 4%; right: 14%; width: 54px; }
 
 /* Cow + cat, placed below the nav buttons */
 .homeBottomSilhouettes{
   position: relative;
   height: 130px;
-  margin-top: 8px;
+  margin-top: 34px;
   pointer-events: none;
   opacity: 0.85;
 }
