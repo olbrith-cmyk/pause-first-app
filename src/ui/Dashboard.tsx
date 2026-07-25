@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import logo from "../assets/pausefirst-logo.png";
 import dogSil from "../assets/silhouettes/dog.png";
 import birdSil from "../assets/silhouettes/bird.png";
+import turtleSil from "../assets/silhouettes/turtle.png";
 import catSil from "../assets/silhouettes/cat.png";
 import cowSil from "../assets/silhouettes/cow.png";
 
@@ -134,6 +135,7 @@ export default function Dashboard({
               <div className="homeSilhouettes" aria-hidden="true">
                 <img src={dogSil} className="homeSilhouette homeSilhouetteDog" alt="" />
                 <img src={birdSil} className="homeSilhouette homeSilhouetteBird" alt="" />
+                <img src={turtleSil} className="homeSilhouette homeSilhouetteTurtle" alt="" />
               </div>
 
               {/* Pause logo */}
