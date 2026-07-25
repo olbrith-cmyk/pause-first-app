@@ -11,8 +11,7 @@ import type {
 } from "../firestore";
 import { addPet, deletePet, getUserPets, updatePet, getUserVisits, getVisitNote } from "../firestore";
 import { ViewOnlyPet } from "./ViewOnlyPet";
-import { ViewOnlyPrepare } from "./ViewOnlyPrepare";
-import { ViewOnlyNotes } from "./ViewOnlyNotes";
+import ViewDocument from "./ViewDocument";
 import PrepareWizard from "./PrepareWizard";
 
 const emptyPet = (userId: string): Pet => ({
@@ -387,12 +386,7 @@ export default function PetsScreen({
                   </button>
                 </div>
 
-                <ViewOnlyPrepare visit={viewingVisit} />
-                {viewingVisitNote ? (
-                  <ViewOnlyNotes note={viewingVisitNote} />
-                ) : (
-                  <div className="muted">{lang === "da" ? "Ingen besøgsnoter endnu." : "No visit notes yet."}</div>
-                )}
+                <ViewDocument lang={lang} visit={viewingVisit} pet={selected} note={viewingVisitNote} />
               </>
             )}
 

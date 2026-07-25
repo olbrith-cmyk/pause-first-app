@@ -1,15 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
-import type { CurrentStatus, TriState, Visit } from "../firestore";
+import type { CurrentStatus, Pet, TriState, Visit } from "../firestore";
 import { addVisit, getVisitById, updateVisit, deleteVisitFully } from "../firestore";
 import TriToggle from "./TriToggle";
+import PetSnapshotCard from "./PetSnapshotCard";
 
 type Props = {
   lang: Lang;
   userId: string;
   petId: string;
   petName: string;
+  pet?: Pet | null;
   visitId?: string;
   mode?: "prepare";
   onClose: () => void;
@@ -38,6 +40,7 @@ export default function PrepareWizard({
   userId,
   petId,
   petName,
+  pet,
   visitId: visitIdProp,
   onClose,
   onComplete,
@@ -1029,6 +1032,8 @@ export default function PrepareWizard({
           {/* MODE 1: WIZARD */}
           {mode === "wizard" && (
             <>
+              {pet && <PetSnapshotCard pet={pet} lang={lang} />}
+
               <div style={{ marginBottom: 16 }}>
                 <h4 style={{ margin: "0 0 6px 0" }}>{stepData[step].title}</h4>
                 <p style={{ color: "var(--muted)", fontSize: 14, margin: 0 }}>{stepData[step].desc}</p>

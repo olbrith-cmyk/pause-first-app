@@ -13,8 +13,7 @@ import {
   deleteVisitFully
 } from "../firestore";
 
-import { ViewOnlyPrepare } from "./ViewOnlyPrepare";
-import { ViewOnlyNotes } from "./ViewOnlyNotes";
+import ViewDocument from "./ViewDocument";
 import PrepareWizard from "./PrepareWizard";
 
 export type Mode = "myVisits" | "prepare";
@@ -470,17 +469,7 @@ const handleDeleteVisit = async (visitId: string) => {
                 </div>
               </div>
 
-              <h4 style={{ marginTop: 12 }}>{lang === "da" ? "Forberedelse" : "Preparation"}</h4>
-              <ViewOnlyPrepare visit={openVisit} />
-
-              <h4 style={{ marginTop: 16 }}>{lang === "da" ? "Besøgsnoter" : "Visit Notes"}</h4>
-              {openNote ? (
-                <ViewOnlyNotes note={openNote} />
-              ) : (
-                <div className="muted">
-                  {lang === "da" ? "Ingen besøgsnoter endnu." : "No visit notes yet."}
-                </div>
-              )}
+              <ViewDocument lang={lang} visit={openVisit} pet={openPet} note={openNote} />
             </div>
           )}
 
@@ -589,6 +578,7 @@ const handleDeleteVisit = async (visitId: string) => {
             mode="prepare"
             petId={selectedPetForWizard.id}
             petName={selectedPetForWizard.name || "(Unnamed)"}
+            pet={selectedPetForWizard}
             visitId={editingVisitId ?? undefined}
             onClose={async () => {
               setShowWizard(false);
@@ -781,6 +771,7 @@ const handleDeleteVisit = async (visitId: string) => {
           mode="prepare"
           petId={selectedPetForWizard.id}
           petName={selectedPetForWizard.name || "(Unnamed)"}
+          pet={selectedPetForWizard}
           visitId={editingVisitId ?? undefined}
           onClose={async () => {
             setShowWizard(false);

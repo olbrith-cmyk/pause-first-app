@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
 import type { Pet, Visit, VisitNote } from "../firestore";
@@ -16,11 +15,6 @@ export default function ViewDocument({
   note: VisitNote | null;
 }) {
   const t = useTranslation(lang);
-
-  const documentTitle = useMemo(() => {
-    if (!visit || !pet) return "No visit selected";
-    return `${pet.name} — ${visit.visitDate || "No date"}`;
-  }, [visit, pet]);
 
   if (!visit || !pet) {
     return (
