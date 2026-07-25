@@ -1302,10 +1302,6 @@ export default function PrepareWizard({
                     {lang === "da" ? "Slet kladde" : "Delete draft"}
                   </button>
                 )}
-
-                <div className="muted" style={{ textAlign: "center", fontSize: 13 }}>
-                  {lang === "da" ? "PDF + email eksport kommer snart." : "PDF + email export coming soon."}
-                </div>
               </div>
             </>
           )}
