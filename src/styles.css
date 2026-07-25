@@ -169,6 +169,15 @@ body {
   gap: 16px;
 }
 
+.authHorseSilhouette {
+  display: block;
+  width: 150px;
+  height: auto;
+  margin: 12px auto 0;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
 .label {
   display: flex;
   flex-direction: column;

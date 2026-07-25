@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
 import { logIn, resetPassword, signUp } from "../auth";
+import horseSil from "../assets/silhouettes/horse.png";
 
 export default function AuthScreen({ lang }: { lang: Lang }) {
   const t = useTranslation(lang);
@@ -108,6 +109,8 @@ export default function AuthScreen({ lang }: { lang: Lang }) {
             </button>
           )}
         </div>
+
+        <img src={horseSil} className="authHorseSilhouette" alt="" aria-hidden="true" />
       </div>
     </main>
   );
