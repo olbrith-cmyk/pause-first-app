@@ -93,6 +93,12 @@ export default function AttachmentManager({
           : "+ Add photo, video, or audio"}
       </button>
 
+      <div className="muted" style={{ marginTop: 6, fontSize: 12 }}>
+        {lang === "da"
+          ? `Maks. filstørrelse: ${ATTACHMENT_MAX_MB}MB pr. fil.`
+          : `Max file size: ${ATTACHMENT_MAX_MB}MB per file.`}
+      </div>
+
       {error && (
         <div className="alert alertError" style={{ marginTop: 8 }}>
           {error}
