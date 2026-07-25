@@ -123,19 +123,21 @@ function filenameFromAttachmentUrl(url: string): string | null {
 async function attachmentToFile(attachment: Attachment, index: number): Promise<File | null> {
   try {
     const res = await fetch(attachment.url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const blob = await res.blob();
     const fallbackExt = attachment.type === "photo" ? "jpg" : attachment.type === "video" ? "mp4" : "m4a";
     const name = filenameFromAttachmentUrl(attachment.url) ?? `${attachment.type}-${index + 1}.${fallbackExt}`;
     return new File([blob], name, { type: blob.type || undefined });
   } catch (e) {
-    console.error("Failed to fetch attachment for sharing", e);
+    console.error("Failed to fetch attachment for sharing (likely a Storage CORS config issue)", e);
     return null;
   }
 }
 
-async function attachmentsToFiles(attachments: Attachment[]): Promise<File[]> {
-  const files = await Promise.all(attachments.map((a, i) => attachmentToFile(a, i)));
-  return files.filter((f): f is File => f !== null);
+async function attachmentsToFiles(attachments: Attachment[]): Promise<{ files: File[]; failedCount: number }> {
+  const results = await Promise.all(attachments.map((a, i) => attachmentToFile(a, i)));
+  const files = results.filter((f): f is File => f !== null);
+  return { files, failedCount: attachments.length - files.length };
 }
 
 function downloadFiles(files: File[]) {
@@ -161,7 +163,15 @@ export async function shareWithVet(params: {
   const text = buildShareText(params);
 
   const attachments = [...(visit.attachments ?? []), ...(note?.attachments ?? [])];
-  const files = attachments.length ? await attachmentsToFiles(attachments) : [];
+  const { files, failedCount } = attachments.length
+    ? await attachmentsToFiles(attachments)
+    : { files: [] as File[], failedCount: 0 };
+
+  const attachmentWarning = failedCount
+    ? lang === "da"
+      ? ` (${failedCount} fil(er) kunne ikke inkluderes — se browserkonsollen for detaljer.)`
+      : ` (${failedCount} file(s) couldn't be included — check the browser console for details.)`
+    : "";
 
   const nav: any = navigator;
   const canShareFiles = files.length > 0 && typeof nav.canShare === "function" && nav.canShare({ files });
@@ -169,6 +179,7 @@ export async function shareWithVet(params: {
   // Mobile share sheet, with the attached files if the device supports it
   if (nav.share && canShareFiles) {
     await nav.share({ title: "Pause First™", text, files });
+    if (failedCount) alert((lang === "da" ? "Delt." : "Shared.") + attachmentWarning);
     return;
   }
 
@@ -176,11 +187,14 @@ export async function shareWithVet(params: {
     await nav.share({ title: "Pause First™", text });
     if (files.length) {
       alert(
-        lang === "da"
+        (lang === "da"
           ? "Teksten blev delt. Din enhed understøtter ikke deling af filer her — de downloades nu, så du kan vedhæfte dem manuelt."
-          : "Shared the text. Your device doesn't support sharing files this way — downloading them now so you can attach them manually."
+          : "Shared the text. Your device doesn't support sharing files this way — downloading them now so you can attach them manually.") +
+          attachmentWarning
       );
       downloadFiles(files);
+    } else if (failedCount) {
+      alert((lang === "da" ? "Teksten blev delt." : "Shared the text.") + attachmentWarning);
     }
     return;
   }
@@ -191,15 +205,15 @@ export async function shareWithVet(params: {
     if (files.length) {
       downloadFiles(files);
       alert(
-        lang === "da"
+        (lang === "da"
           ? `Teksten er kopieret. ${files.length} fil(er) downloades — vedhæft dem til din e-mail.`
-          : `Text copied. ${files.length} file(s) are downloading — attach them to your email.`
+          : `Text copied. ${files.length} file(s) are downloading — attach them to your email.`) + attachmentWarning
       );
     } else {
       alert(
-        lang === "da"
+        (lang === "da"
           ? "Teksten er kopieret. Du kan indsætte den i en e-mail til din dyrlæge."
-          : "Copied to clipboard. You can paste it into an email to your vet."
+          : "Copied to clipboard. You can paste it into an email to your vet.") + attachmentWarning
       );
     }
     return;
