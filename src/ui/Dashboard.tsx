@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import logo from "../assets/pausefirst-logo.png";
 import dogSil from "../assets/silhouettes/dog.png";
 import birdSil from "../assets/silhouettes/bird.png";
 import catSil from "../assets/silhouettes/cat.png";
@@ -133,14 +134,15 @@ export default function Dashboard({
               <div className="homeSilhouettes" aria-hidden="true">
                 <img src={dogSil} className="homeSilhouette homeSilhouetteDog" alt="" />
                 <img src={birdSil} className="homeSilhouette homeSilhouetteBird" alt="" />
-                <img src={cowSil} className="homeSilhouette homeSilhouetteCow" alt="" />
-                <img src={catSil} className="homeSilhouette homeSilhouetteCat" alt="" />
               </div>
 
-              {/* Pause icon */}
-              <div className="pauseIcon" aria-hidden="true">
-                <span className="pauseBar" />
-                <span className="pauseBar" />
+              {/* Pause logo */}
+              <div className="homeIcon homeIconV2" aria-hidden="true">
+                <img
+                  src={logo}
+                  alt=""
+                  style={{ width: 110, height: 110, display: "block", objectFit: "contain" }}
+                />
               </div>
 
               <h2 className="homeTitle homeTitleV2">
@@ -194,6 +196,11 @@ export default function Dashboard({
                     {lang === "da" ? "Mine Besøg" : "My Visits"}
                   </button>
                 </div>
+              </div>
+
+              <div className="homeBottomSilhouettes" aria-hidden="true">
+                <img src={cowSil} className="homeSilhouette homeBottomSilhouetteCow" alt="" />
+                <img src={catSil} className="homeSilhouette homeBottomSilhouetteCat" alt="" />
               </div>
             </section>
           </div>
