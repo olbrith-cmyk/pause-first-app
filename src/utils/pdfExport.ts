@@ -1,7 +1,7 @@
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import type { Lang } from "../i18n";
-import type { Pet, Visit, VisitNote } from "../firestore";
+import type { Attachment, Pet, Visit, VisitNote } from "../firestore";
 
 function buildShareText(params: { visit: Visit; pet: Pet; note: VisitNote | null; lang: Lang }) {
   const { visit, pet, note, lang } = params;
@@ -107,31 +107,105 @@ export async function exportToPDF(params: {
   pdf.save(fileName);
 }
 
+function filenameFromAttachmentUrl(url: string): string | null {
+  try {
+    const path = new URL(url).pathname.split("/o/")[1];
+    if (!path) return null;
+    const objectName = decodeURIComponent(path).split("/").pop() ?? "";
+    const parts = objectName.split("-");
+    // Stored as "{timestamp}-{random}-{originalFilename}"
+    return parts.length >= 3 ? parts.slice(2).join("-") : objectName || null;
+  } catch {
+    return null;
+  }
+}
+
+async function attachmentToFile(attachment: Attachment, index: number): Promise<File | null> {
+  try {
+    const res = await fetch(attachment.url);
+    const blob = await res.blob();
+    const fallbackExt = attachment.type === "photo" ? "jpg" : attachment.type === "video" ? "mp4" : "m4a";
+    const name = filenameFromAttachmentUrl(attachment.url) ?? `${attachment.type}-${index + 1}.${fallbackExt}`;
+    return new File([blob], name, { type: blob.type || undefined });
+  } catch (e) {
+    console.error("Failed to fetch attachment for sharing", e);
+    return null;
+  }
+}
+
+async function attachmentsToFiles(attachments: Attachment[]): Promise<File[]> {
+  const files = await Promise.all(attachments.map((a, i) => attachmentToFile(a, i)));
+  return files.filter((f): f is File => f !== null);
+}
+
+function downloadFiles(files: File[]) {
+  for (const file of files) {
+    const url = URL.createObjectURL(file);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = file.name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10_000);
+  }
+}
+
 export async function shareWithVet(params: {
   visit: Visit;
   pet: Pet;
   note: VisitNote | null;
   lang: Lang;
 }) {
+  const { visit, note, lang } = params;
   const text = buildShareText(params);
 
-  // Mobile share sheet (best UX on phones/tablets)
+  const attachments = [...(visit.attachments ?? []), ...(note?.attachments ?? [])];
+  const files = attachments.length ? await attachmentsToFiles(attachments) : [];
+
   const nav: any = navigator;
-  if (nav.share) {
-    await nav.share({
-      title: "Pause First™",
-      text
-    });
+  const canShareFiles = files.length > 0 && typeof nav.canShare === "function" && nav.canShare({ files });
+
+  // Mobile share sheet, with the attached files if the device supports it
+  if (nav.share && canShareFiles) {
+    await nav.share({ title: "Pause First™", text, files });
     return;
   }
 
-  // Desktop fallback: copy to clipboard
+  if (nav.share) {
+    await nav.share({ title: "Pause First™", text });
+    if (files.length) {
+      alert(
+        lang === "da"
+          ? "Teksten blev delt. Din enhed understøtter ikke deling af filer her — de downloades nu, så du kan vedhæfte dem manuelt."
+          : "Shared the text. Your device doesn't support sharing files this way — downloading them now so you can attach them manually."
+      );
+      downloadFiles(files);
+    }
+    return;
+  }
+
+  // Desktop fallback: copy text, download any attachments for manual attaching
   if (navigator.clipboard?.writeText) {
     await navigator.clipboard.writeText(text);
-    alert("Copied to clipboard. You can paste it into an email to your vet.");
+    if (files.length) {
+      downloadFiles(files);
+      alert(
+        lang === "da"
+          ? `Teksten er kopieret. ${files.length} fil(er) downloades — vedhæft dem til din e-mail.`
+          : `Text copied. ${files.length} file(s) are downloading — attach them to your email.`
+      );
+    } else {
+      alert(
+        lang === "da"
+          ? "Teksten er kopieret. Du kan indsætte den i en e-mail til din dyrlæge."
+          : "Copied to clipboard. You can paste it into an email to your vet."
+      );
+    }
     return;
   }
 
   // Last resort
+  if (files.length) downloadFiles(files);
   alert(text);
 }
