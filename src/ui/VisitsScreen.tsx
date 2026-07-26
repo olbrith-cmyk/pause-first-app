@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
 
@@ -74,6 +74,13 @@ export default function VisitsScreen({
   const [openNote, setOpenNote] = useState<VisitNote | null>(null);
   const [editingNote, setEditingNote] = useState<VisitNote | null>(null);
   const [noteVisitId, setNoteVisitId] = useState<string | null>(null);
+  const noteEditorRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (editingNote && noteVisitId) {
+      noteEditorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [editingNote, noteVisitId]);
   const [toast, setToast] = useState<string | null>(null);
   const showToast = (message: string) => {
   setToast(message);
@@ -478,7 +485,7 @@ const handleDeleteVisit = async (visitId: string) => {
           )}
 
           {editingNote && noteVisitId && (
-            <div className="panel" style={{ marginTop: 16 }}>
+            <div className="panel" style={{ marginTop: 16 }} ref={noteEditorRef}>
               <div className="panelHeader">
                 <h4 style={{ margin: 0 }}>
                   {lang === "da" ? "Redigér besøgsnoter" : "Edit Visit Notes"}
