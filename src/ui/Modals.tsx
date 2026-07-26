@@ -196,15 +196,11 @@ export function PrivacyPolicy({ lang, onClose }: { lang: Lang; onClose: () => vo
           </a>
         </p>
         <p>
-          Tjenesten hostes via <strong>Vercel</strong> og <strong>Netlify</strong>, som i kraft af
-          hostingen kan behandle grundlæggende tekniske oplysninger (fx IP-adresse og server-logs).
-          Deres privatlivspolitikker er tilgængelige her:{" "}
+          Tjenesten hostes via <strong>Vercel</strong>, som i kraft af hostingen kan behandle
+          grundlæggende tekniske oplysninger (fx IP-adresse og server-logs). Vercels
+          privatlivspolitik er tilgængelig her:{" "}
           <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noreferrer">
             vercel.com/legal/privacy-policy
-          </a>{" "}
-          og{" "}
-          <a href="https://www.netlify.com/privacy/" target="_blank" rel="noreferrer">
-            netlify.com/privacy
           </a>
           .
         </p>
@@ -327,15 +323,11 @@ export function PrivacyPolicy({ lang, onClose }: { lang: Lang; onClose: () => vo
         </a>
       </p>
       <p>
-        The Service is hosted via <strong>Vercel</strong> and <strong>Netlify</strong>, which as
-        part of providing hosting infrastructure may process basic technical information (such as
-        IP address and server logs). Their privacy policies are available here:{" "}
+        The Service is hosted via <strong>Vercel</strong>, which as part of providing hosting
+        infrastructure may process basic technical information (such as IP address and server
+        logs). Vercel's privacy policy is available here:{" "}
         <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noreferrer">
           vercel.com/legal/privacy-policy
-        </a>{" "}
-        and{" "}
-        <a href="https://www.netlify.com/privacy/" target="_blank" rel="noreferrer">
-          netlify.com/privacy
         </a>
         .
       </p>
