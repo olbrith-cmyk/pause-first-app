@@ -1155,6 +1155,67 @@ export default function PrepareWizard({
                 <div style={notebookMarginStyle} />
 
                 <div style={{ position: "relative", paddingLeft: 14 }}>
+                  {/* PATIENT INFO (from the pet's profile) */}
+                  {pet &&
+                    (() => {
+                      const rows: { label: string; value: string }[] = [];
+                      const push = (label: string, value?: string) => {
+                        const v = (value ?? "").trim();
+                        if (v) rows.push({ label, value: v });
+                      };
+                      const vLabel =
+                        pet.vaccinationStatus === "up_to_date"
+                          ? lang === "da" ? "Opdateret" : "Up to date"
+                          : pet.vaccinationStatus === "not_up_to_date"
+                            ? lang === "da" ? "Ikke opdateret" : "Not up to date"
+                            : pet.vaccinationStatus === "unknown"
+                              ? lang === "da" ? "Ikke sikker" : "Not sure"
+                              : "";
+                      const vDate = pet.vaccinationLastDate?.trim();
+
+                      push(lang === "da" ? "Art" : "Species", pet.species);
+                      push(lang === "da" ? "Alder" : "Age", pet.age);
+                      push(lang === "da" ? "Køn" : "Sex", pet.sex);
+                      push(lang === "da" ? "Vægt" : "Weight", pet.weight);
+                      if (vLabel || vDate) {
+                        push(
+                          lang === "da" ? "Vaccinationer" : "Vaccinations",
+                          [vLabel, vDate ? (lang === "da" ? `Sidst: ${vDate}` : `Last: ${vDate}`) : ""]
+                            .filter(Boolean)
+                            .join(" • ")
+                        );
+                      }
+                      push(lang === "da" ? "Foder" : "Diet / feed", pet.diet);
+                      push(lang === "da" ? "Forebyggelse" : "Preventatives", pet.preventatives);
+                      push(lang === "da" ? "Medicin" : "Medications", pet.medications);
+                      push(lang === "da" ? "Allergier/reaktioner" : "Allergies / reactions", pet.allergies);
+                      push(lang === "da" ? "Operationer/indgreb" : "Surgeries / procedures", pet.surgeries);
+                      push(lang === "da" ? "Livsstil/miljø" : "Lifestyle / environment", pet.lifestyle);
+
+                      if (!rows.length) return null;
+
+                      return (
+                        <>
+                          <div style={sectionLabelStyle}>
+                            {lang === "da" ? "Patientinfo" : "Patient Info"}
+                          </div>
+                          <div style={{ marginBottom: 14 }}>
+                            {rows.map((r) => (
+                              <div
+                                key={r.label}
+                                style={{ display: "flex", gap: 8, padding: "3px 0", fontSize: 14 }}
+                              >
+                                <div style={{ width: 150, flexShrink: 0, color: "rgba(20,40,60,0.65)" }}>
+                                  {r.label}
+                                </div>
+                                <div style={{ color: "rgba(15,25,35,0.92)" }}>{r.value}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      );
+                    })()}
+
                   {/* MAIN CONCERN */}
                   <SectionLabel
                     label={lang === "da" ? "Hovedbekymring" : "Main concern"}
