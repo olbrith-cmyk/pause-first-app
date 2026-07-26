@@ -13,6 +13,10 @@ import { addPet, deletePet, getUserPets, updatePet, getUserVisits, getVisitNote 
 import { ViewOnlyPet } from "./ViewOnlyPet";
 import ViewDocument from "./ViewDocument";
 import PrepareWizard from "./PrepareWizard";
+import PetAvatar from "./PetAvatar";
+import PetPhotoUpload from "./PetPhotoUpload";
+
+const newPhotoScopeId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
 const emptyPet = (userId: string): Pet => ({
   userId,
@@ -94,6 +98,7 @@ export default function PetsScreen({
 
   const [mode, setMode] = useState<"view" | "edit">("view");
   const [editing, setEditing] = useState<Pet>(emptyPet(userId));
+  const [photoScopeId, setPhotoScopeId] = useState(newPhotoScopeId);
 
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -149,6 +154,7 @@ export default function PetsScreen({
   const startNew = () => {
     setSelected(null);
     setEditing(emptyPet(userId));
+    setPhotoScopeId(newPhotoScopeId());
     setMode("edit");
     setStatus(null);
     setError(null);
@@ -293,10 +299,13 @@ export default function PetsScreen({
                   key={pet.id}
                   className="itemCard"
                   onClick={() => openView(pet)}
-                  style={{ cursor: "pointer", textAlign: "left" }}
+                  style={{ cursor: "pointer", textAlign: "left", flexDirection: "row", alignItems: "center" }}
                 >
-                  <div className="itemTitle">{pet.name || "(Unnamed)"}</div>
-                  <div className="muted">{pet.species || (lang === "da" ? "Ukendt art" : "Unknown species")}</div>
+                  <PetAvatar photoUrl={pet.photoUrl} />
+                  <div>
+                    <div className="itemTitle">{pet.name || "(Unnamed)"}</div>
+                    <div className="muted">{pet.species || (lang === "da" ? "Ukendt art" : "Unknown species")}</div>
+                  </div>
                 </button>
               ))
             )}
@@ -406,12 +415,20 @@ export default function PetsScreen({
                   }}
                 >
                   {lang === "da"
-                    ? "Udfyld dette én gang — vi genbruger det til at udfylde dit Notat til dyrlægen automatisk."
+                    ? "Udfyld dette én gang — vi genbruger det til automatisk at udfylde din besøgsforberedelse."
                     : "Fill this in once — we’ll reuse it to auto‑fill your Visit Briefs."}
                 </div>
 
                 <Section title={lang === "da" ? "Om dit dyr" : "About your pet"}>
                   <div className="stack">
+                    <PetPhotoUpload
+                      lang={lang}
+                      userId={userId}
+                      scopeId={editing.id ?? photoScopeId}
+                      photoUrl={editing.photoUrl}
+                      onChange={(next) => setEditing({ ...editing, photoUrl: next })}
+                    />
+
                     <label className="label">
                       {t.petName}
                       <input

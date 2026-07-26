@@ -52,6 +52,7 @@ export interface Pet {
   // About your pet
   name: string;
   species: string;
+  photoUrl?: string;
 
   // Legacy field (keep for backwards compatibility; we will stop showing it in UI)
   age: string;

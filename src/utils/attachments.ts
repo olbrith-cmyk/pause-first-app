@@ -84,3 +84,44 @@ export async function deleteAttachment(attachment: Attachment): Promise<void> {
     console.error("Failed to delete attachment from storage", e);
   }
 }
+
+const PET_PHOTO_MAX_BYTES = 8 * 1024 * 1024;
+export const PET_PHOTO_MAX_MB = PET_PHOTO_MAX_BYTES / (1024 * 1024);
+
+export function isSupportedPetPhoto(file: File): boolean {
+  return file.type.startsWith("image/");
+}
+
+export function isPetPhotoTooLarge(file: File): boolean {
+  return file.size > PET_PHOTO_MAX_BYTES;
+}
+
+export async function uploadPetPhoto(params: {
+  userId: string;
+  scopeId: string;
+  file: File;
+}): Promise<string> {
+  const { userId, scopeId, file } = params;
+
+  if (!isSupportedPetPhoto(file)) throw new Error("Unsupported file type.");
+  if (isPetPhotoTooLarge(file)) throw new Error(`File is larger than ${PET_PHOTO_MAX_MB}MB.`);
+
+  const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const safeName = file.name.replace(/[^\w.\-]/g, "_");
+  const path = `pet-photos/${userId}/${scopeId}/${id}-${safeName}`;
+
+  const timeoutMessage =
+    "Upload timed out. This usually means Firebase Storage isn't set up for this project yet, or there's a network issue.";
+
+  const storageRef = ref(storage, path);
+  await withTimeout(uploadBytes(storageRef, file), UPLOAD_TIMEOUT_MS, timeoutMessage);
+  return withTimeout(getDownloadURL(storageRef), UPLOAD_TIMEOUT_MS, timeoutMessage);
+}
+
+export async function deletePetPhoto(url: string): Promise<void> {
+  try {
+    await deleteObject(ref(storage, url));
+  } catch (e) {
+    console.error("Failed to delete pet photo from storage", e);
+  }
+}

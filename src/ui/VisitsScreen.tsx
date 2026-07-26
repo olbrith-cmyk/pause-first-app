@@ -16,6 +16,7 @@ import {
 import ViewDocument from "./ViewDocument";
 import PrepareWizard from "./PrepareWizard";
 import AttachmentManager from "./AttachmentManager";
+import PetAvatar from "./PetAvatar";
 
 export type Mode = "myVisits" | "prepare";
 
@@ -733,11 +734,14 @@ const handleDeleteVisit = async (visitId: string) => {
                         key={pet.id}
                         className="itemCard"
                         onClick={() => handleSelectPetForWizard(pet)}
-                        style={{ cursor: "pointer", textAlign: "left" }}
+                        style={{ cursor: "pointer", textAlign: "left", flexDirection: "row", alignItems: "center" }}
                       >
-                        <div className="itemTitle">{pet.name || "(Unnamed)"}</div>
-                        <div className="muted">
-                          {pet.species || (lang === "da" ? "Ukendt art" : "Unknown species")}
+                        <PetAvatar photoUrl={pet.photoUrl} />
+                        <div>
+                          <div className="itemTitle">{pet.name || "(Unnamed)"}</div>
+                          <div className="muted">
+                            {pet.species || (lang === "da" ? "Ukendt art" : "Unknown species")}
+                          </div>
                         </div>
                       </button>
                     ))}
