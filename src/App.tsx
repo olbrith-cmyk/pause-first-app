@@ -43,6 +43,37 @@ export default function App() {
     return () => unsub();
   }, []);
 
+  // Track the real visible height (visualViewport shrinks when the on-screen
+  // keyboard opens; window.innerHeight/100vh often doesn't) so fixed-height
+  // screens don't trap the focused field behind the keyboard on mobile.
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+
+    const setAppHeight = () => {
+      document.documentElement.style.setProperty("--app-vh", `${vv.height}px`);
+    };
+
+    setAppHeight();
+    vv.addEventListener("resize", setAppHeight);
+    return () => vv.removeEventListener("resize", setAppHeight);
+  }, []);
+
+  // Once the keyboard finishes animating in, make sure the focused field is
+  // actually visible rather than just inside a now-correctly-sized container.
+  useEffect(() => {
+    const handleFocusIn = (e: FocusEvent) => {
+      const el = e.target as HTMLElement;
+      if (el.tagName !== "INPUT" && el.tagName !== "TEXTAREA") return;
+      window.setTimeout(() => {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 300);
+    };
+
+    document.addEventListener("focusin", handleFocusIn);
+    return () => document.removeEventListener("focusin", handleFocusIn);
+  }, []);
+
   const handleDeleteAccount = async () => {
     if (!user) return;
 
@@ -73,7 +104,7 @@ export default function App() {
       style={{
         display: "flex",
         flexDirection: "column",
-        height: "100vh",
+        height: "var(--app-vh, 100vh)",
         width: "100vw",
         overflow: "hidden",
         backgroundColor: "#fff"
