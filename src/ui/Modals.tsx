@@ -208,6 +208,17 @@ export function PrivacyPolicy({ lang, onClose }: { lang: Lang; onClose: () => vo
           </a>
           .
         </p>
+        <p>
+          Appen har også en valgfri funktion, <strong>"Pause First AI-assistent"</strong>, som
+          åbner en brugerdefineret GPT hostet på OpenAIs ChatGPT-platform i en ny fane. Denne
+          funktion er helt valgfri — vi sender dig kun derhen, hvis du selv vælger at åbne den, og
+          alt hvad du skriver der, behandles af OpenAI og ikke af Pause First™. OpenAIs
+          privatlivspraksis er beskrevet her:{" "}
+          <a href="https://openai.com/policies/privacy-policy" target="_blank" rel="noreferrer">
+            openai.com/policies/privacy-policy
+          </a>
+          .
+        </p>
 
         <h3>9. Kontaktoplysninger</h3>
         <p>
@@ -325,6 +336,17 @@ export function PrivacyPolicy({ lang, onClose }: { lang: Lang; onClose: () => vo
         and{" "}
         <a href="https://www.netlify.com/privacy/" target="_blank" rel="noreferrer">
           netlify.com/privacy
+        </a>
+        .
+      </p>
+      <p>
+        The app also has an optional <strong>"Pause First AI Assistant"</strong> feature that
+        opens a custom GPT hosted on OpenAI's ChatGPT platform in a new tab. This feature is
+        entirely optional — we only send you there if you choose to open it, and anything you
+        type there is processed by OpenAI, not by Pause First™. OpenAI's privacy practices are
+        described here:{" "}
+        <a href="https://openai.com/policies/privacy-policy" target="_blank" rel="noreferrer">
+          openai.com/policies/privacy-policy
         </a>
         .
       </p>
