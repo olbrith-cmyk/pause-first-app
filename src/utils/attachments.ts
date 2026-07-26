@@ -108,7 +108,10 @@ export async function uploadPetPhoto(params: {
 
   const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const safeName = file.name.replace(/[^\w.\-]/g, "_");
-  const path = `pet-photos/${userId}/${scopeId}/${id}-${safeName}`;
+  // Reuses the same "attachments/{userId}/..." prefix as visit attachments so it's
+  // covered by the same Storage security rule, rather than a brand-new top-level
+  // path that the existing rule may not grant access to.
+  const path = `attachments/${userId}/pet-${scopeId}/${id}-${safeName}`;
 
   const timeoutMessage =
     "Upload timed out. This usually means Firebase Storage isn't set up for this project yet, or there's a network issue.";

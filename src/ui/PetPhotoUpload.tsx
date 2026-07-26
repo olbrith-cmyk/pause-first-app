@@ -107,8 +107,8 @@ export default function PetPhotoUpload({
 
         <div className="muted" style={{ marginTop: 6, fontSize: 12 }}>
           {lang === "da"
-            ? `Maks. filstørrelse: ${PET_PHOTO_MAX_MB}MB.`
-            : `Max file size: ${PET_PHOTO_MAX_MB}MB.`}
+            ? `Maks. filstørrelse: ${PET_PHOTO_MAX_MB}MB. Kun til at kunne genkende dyret i appen — vises ikke i besøgsforberedelsen.`
+            : `Max file size: ${PET_PHOTO_MAX_MB}MB. Just to help you spot the right animal in the app — not included in the Visit Brief.`}
         </div>
 
         {error && (
