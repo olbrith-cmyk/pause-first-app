@@ -1,8 +1,76 @@
 import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
-import type { Pet, Visit, VisitNote } from "../firestore";
+import type { CurrentStatus, Pet, TriState, Visit, VisitNote } from "../firestore";
 import { exportToPDF, shareWithVet } from "../utils/pdfExport";
 import AttachmentGallery from "./AttachmentGallery";
+
+function vaccineLabel(v?: Pet["vaccinationStatus"]) {
+  if (v === "up_to_date") return "Up to date";
+  if (v === "not_up_to_date") return "Not up to date";
+  if (v === "unknown") return "Not sure";
+  return "";
+}
+
+function patientInfoRows(pet: Pet): { label: string; value: string }[] {
+  const rows: { label: string; value: string }[] = [];
+  const push = (label: string, value?: string) => {
+    const v = (value ?? "").trim();
+    if (v) rows.push({ label, value: v });
+  };
+
+  push("Species", pet.species);
+  push("Age", pet.age);
+  push("Sex", pet.sex);
+  push("Weight", pet.weight);
+
+  const vLabel = vaccineLabel(pet.vaccinationStatus);
+  const vDate = pet.vaccinationLastDate?.trim();
+  if (vLabel || vDate) {
+    push("Vaccinations", [vLabel, vDate ? `Last: ${vDate}` : ""].filter(Boolean).join(" • "));
+  }
+
+  push("Diet / feed", pet.diet);
+  push("Preventatives", pet.preventatives);
+  push("Medications", pet.medications);
+  push("Allergies / reactions", pet.allergies);
+  push("Surgeries / procedures", pet.surgeries);
+  push("Lifestyle / environment", pet.lifestyle);
+
+  return rows;
+}
+
+function currentStatusSummary(cs?: CurrentStatus) {
+  if (!cs) return null;
+
+  const items: Array<{ key: keyof CurrentStatus; label: string; notesKey: keyof CurrentStatus }> = [
+    { key: "appetite", label: "Appetite", notesKey: "appetiteNotes" },
+    { key: "drinking", label: "Drinking", notesKey: "drinkingNotes" },
+    { key: "energy", label: "Energy", notesKey: "energyNotes" },
+    { key: "toileting", label: "Toileting", notesKey: "toiletingNotes" },
+    { key: "gi", label: "GI (vomiting/diarrhea)", notesKey: "giNotes" },
+    { key: "breathing", label: "Breathing/coughing", notesKey: "breathingNotes" },
+    { key: "mobilityPain", label: "Mobility/pain", notesKey: "mobilityPainNotes" },
+    { key: "skinEars", label: "Skin/ears", notesKey: "skinEarsNotes" }
+  ];
+
+  const different: string[] = [];
+  const notSure: string[] = [];
+  const asUsual: string[] = [];
+
+  for (const it of items) {
+    const v = (cs[it.key] as TriState) ?? "normal";
+    const notes = ((cs[it.notesKey] as string) ?? "").trim();
+    const line = notes ? `${it.label}: ${notes}` : it.label;
+    if (v === "changed") different.push(line);
+    else if (v === "na") notSure.push(line);
+    else asUsual.push(it.label);
+  }
+
+  const otherNotes = (cs.otherNotes ?? "").trim();
+
+  if (!different.length && !notSure.length && !asUsual.length && !otherNotes) return null;
+  return { different, notSure, asUsual, otherNotes };
+}
 
 export default function ViewDocument({
   lang,
@@ -42,6 +110,12 @@ export default function ViewDocument({
     }
   };
 
+  const patientRows = patientInfoRows(pet);
+  const statusSummary = currentStatusSummary(visit.currentStatus);
+  const medicationsSupplements = visit.medicationsSupplements ?? "";
+  const knownConditions = ((visit as any).knownConditions as string) ?? "";
+  const recentTests = ((visit as any).recentTests as string) ?? "";
+
   return (
     <div className="stack">
       <h3>{t.viewDocument}</h3>
@@ -56,6 +130,21 @@ export default function ViewDocument({
             Visit Date: {visit.visitDate || "Not specified"}
           </p>
         </div>
+
+        {/* Patient Info (from the pet's profile) */}
+        {!!patientRows.length && (
+          <div style={{ marginBottom: "20px" }}>
+            <h4 style={{ margin: "0 0 8px 0", color: "var(--primary)" }}>Patient Info</h4>
+            {patientRows.map((r) => (
+              <div key={r.label} style={{ display: "flex", gap: 8, padding: "3px 0" }}>
+                <div style={{ width: 160, flexShrink: 0, color: "var(--text-muted)", fontSize: 13 }}>
+                  {r.label}
+                </div>
+                <div style={{ lineHeight: "1.5" }}>{r.value}</div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Main Concern */}
         <div style={{ marginBottom: "20px" }}>
@@ -94,6 +183,63 @@ export default function ViewDocument({
           <div style={{ marginBottom: "20px" }}>
             <h4 style={{ margin: "0 0 8px 0", color: "var(--primary)" }}>Associated Signs</h4>
             <p style={{ margin: "0", lineHeight: "1.6" }}>{visit.associatedSigns}</p>
+          </div>
+        )}
+
+        {/* Current Status */}
+        {statusSummary && (
+          <div style={{ marginBottom: "20px" }}>
+            <h4 style={{ margin: "0 0 8px 0", color: "var(--primary)" }}>Current Status</h4>
+            {!!statusSummary.different.length && (
+              <p style={{ margin: "0 0 6px 0", lineHeight: "1.6" }}>
+                <strong>Different:</strong> {statusSummary.different.join(", ")}
+              </p>
+            )}
+            {!!statusSummary.notSure.length && (
+              <p style={{ margin: "0 0 6px 0", lineHeight: "1.6" }}>
+                <strong>N/A / not sure:</strong> {statusSummary.notSure.join(", ")}
+              </p>
+            )}
+            {!!statusSummary.asUsual.length && (
+              <p style={{ margin: "0 0 6px 0", lineHeight: "1.6" }}>
+                <strong>As usual:</strong> {statusSummary.asUsual.join(", ")}
+              </p>
+            )}
+            {statusSummary.otherNotes && (
+              <p style={{ margin: "0", lineHeight: "1.6" }}>{statusSummary.otherNotes}</p>
+            )}
+          </div>
+        )}
+
+        {/* Other Details */}
+        {visit.otherDetails && (
+          <div style={{ marginBottom: "20px" }}>
+            <h4 style={{ margin: "0 0 8px 0", color: "var(--primary)" }}>Other Details</h4>
+            <p style={{ margin: "0", lineHeight: "1.6" }}>{visit.otherDetails}</p>
+          </div>
+        )}
+
+        {/* Medications / Supplements */}
+        {medicationsSupplements && (
+          <div style={{ marginBottom: "20px" }}>
+            <h4 style={{ margin: "0 0 8px 0", color: "var(--primary)" }}>Meds / Supplements</h4>
+            <p style={{ margin: "0", lineHeight: "1.6" }}>{medicationsSupplements}</p>
+          </div>
+        )}
+
+        {/* Known Conditions */}
+        {knownConditions && (
+          <div style={{ marginBottom: "20px" }}>
+            <h4 style={{ margin: "0 0 8px 0", color: "var(--primary)" }}>Known Conditions (Vet-Diagnosed)</h4>
+            <p style={{ margin: "0", lineHeight: "1.6" }}>{knownConditions}</p>
+          </div>
+        )}
+
+        {/* Recent Tests */}
+        {recentTests && (
+          <div style={{ marginBottom: "20px" }}>
+            <h4 style={{ margin: "0 0 8px 0", color: "var(--primary)" }}>Recent Tests / Results</h4>
+            <p style={{ margin: "0", lineHeight: "1.6" }}>{recentTests}</p>
           </div>
         )}
 
