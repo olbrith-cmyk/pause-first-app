@@ -151,7 +151,7 @@ export default function Dashboard({
 
               <p className="homeLead homeLeadV2">
                 {lang === "da"
-                  ? "Vælg et dyr (eller tilføj et) og skriv dine observationer ned. Gå ind til besøget rolig, klar og forberedt."
+                  ? "Vælg et dyr (eller tilføj et) og skriv dine observationer ned. Mød rolig og forberedt op hos dyrlægen."
                   : "Choose an animal (or add one) and write down your observations. Walk into the visit calm, clear, and prepared."}
               </p>
 

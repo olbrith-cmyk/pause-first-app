@@ -8,9 +8,29 @@ import type { User } from "firebase/auth";
 import AuthScreen from "./ui/AuthScreen";
 import Dashboard from "./ui/Dashboard";
 
+const LANG_STORAGE_KEY = "pauseFirstLang";
+
+function loadStoredLang(): Lang {
+  try {
+    const stored = window.localStorage.getItem(LANG_STORAGE_KEY);
+    return stored === "da" || stored === "en" ? stored : "en";
+  } catch {
+    return "en";
+  }
+}
+
 export default function App() {
-  const [lang, setLang] = useState<Lang>("en");
+  const [lang, setLang] = useState<Lang>(loadStoredLang);
   const t = useTranslation(lang);
+
+  const handleLangChange = (next: Lang) => {
+    setLang(next);
+    try {
+      window.localStorage.setItem(LANG_STORAGE_KEY, next);
+    } catch {
+      // ignore write failures (e.g., private browsing)
+    }
+  };
 
   const [user, setUser] = useState<User | null>(null);
   const [authReady, setAuthReady] = useState(false);
@@ -60,13 +80,13 @@ export default function App() {
       }}
     >
       {!user ? (
-        <AuthScreen lang={lang} />
+        <AuthScreen lang={lang} onLangChange={handleLangChange} />
       ) : (
         <Dashboard
           lang={lang}
           userId={user.uid}
           email={user.email ?? ""}
-          onLangChange={setLang}
+          onLangChange={handleLangChange}
           onLogout={logOut}
           onDeleteAccount={handleDeleteAccount}
         />

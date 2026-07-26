@@ -4,7 +4,13 @@ import { useTranslation } from "../i18n";
 import { logIn, resetPassword, signUp } from "../auth";
 import horseSil from "../assets/silhouettes/horse.png";
 
-export default function AuthScreen({ lang }: { lang: Lang }) {
+export default function AuthScreen({
+  lang,
+  onLangChange
+}: {
+  lang: Lang;
+  onLangChange?: (next: Lang) => void;
+}) {
   const t = useTranslation(lang);
 
   const [mode, setMode] = useState<"login" | "signup" | "reset">("signup");
@@ -36,7 +42,18 @@ export default function AuthScreen({ lang }: { lang: Lang }) {
 
   return (
     <main className="card">
-      <h2>{t.welcome}</h2>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+        <h2 style={{ margin: 0 }}>{t.welcome}</h2>
+        {onLangChange && (
+          <button
+            onClick={() => onLangChange(lang === "en" ? "da" : "en")}
+            className="langBtn"
+            aria-label="Toggle language"
+          >
+            {lang === "en" ? "DA" : "EN"}
+          </button>
+        )}
+      </div>
       <p className="muted">{t.accountInfo}</p>
 
       <div className="form">
