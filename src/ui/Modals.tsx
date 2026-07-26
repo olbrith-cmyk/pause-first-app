@@ -123,7 +123,7 @@ export function PrivacyPolicy({ lang, onClose }: { lang: Lang; onClose: () => vo
   if (lang === "da") {
     return (
       <ModalShell title="Privatlivspolitik" onClose={onClose}>
-        <p className="muted">Senest opdateret: April 2026</p>
+        <p className="muted">Senest opdateret: Juli 2026</p>
 
         <h3>1. Introduktion</h3>
         <p>
@@ -189,10 +189,24 @@ export function PrivacyPolicy({ lang, onClose }: { lang: Lang; onClose: () => vo
 
         <h3>8. Tredjepartstjenester</h3>
         <p>
-          Vi bruger Firebase (af Google). Googles privatlivspraksis er beskrevet her:{" "}
+          Vi bruger Firebase (af Google) til autentificering og datalagring. Googles
+          privatlivspraksis er beskrevet her:{" "}
           <a href="https://policies.google.com/privacy" target="_blank" rel="noreferrer">
             https://policies.google.com/privacy
           </a>
+        </p>
+        <p>
+          Tjenesten hostes via <strong>Vercel</strong> og <strong>Netlify</strong>, som i kraft af
+          hostingen kan behandle grundlæggende tekniske oplysninger (fx IP-adresse og server-logs).
+          Deres privatlivspolitikker er tilgængelige her:{" "}
+          <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noreferrer">
+            vercel.com/legal/privacy-policy
+          </a>{" "}
+          og{" "}
+          <a href="https://www.netlify.com/privacy/" target="_blank" rel="noreferrer">
+            netlify.com/privacy
+          </a>
+          .
         </p>
 
         <h3>9. Kontaktoplysninger</h3>
@@ -230,7 +244,7 @@ export function PrivacyPolicy({ lang, onClose }: { lang: Lang; onClose: () => vo
   // English version (default)
   return (
     <ModalShell title="Privacy Policy" onClose={onClose}>
-      <p className="muted">Last Updated: April 2026</p>
+      <p className="muted">Last Updated: July 2026</p>
 
       <h3>1. Introduction</h3>
       <p>
@@ -295,10 +309,24 @@ export function PrivacyPolicy({ lang, onClose }: { lang: Lang; onClose: () => vo
 
       <h3>8. Third-Party Services</h3>
       <p>
-        We use Firebase (by Google). Google's privacy practices are described here:{" "}
+        We use Firebase (by Google) for authentication and data storage. Google's privacy
+        practices are described here:{" "}
         <a href="https://policies.google.com/privacy" target="_blank" rel="noreferrer">
           https://policies.google.com/privacy
         </a>
+      </p>
+      <p>
+        The Service is hosted via <strong>Vercel</strong> and <strong>Netlify</strong>, which as
+        part of providing hosting infrastructure may process basic technical information (such as
+        IP address and server logs). Their privacy policies are available here:{" "}
+        <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noreferrer">
+          vercel.com/legal/privacy-policy
+        </a>{" "}
+        and{" "}
+        <a href="https://www.netlify.com/privacy/" target="_blank" rel="noreferrer">
+          netlify.com/privacy
+        </a>
+        .
       </p>
 
       <h3>9. Contact Details</h3>
