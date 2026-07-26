@@ -1441,7 +1441,13 @@ export default function PrepareWizard({
                 disabled={!stepData[step].ok}
                 style={{ flex: 1 }}
               >
-                {step === stepData.length - 1 ? "Preview" : lang === "da" ? "Næste" : "Next"}
+                {step === stepData.length - 1
+                  ? lang === "da"
+                    ? "Gennemse"
+                    : "Preview"
+                  : lang === "da"
+                    ? "Næste"
+                    : "Next"}
               </button>
             ) : (
               <div style={{ flex: 1 }} />

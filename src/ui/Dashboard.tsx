@@ -193,7 +193,7 @@ export default function Dashboard({
                     onClick={() => setMode("myVisits")}
                     className="btn btnSecondary homeSecondaryPill"
                   >
-                    {lang === "da" ? "Mine Besøg" : "My Visits"}
+                    {lang === "da" ? "Mine besøg" : "My Visits"}
                   </button>
                 </div>
               </div>

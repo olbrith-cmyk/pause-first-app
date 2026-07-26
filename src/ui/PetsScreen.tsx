@@ -284,8 +284,8 @@ export default function PetsScreen({
             {pets.length === 0 ? (
               <div className="muted">
                 {lang === "da"
-                  ? "Ingen kæledyr endnu. Klik “+ Tilføj dit første kæledyr” for at komme i gang."
-                  : 'No pets yet. Click "+ Add Your First Pet" to get started.'}
+                  ? "Ingen dyr endnu. Klik “+ Tilføj dit første dyr” for at komme i gang."
+                  : 'No animals yet. Click "+ Add your first animal" to get started.'}
               </div>
             ) : (
               pets.map((pet) => (

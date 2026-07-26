@@ -90,7 +90,7 @@ export function patientInfoRows(pet: Pet, lang: Lang): { label: string; value: s
   push(lang === "da" ? "Race" : "Breed", pet.breedType);
   push(lang === "da" ? "Fødselsdato / alder" : "Date of birth / age", ageOrBirthSummary(pet));
   push(lang === "da" ? "Køn" : "Sex", pet.sex);
-  push(lang === "da" ? "Neutraliseret" : "Neutered status", pet.neuteredStatus);
+  push(lang === "da" ? "Kastreret/steriliseret" : "Neutered status", pet.neuteredStatus);
   push(lang === "da" ? "Vægt" : "Weight", pet.weight);
   push(lang === "da" ? "Mikrochip" : "Microchip", pet.microchip);
   push(lang === "da" ? "Vaccinationer" : "Vaccinations", vaccinationsSummary(pet, lang));
