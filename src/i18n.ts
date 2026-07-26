@@ -182,7 +182,7 @@ const da: Translations = {
 
   // Auth
   welcome: "Velkommen",
-  accountInfo: "Opret en konto eller log ind for at gemme dine dyr og besøg.",
+  accountInfo: "Opret en konto eller log ind for at gemme dine dyr og forberede dyrlægebesøg.",
   email: "E-mail",
   password: "Adgangskode",
   createPassword: "Opret en adgangskode",
