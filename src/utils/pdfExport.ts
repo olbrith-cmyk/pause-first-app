@@ -143,12 +143,7 @@ function buildShareText(params: { visit: Visit; pet: Pet; note: VisitNote | null
   return lines.join("\n");
 }
 
-export async function exportToPDF(params: {
-  visit: Visit;
-  pet: Pet;
-  note: VisitNote | null;
-  lang: Lang;
-}) {
+async function renderDocumentPdf(params: { visit: Visit; pet: Pet }): Promise<{ pdf: jsPDF; fileName: string }> {
   const el = document.getElementById("document-content");
   if (!el) throw new Error("Document content not found.");
 
@@ -188,7 +183,28 @@ export async function exportToPDF(params: {
     .replace(/\s+/g, "_")
     .replace(/[^\w\-\.]/g, "");
 
+  return { pdf, fileName };
+}
+
+export async function exportToPDF(params: {
+  visit: Visit;
+  pet: Pet;
+  note: VisitNote | null;
+  lang: Lang;
+}) {
+  const { pdf, fileName } = await renderDocumentPdf(params);
   pdf.save(fileName);
+}
+
+async function generatePdfFile(params: { visit: Visit; pet: Pet }): Promise<File | null> {
+  try {
+    const { pdf, fileName } = await renderDocumentPdf(params);
+    const blob = pdf.output("blob");
+    return new File([blob], fileName, { type: "application/pdf" });
+  } catch (e) {
+    console.error("Failed to generate PDF for sharing", e);
+    return null;
+  }
 }
 
 function filenameFromAttachmentUrl(url: string): string | null {
@@ -243,19 +259,30 @@ export async function shareWithVet(params: {
   note: VisitNote | null;
   lang: Lang;
 }) {
-  const { visit, note, lang } = params;
+  const { visit, pet, note, lang } = params;
   const text = buildShareText(params);
 
   const attachments = [...(visit.attachments ?? []), ...(note?.attachments ?? [])];
-  const { files, failedCount } = attachments.length
-    ? await attachmentsToFiles(attachments)
-    : { files: [] as File[], failedCount: 0 };
+  const [pdfFile, attachmentResult] = await Promise.all([
+    generatePdfFile({ visit, pet }),
+    attachments.length ? attachmentsToFiles(attachments) : Promise.resolve({ files: [] as File[], failedCount: 0 })
+  ]);
 
-  const attachmentWarning = failedCount
+  const { files: attachmentFiles, failedCount } = attachmentResult;
+  const files = pdfFile ? [pdfFile, ...attachmentFiles] : attachmentFiles;
+
+  const pdfWarning = !pdfFile
     ? lang === "da"
-      ? ` (${failedCount} fil(er) kunne ikke inkluderes — se browserkonsollen for detaljer.)`
-      : ` (${failedCount} file(s) couldn't be included — check the browser console for details.)`
+      ? " (PDF'en kunne ikke oprettes — se browserkonsollen for detaljer.)"
+      : " (The PDF couldn't be generated — check the browser console for details.)"
     : "";
+
+  const attachmentWarning =
+    (failedCount
+      ? lang === "da"
+        ? ` (${failedCount} fil(er) kunne ikke inkluderes — se browserkonsollen for detaljer.)`
+        : ` (${failedCount} file(s) couldn't be included — check the browser console for details.)`
+      : "") + pdfWarning;
 
   const nav: any = navigator;
   const canShareFiles = files.length > 0 && typeof nav.canShare === "function" && nav.canShare({ files });
