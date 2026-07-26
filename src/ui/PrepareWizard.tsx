@@ -57,6 +57,7 @@ export default function PrepareWizard({
   const [savingDraft, setSavingDraft] = useState(false);
   const [mode, setMode] = useState<"wizard" | "preview" | "done">("wizard");
   const [showCurrentStatus, setShowCurrentStatus] = useState(false);
+  const [showPatientInfo, setShowPatientInfo] = useState(false);
 
   const [visitId, setVisitId] = useState<string | null>(null);
   const didInit = useRef(false);
@@ -1126,7 +1127,7 @@ export default function PrepareWizard({
                 <div style={notebookMarginStyle} />
 
                 <div style={{ position: "relative", paddingLeft: 14 }}>
-                  {/* PATIENT INFO (from the pet's profile) */}
+                  {/* PATIENT INFO (from the pet's profile, collapsible like Current Status) */}
                   {pet &&
                     (() => {
                       const rows = patientInfoRows(pet, lang);
@@ -1138,18 +1139,51 @@ export default function PrepareWizard({
                           <div style={sectionLabelStyle}>
                             {lang === "da" ? "Patientinfo" : "Patient Info"}
                           </div>
+
                           <div style={{ marginBottom: 14 }}>
-                            {rows.map((r) => (
-                              <div
-                                key={r.label}
-                                style={{ display: "flex", gap: 8, padding: "3px 0", fontSize: 14 }}
-                              >
-                                <div style={{ width: 150, flexShrink: 0, color: "rgba(20,40,60,0.65)" }}>
-                                  {r.label}
-                                </div>
-                                <div style={{ color: "rgba(15,25,35,0.92)" }}>{r.value}</div>
+                            <button
+                              type="button"
+                              className="btn btnSecondary"
+                              onClick={() => setShowPatientInfo((v) => !v)}
+                              style={{
+                                width: "100%",
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                padding: "10px 12px"
+                              }}
+                            >
+                              <span style={{ fontWeight: 700 }}>
+                                {showPatientInfo
+                                  ? lang === "da" ? "Skjul patientinfo" : "Hide patient info"
+                                  : lang === "da" ? "Vis patientinfo" : "Show patient info"}
+                              </span>
+                              <span style={{ fontWeight: 700 }}>{showPatientInfo ? "▲" : "▼"}</span>
+                            </button>
+
+                            {!showPatientInfo && (
+                              <div className="muted" style={{ fontSize: 13, marginTop: 8 }}>
+                                {lang === "da"
+                                  ? `${rows.length} felter fra kæledyrsprofilen`
+                                  : `${rows.length} fields from the pet profile`}
                               </div>
-                            ))}
+                            )}
+
+                            {showPatientInfo && (
+                              <div style={{ marginTop: 10 }}>
+                                {rows.map((r) => (
+                                  <div
+                                    key={r.label}
+                                    style={{ display: "flex", gap: 8, padding: "3px 0", fontSize: 14 }}
+                                  >
+                                    <div style={{ width: 150, flexShrink: 0, color: "rgba(20,40,60,0.65)" }}>
+                                      {r.label}
+                                    </div>
+                                    <div style={{ color: "rgba(15,25,35,0.92)" }}>{r.value}</div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         </>
                       );
