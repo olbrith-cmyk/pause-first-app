@@ -233,7 +233,7 @@ export default function PetsScreen({
   };
 
   const remove = async (petId: string) => {
-    if (!confirm(lang === "da" ? "Slet kæledyr?" : "Delete pet?")) return;
+    if (!confirm(lang === "da" ? "Slet dyr?" : "Delete pet?")) return;
     await deletePet(petId);
     await load();
     cancel();
@@ -310,12 +310,12 @@ export default function PetsScreen({
               <h4 style={{ margin: 0 }}>
                 {isFirstPet && !selected
                   ? lang === "da"
-                    ? "Tilføj dit første kæledyr"
+                    ? "Tilføj dit første dyr"
                     : "Add Your First Pet"
                   : selected
                     ? selected.name || "(Unnamed)"
                     : lang === "da"
-                      ? "Nyt kæledyr"
+                      ? "Nyt dyr"
                       : "New Pet"}
               </h4>
             </div>
@@ -328,7 +328,7 @@ export default function PetsScreen({
                 <div className="row" style={{ marginTop: 12 }}>
                   <button className="btn btnPrimary" onClick={() => setShowWizard(true)}>
                     {lang === "da" ? "+ Tilføj besøg for " : "+ Add visit for "}
-                    {selected.name || (lang === "da" ? "dette kæledyr" : "this pet")}
+                    {selected.name || (lang === "da" ? "dette dyr" : "this pet")}
                   </button>
                 </div>
 
@@ -336,7 +336,7 @@ export default function PetsScreen({
                   <h4 style={{ margin: "8px 0" }}>{lang === "da" ? "Besøg" : "Visits"}</h4>
                   {selectedPetVisits.length === 0 ? (
                     <div className="muted">
-                      {lang === "da" ? "Ingen besøg endnu for dette kæledyr." : "No visits yet for this pet."}
+                      {lang === "da" ? "Ingen besøg endnu for dette dyr." : "No visits yet for this pet."}
                     </div>
                   ) : (
                     <div className="stack">
@@ -410,7 +410,7 @@ export default function PetsScreen({
                     : "Fill this in once — we’ll reuse it to auto‑fill your Visit Briefs."}
                 </div>
 
-                <Section title={lang === "da" ? "Om dit kæledyr" : "About your pet"}>
+                <Section title={lang === "da" ? "Om dit dyr" : "About your pet"}>
                   <div className="stack">
                     <label className="label">
                       {t.petName}

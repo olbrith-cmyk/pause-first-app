@@ -28,6 +28,76 @@ function ModalShell({
 export function EmergencyGuide({ lang, onClose }: { lang: Lang; onClose: () => void }) {
   const t = useTranslation(lang);
 
+  if (lang === "da") {
+    return (
+      <ModalShell title={t.emergencyGuide} onClose={onClose}>
+        <div className="alert alertInfo">
+          Pause First™ er et forberedelsesværktøj til ikke-akutte dyrlægebesøg. Det hjælper dig med
+          at organisere oplysninger om symptomer, der er opstået gradvist eller virker milde. Stol
+          altid på din mavefornemmelse — er du i tvivl, så ring til din dyrlæge eller nærmeste
+          akutklinik med det samme.
+        </div>
+
+        <h3>Almindelige tegn på en veterinær nødsituation</h3>
+        <ul className="list">
+          <li>
+            <strong>Vejrtrækningsbesvær eller kvælning</strong> — Anstrengt, overfladisk eller hurtig
+            vejrtrækning
+          </li>
+          <li>
+            <strong>Bevidstløshed eller kollaps</strong> — Manglende reaktion eller pludseligt fald
+          </li>
+          <li>
+            <strong>Alvorligt traume</strong> — Påkørsel, dybe sår eller andre større skader
+          </li>
+          <li>
+            <strong>Manglende evne til at lade vandet eller afføre sig</strong> — Presser uden
+            resultat
+          </li>
+          <li>
+            <strong>Mistanke om forgiftning</strong> — Kendt indtagelse af giftige stoffer
+          </li>
+          <li>
+            <strong>Ukontrolleret opkastning eller diarré med blod</strong> — Vedvarende eller
+            blodigt opkast/afføring
+          </li>
+          <li>
+            <strong>Øjenskade eller pludseligt øjenproblem</strong> — Sammenknebne øjne, poter mod
+            øjet, rødme, hævelse, udflod, uklart/blåligt udseende
+          </li>
+          <li>
+            <strong>Tegn på svær smerte</strong> — Klynken, aggression eller manglende evne til at
+            bevæge sig
+          </li>
+          <li>
+            <strong>Blege eller blålige tandkød</strong> — Dårlig blodcirkulation eller åndenød
+          </li>
+          <li>
+            <strong>Symptomer på hedeslag</strong> — Kraftig savlen, hurtig vejrtrækning eller
+            sløvhed
+          </li>
+          <li>
+            <strong>Manglende evne til at bevæge sig eller lammelse</strong> — Tab af førlighed
+            eller koordination
+          </li>
+          <li>
+            <strong>Krampeanfald</strong> — Ukontrollerede kramper eller muskelspasmer
+          </li>
+        </ul>
+
+        <p className="alert alertInfo">
+          Er du i tvivl, så kontakt din dyrlæge eller nærmeste akutklinik med det samme.
+        </p>
+
+        <div className="row">
+          <button className="btn btnSecondary" onClick={onClose}>
+            {t.close}
+          </button>
+        </div>
+      </ModalShell>
+    );
+  }
+
   return (
     <ModalShell title={t.emergencyGuide} onClose={onClose}>
       <div className="alert alertInfo">
@@ -93,6 +163,32 @@ export function EmergencyGuide({ lang, onClose }: { lang: Lang; onClose: () => v
 export function MedicalDisclaimer({ lang, onClose }: { lang: Lang; onClose: () => void }) {
   const t = useTranslation(lang);
 
+  if (lang === "da") {
+    return (
+      <ModalShell title={t.medicalDisclaimer} onClose={onClose}>
+        <p>
+          Pause First™ er udelukkende et forberedelsesværktøj — ikke en erstatning for
+          dyrlægefaglig rådgivning. Kontakt altid din dyrlæge. Ved akutte tilfælde, kontakt din
+          dyrlæge eller dyreklinik med det samme.
+        </p>
+
+        <div className="calloutBox">
+          <p>
+            Dette værktøj er designet til at hjælpe dig med at organisere dine tanker og
+            observationer før et dyrlægebesøg. Det stiller ikke diagnoser, behandler ikke og
+            erstatter ikke professionel dyrlægefaglig rådgivning, diagnose eller behandling.
+          </p>
+        </div>
+
+        <div className="row">
+          <button className="btn btnSecondary" onClick={onClose}>
+            {t.close}
+          </button>
+        </div>
+      </ModalShell>
+    );
+  }
+
   return (
     <ModalShell title={t.medicalDisclaimer} onClose={onClose}>
       <p>
@@ -139,7 +235,7 @@ export function PrivacyPolicy({ lang, onClose }: { lang: Lang; onClose: () => vo
         <p><strong>Oplysninger du giver direkte:</strong></p>
         <ul className="list">
           <li>Kontooplysninger (navn, e-mailadresse, adgangskode)</li>
-          <li>Kæledyrsoplysninger (kæledyrets navn, art og andre detaljer du vælger at tilføje)</li>
+          <li>Dyreoplysninger (dyrets navn, art og andre detaljer du vælger at tilføje)</li>
           <li>
             Sundhedsoplysninger du indtaster (symptomer, forberedelsesnoter, besøgsnoter, diagnoser,
             medicin, behandlingsnoter)
@@ -155,7 +251,7 @@ export function PrivacyPolicy({ lang, onClose }: { lang: Lang; onClose: () => vo
         <h3>3. Hvordan Vi Bruger Dine Oplysninger</h3>
         <ul className="list">
           <li>For at oprette og vedligeholde din konto</li>
-          <li>For at gemme og organisere dine kæledyrsoplysninger og besøgsnoter</li>
+          <li>For at gemme og organisere dine dyreoplysninger og besøgsnoter</li>
           <li>For at hjælpe dig med at forberede dig til dyrlægebesøg</li>
           <li>For at forbedre tjenesten og løse problemer</li>
           <li>For at overholde juridiske forpligtelser</li>

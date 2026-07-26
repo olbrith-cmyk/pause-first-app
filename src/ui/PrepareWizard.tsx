@@ -348,8 +348,8 @@ export default function PrepareWizard({
     const cs = draft.currentStatus ?? makeEmptyStatus();
     const lines: string[] = [];
 
-    lines.push(lang === "da" ? "VISIT BRIEF (Ejer-observationer)" : "VISIT BRIEF (Owner observations)");
-    lines.push(`${lang === "da" ? "Kæledyr" : "Pet"}: ${petName}`);
+    lines.push(lang === "da" ? "BESØGSFORBEREDELSE (Ejer-observationer)" : "VISIT BRIEF (Owner observations)");
+    lines.push(`${lang === "da" ? "Dyr" : "Pet"}: ${petName}`);
     if (draft.visitDate) lines.push(`${lang === "da" ? "Besøgsdato" : "Visit date"}: ${draft.visitDate}`);
 
     if (pet) {
@@ -747,7 +747,7 @@ export default function PrepareWizard({
         return (
           <>
             <div className="muted" style={{ marginBottom: 8 }}>
-              {lang === "da" ? "Kæledyr:" : "Pet:"} <strong>{petName}</strong>
+              {lang === "da" ? "Dyr:" : "Pet:"} <strong>{petName}</strong>
             </div>
 
             <label className="label">
@@ -1082,7 +1082,7 @@ export default function PrepareWizard({
           {mode === "preview" && (
             <>
               <div style={{ marginBottom: 12 }}>
-                <h3 style={{ margin: "0 0 4px 0" }}>{lang === "da" ? "Visit Brief" : "Visit Brief"}</h3>
+                <h3 style={{ margin: "0 0 4px 0" }}>{lang === "da" ? "Besøgsforberedelse" : "Visit Brief"}</h3>
                 <div className="muted" style={{ fontSize: 14 }}>
                   {lang === "da"
                     ? "Klar til at dele med dit dyrlægeteam."
@@ -1103,7 +1103,7 @@ export default function PrepareWizard({
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
                   <div>
                     <div className="muted" style={{ fontSize: 12 }}>
-                      {lang === "da" ? "Kæledyr" : "Pet"}
+                      {lang === "da" ? "Dyr" : "Pet"}
                     </div>
                     <div style={{ fontWeight: 800, fontSize: 18, lineHeight: 1.2 }}>{petName}</div>
                   </div>
@@ -1118,7 +1118,7 @@ export default function PrepareWizard({
               </div>
 
               <button className="btn btnSecondary" onClick={handleCopy} style={{ width: "100%", marginBottom: 12 }}>
-                {lang === "da" ? "Kopiér Visit Brief" : "Copy Visit Brief"}
+                {lang === "da" ? "Kopiér besøgsforberedelse" : "Copy Visit Brief"}
               </button>
 
               {/* Notebook brief */}
@@ -1164,7 +1164,7 @@ export default function PrepareWizard({
                             {!showPatientInfo && (
                               <div className="muted" style={{ fontSize: 13, marginTop: 8 }}>
                                 {lang === "da"
-                                  ? `${rows.length} felter fra kæledyrsprofilen`
+                                  ? `${rows.length} felter fra dyreprofilen`
                                   : `${rows.length} fields from the pet profile`}
                               </div>
                             )}

@@ -392,7 +392,7 @@ const handleDeleteVisit = async (visitId: string) => {
         </h4>
         <div className="muted" style={{ marginTop: 4 }}>
           {lang === "da"
-            ? "Færdige besøgsnotater (ikke kladder)"
+            ? "Færdige besøgsforberedelser (ikke kladder)"
             : "Finished Visit Briefs (not drafts)"}
         </div>
       </div>

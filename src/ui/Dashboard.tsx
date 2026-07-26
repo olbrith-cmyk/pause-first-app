@@ -169,7 +169,7 @@ export default function Dashboard({
 
                   <div className="homeCtaHeroText">
                     <div className="homeCtaHeroMain">
-                      {lang === "da" ? "Forbered et besøgsnotat" : "Prepare a Visit Brief"}
+                      {lang === "da" ? "Lav en besøgsforberedelse" : "Prepare a Visit Brief"}
                     </div>
                     <div className="homeCtaHeroSub">
                       {lang === "da" ? "5–10 minutter" : "5–10 minutes"}

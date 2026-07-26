@@ -54,7 +54,7 @@ function buildShareText(params: { visit: Visit; pet: Pet; note: VisitNote | null
 
   if (lang === "da") {
     lines.push(`Pause First™ – forberedelse til dyrlægebesøg`);
-    lines.push(`Kæledyr: ${pet.name}`);
+    lines.push(`Dyr: ${pet.name}`);
     lines.push(`Dato: ${visit.visitDate || "(ingen dato)"}`);
 
     const patientLines = patientInfoLines(pet, lang);

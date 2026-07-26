@@ -6,18 +6,18 @@ import { exportToPDF, shareWithVet } from "../utils/pdfExport";
 import { patientInfoRows } from "../utils/petInfo";
 import AttachmentGallery from "./AttachmentGallery";
 
-function currentStatusSummary(cs?: CurrentStatus) {
+function currentStatusSummary(cs: CurrentStatus | undefined, lang: Lang) {
   if (!cs) return null;
 
-  const items: Array<{ key: keyof CurrentStatus; label: string; notesKey: keyof CurrentStatus }> = [
-    { key: "appetite", label: "Appetite", notesKey: "appetiteNotes" },
-    { key: "drinking", label: "Drinking", notesKey: "drinkingNotes" },
-    { key: "energy", label: "Energy", notesKey: "energyNotes" },
-    { key: "toileting", label: "Toileting", notesKey: "toiletingNotes" },
-    { key: "gi", label: "GI (vomiting/diarrhea)", notesKey: "giNotes" },
-    { key: "breathing", label: "Breathing/coughing", notesKey: "breathingNotes" },
-    { key: "mobilityPain", label: "Mobility/pain", notesKey: "mobilityPainNotes" },
-    { key: "skinEars", label: "Skin/ears", notesKey: "skinEarsNotes" }
+  const items: Array<{ key: keyof CurrentStatus; labelEn: string; labelDa: string; notesKey: keyof CurrentStatus }> = [
+    { key: "appetite", labelEn: "Appetite", labelDa: "Appetit", notesKey: "appetiteNotes" },
+    { key: "drinking", labelEn: "Drinking", labelDa: "Drikker", notesKey: "drinkingNotes" },
+    { key: "energy", labelEn: "Energy", labelDa: "Energi", notesKey: "energyNotes" },
+    { key: "toileting", labelEn: "Toileting", labelDa: "Toiletvaner", notesKey: "toiletingNotes" },
+    { key: "gi", labelEn: "GI (vomiting/diarrhea)", labelDa: "Mave/tarm (opkast/diarré)", notesKey: "giNotes" },
+    { key: "breathing", labelEn: "Breathing/coughing", labelDa: "Vejrtrækning/hoste", notesKey: "breathingNotes" },
+    { key: "mobilityPain", labelEn: "Mobility/pain", labelDa: "Bevægelse/smerte", notesKey: "mobilityPainNotes" },
+    { key: "skinEars", labelEn: "Skin/ears", labelDa: "Hud/ører", notesKey: "skinEarsNotes" }
   ];
 
   const different: string[] = [];
@@ -27,10 +27,11 @@ function currentStatusSummary(cs?: CurrentStatus) {
   for (const it of items) {
     const v = (cs[it.key] as TriState) ?? "normal";
     const notes = ((cs[it.notesKey] as string) ?? "").trim();
-    const line = notes ? `${it.label}: ${notes}` : it.label;
+    const label = lang === "da" ? it.labelDa : it.labelEn;
+    const line = notes ? `${label}: ${notes}` : label;
     if (v === "changed") different.push(line);
     else if (v === "na") notSure.push(line);
-    else asUsual.push(it.label);
+    else asUsual.push(label);
   }
 
   const otherNotes = (cs.otherNotes ?? "").trim();
@@ -143,12 +144,13 @@ export default function ViewDocument({
   note: VisitNote | null;
 }) {
   const t = useTranslation(lang);
+  const tt = (en: string, da: string) => (lang === "da" ? da : en);
 
   if (!visit || !pet) {
     return (
       <div className="stack">
         <h3>{t.viewDocument}</h3>
-        <div className="muted">Select a visit to view the document.</div>
+        <div className="muted">{tt("Select a visit to view the document.", "Vælg et besøg for at se dokumentet.")}</div>
       </div>
     );
   }
@@ -157,7 +159,7 @@ export default function ViewDocument({
     try {
       await exportToPDF({ visit, pet, note, lang });
     } catch (e: any) {
-      alert("Error generating PDF: " + (e?.message ?? String(e)));
+      alert(tt("Error generating PDF: ", "Fejl ved generering af PDF: ") + (e?.message ?? String(e)));
     }
   };
 
@@ -165,12 +167,12 @@ export default function ViewDocument({
     try {
       await shareWithVet({ visit, pet, note, lang });
     } catch (e: any) {
-      alert("Error sharing: " + (e?.message ?? String(e)));
+      alert(tt("Error sharing: ", "Fejl ved deling: ") + (e?.message ?? String(e)));
     }
   };
 
   const patientRows = patientInfoRows(pet, lang);
-  const statusSummary = currentStatusSummary(visit.currentStatus);
+  const statusSummary = currentStatusSummary(visit.currentStatus, lang);
   const medicationsSupplements = visit.medicationsSupplements ?? "";
   const knownConditions = ((visit as any).knownConditions as string) ?? "";
   const recentTests = ((visit as any).recentTests as string) ?? "";
@@ -187,7 +189,7 @@ export default function ViewDocument({
         <div style={{ marginBottom: "20px", paddingBottom: "12px", borderBottom: "2px solid var(--border)" }}>
           <h2 style={{ margin: "0 0 4px 0", fontSize: "26px", fontWeight: 800, color: "var(--text)" }}>{pet.name}</h2>
           <p style={{ margin: "0", color: "var(--muted)", fontSize: "14px" }}>
-            Visit Date: {visit.visitDate || "Not specified"}
+            {tt("Visit Date", "Besøgsdato")}: {visit.visitDate || tt("Not specified", "Ikke angivet")}
           </p>
         </div>
 
@@ -213,17 +215,17 @@ export default function ViewDocument({
                 letterSpacing: "0.4px"
               }}
             >
-              Main Concern
+              {tt("Main Concern", "Hovedbekymring")}
             </h3>
           </div>
           <p style={{ margin: 0, fontSize: 19, fontWeight: 700, lineHeight: "1.5", color: "var(--text)" }}>
-            {visit.mainConcern || "(Not provided)"}
+            {visit.mainConcern || tt("(Not provided)", "(Ikke angivet)")}
           </p>
         </div>
 
         {/* Patient Info (from the pet's profile) */}
         {!!patientRows.length && (
-          <Section title="Patient Info" icon="🐾">
+          <Section title={tt("Patient Info", "Patientinfo")} icon="🐾">
             {patientRows.map((r, i) => (
               <div
                 key={r.label}
@@ -246,38 +248,42 @@ export default function ViewDocument({
 
         {/* When Did It Start */}
         {visit.whenStart && (
-          <Section title="When Did This Start?" icon="📅">
+          <Section title={tt("When Did This Start?", "Hvornår startede det?")} icon="📅">
             {visit.whenStart}
           </Section>
         )}
 
         {/* How Is It Progressing */}
         {visit.howProgressing && (
-          <Section title="How Is It Progressing?" icon="📈">
+          <Section title={tt("How Is It Progressing?", "Hvordan udvikler det sig?")} icon="📈">
             {visit.howProgressing}
           </Section>
         )}
 
         {/* Patterns */}
         {visit.patterns && (
-          <Section title="Patterns or Triggers" icon="🔁">
+          <Section title={tt("Patterns or Triggers", "Mønstre eller udløsende faktorer")} icon="🔁">
             {visit.patterns}
           </Section>
         )}
 
         {/* Associated Signs */}
         {visit.associatedSigns && (
-          <Section title="Associated Signs" icon="👀">
+          <Section title={tt("Associated Signs", "Tilknyttede tegn")} icon="👀">
             {visit.associatedSigns}
           </Section>
         )}
 
         {/* Current Status */}
         {statusSummary && (
-          <Section title="Current Status" icon="❤️">
-            <StatusGroup label="Different" items={statusSummary.different} tone="changed" />
-            <StatusGroup label="N/A / not sure" items={statusSummary.notSure} tone="notSure" />
-            <StatusGroup label="As usual" items={statusSummary.asUsual} tone="asUsual" />
+          <Section title={tt("Current Status", "Nuværende status")} icon="❤️">
+            <StatusGroup label={tt("Different", "Anderledes")} items={statusSummary.different} tone="changed" />
+            <StatusGroup
+              label={tt("N/A / not sure", "Ikke relevant / ved ikke")}
+              items={statusSummary.notSure}
+              tone="notSure"
+            />
+            <StatusGroup label={tt("As usual", "Som normalt")} items={statusSummary.asUsual} tone="asUsual" />
             {statusSummary.otherNotes && (
               <p style={{ margin: "4px 0 0 0", lineHeight: "1.6" }}>{statusSummary.otherNotes}</p>
             )}
@@ -286,49 +292,49 @@ export default function ViewDocument({
 
         {/* Other Details */}
         {visit.otherDetails && (
-          <Section title="Other Details" icon="📝">
+          <Section title={tt("Other Details", "Andre detaljer")} icon="📝">
             {visit.otherDetails}
           </Section>
         )}
 
         {/* Medications / Supplements */}
         {medicationsSupplements && (
-          <Section title="Meds / Supplements" icon="💊">
+          <Section title={tt("Meds / Supplements", "Medicin / Tilskud")} icon="💊">
             {medicationsSupplements}
           </Section>
         )}
 
         {/* Known Conditions */}
         {knownConditions && (
-          <Section title="Known Conditions (Vet-Diagnosed)" icon="🏥">
+          <Section title={tt("Known Conditions (Vet-Diagnosed)", "Kendte tilstande (dyrlæge-diagnosticeret)")} icon="🏥">
             {knownConditions}
           </Section>
         )}
 
         {/* Recent Tests */}
         {recentTests && (
-          <Section title="Recent Tests / Results" icon="🧪">
+          <Section title={tt("Recent Tests / Results", "Nylige tests / resultater")} icon="🧪">
             {recentTests}
           </Section>
         )}
 
         {/* Previous Treatment */}
         {visit.previousTreatment && (
-          <Section title="Previous Treatment" icon="📋">
+          <Section title={tt("Previous Treatment", "Tidligere behandling")} icon="📋">
             {visit.previousTreatment}
           </Section>
         )}
 
         {/* Questions for Vet */}
         {visit.questionsVet && (
-          <Section title="Questions for Your Veterinarian" icon="❓">
+          <Section title={tt("Questions for Your Veterinarian", "Spørgsmål til din dyrlæge")} icon="❓">
             {visit.questionsVet}
           </Section>
         )}
 
         {/* Attachments */}
         {!!visit.attachments?.length && (
-          <Section title="Photos, Video & Audio" icon="📎">
+          <Section title={tt("Photos, Video & Audio", "Fotos, video & lyd")} icon="📎">
             <AttachmentGallery attachments={visit.attachments} />
           </Section>
         )}
@@ -339,47 +345,47 @@ export default function ViewDocument({
             <div style={{ height: 4, background: "var(--green)", borderRadius: 4, margin: "22px 0 16px 0" }} />
 
             <h3 style={{ margin: "0 0 14px 0", fontSize: "18px", color: "var(--green)", fontWeight: 800 }}>
-              Visit Notes
+              {tt("Visit Notes", "Besøgsnoter")}
             </h3>
 
             {note.vetName && (
-              <Section title="Veterinarian" icon="👩‍⚕️" accent="var(--green)">
+              <Section title={tt("Veterinarian", "Dyrlæge")} icon="👩‍⚕️" accent="var(--green)">
                 {note.vetName}
               </Section>
             )}
 
             {note.diagnosis && (
-              <Section title="Diagnosis / Findings" icon="🔍" accent="var(--green)">
+              <Section title={tt("Diagnosis / Findings", "Diagnose / Fund")} icon="🔍" accent="var(--green)">
                 {note.diagnosis}
               </Section>
             )}
 
             {note.testsPerformed && (
-              <Section title="Tests Performed" icon="🧪" accent="var(--green)">
+              <Section title={tt("Tests Performed", "Udførte tests")} icon="🧪" accent="var(--green)">
                 {note.testsPerformed}
               </Section>
             )}
 
             {note.treatmentMeds && (
-              <Section title="Medications / Treatment" icon="💊" accent="var(--green)">
+              <Section title={tt("Medications / Treatment", "Medicin / Behandling")} icon="💊" accent="var(--green)">
                 {note.treatmentMeds}
               </Section>
             )}
 
             {note.homeInstructions && (
-              <Section title="Instructions at Home" icon="🏠" accent="var(--green)">
+              <Section title={tt("Instructions at Home", "Instruktioner derhjemme")} icon="🏠" accent="var(--green)">
                 {note.homeInstructions}
               </Section>
             )}
 
             {note.followUp && (
-              <Section title="Follow-up Plan" icon="🔔" accent="var(--green)">
+              <Section title={tt("Follow-up Plan", "Opfølgningsplan")} icon="🔔" accent="var(--green)">
                 {note.followUp}
               </Section>
             )}
 
             {!!note.attachments?.length && (
-              <Section title="Photos, Video & Audio" icon="📎" accent="var(--green)">
+              <Section title={tt("Photos, Video & Audio", "Fotos, video & lyd")} icon="📎" accent="var(--green)">
                 <AttachmentGallery attachments={note.attachments} />
               </Section>
             )}
@@ -390,10 +396,10 @@ export default function ViewDocument({
       {/* Action Buttons */}
       <div className="row rowWrap" style={{ marginTop: "16px" }}>
         <button className="btn btnPrimary" onClick={handleDownloadPDF}>
-          📥 Download as PDF
+          📥 {tt("Download as PDF", "Download som PDF")}
         </button>
         <button className="btn btnSecondary" onClick={handleShareWithVet}>
-          📤 Share with Vet
+          📤 {tt("Share with Vet", "Del med dyrlæge")}
         </button>
       </div>
     </div>
