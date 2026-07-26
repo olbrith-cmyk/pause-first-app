@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
 import type { CurrentStatus, Pet, TriState, Visit, VisitNote } from "../firestore";
@@ -36,6 +37,98 @@ function currentStatusSummary(cs?: CurrentStatus) {
 
   if (!different.length && !notSure.length && !asUsual.length && !otherNotes) return null;
   return { different, notSure, asUsual, otherNotes };
+}
+
+// --- Visual building blocks for a scannable, easy-on-the-eyes document ---
+
+function Section({
+  title,
+  icon,
+  accent = "var(--blue)",
+  children
+}: {
+  title: string;
+  icon?: string;
+  accent?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      style={{
+        marginBottom: 14,
+        padding: "12px 16px",
+        background: "var(--card)",
+        border: "1px solid var(--border)",
+        borderLeft: `4px solid ${accent}`,
+        borderRadius: 10
+      }}
+    >
+      <h4
+        style={{
+          margin: "0 0 8px 0",
+          color: accent,
+          fontSize: 12,
+          fontWeight: 800,
+          textTransform: "uppercase",
+          letterSpacing: "0.4px"
+        }}
+      >
+        {icon ? `${icon}  ` : ""}
+        {title}
+      </h4>
+      <div style={{ lineHeight: "1.6", fontSize: 15, color: "var(--text)" }}>{children}</div>
+    </div>
+  );
+}
+
+function StatusChip({ label, tone }: { label: string; tone: "changed" | "asUsual" | "notSure" }) {
+  const palette = {
+    changed: { bg: "var(--lightRed)", fg: "var(--red)" },
+    notSure: { bg: "var(--lightBlue)", fg: "var(--blue)" },
+    asUsual: { bg: "var(--lightGreen)", fg: "var(--green)" }
+  }[tone];
+
+  return (
+    <span
+      style={{
+        display: "inline-block",
+        padding: "4px 10px",
+        margin: "0 6px 6px 0",
+        borderRadius: 999,
+        fontSize: 13,
+        fontWeight: 600,
+        background: palette.bg,
+        color: palette.fg
+      }}
+    >
+      {label}
+    </span>
+  );
+}
+
+function StatusGroup({ label, items, tone }: { label: string; items: string[]; tone: "changed" | "asUsual" | "notSure" }) {
+  if (!items.length) return null;
+  return (
+    <div style={{ marginBottom: 8 }}>
+      <div
+        style={{
+          fontSize: 11,
+          fontWeight: 700,
+          color: "var(--muted)",
+          textTransform: "uppercase",
+          letterSpacing: "0.3px",
+          marginBottom: 4
+        }}
+      >
+        {label}
+      </div>
+      <div>
+        {items.map((it) => (
+          <StatusChip key={it} label={it} tone={tone} />
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export default function ViewDocument({
@@ -87,206 +180,208 @@ export default function ViewDocument({
       <h3>{t.viewDocument}</h3>
 
       <div id="document-content" className="panel" style={{ padding: "24px" }}>
+        {/* Top accent bar for a bit of brand color at a glance */}
+        <div style={{ height: 4, background: "var(--blue)", borderRadius: 4, marginBottom: "18px" }} />
+
         {/* Header */}
-        <div style={{ marginBottom: "24px", borderBottom: "2px solid var(--border)", paddingBottom: "16px" }}>
-          <h2 style={{ margin: "0 0 8px 0", fontSize: "24px", fontWeight: "600" }}>
-            {pet.name}
-          </h2>
-          <p style={{ margin: "0", color: "var(--text-muted)", fontSize: "14px" }}>
+        <div style={{ marginBottom: "20px", paddingBottom: "12px", borderBottom: "2px solid var(--border)" }}>
+          <h2 style={{ margin: "0 0 4px 0", fontSize: "26px", fontWeight: 800, color: "var(--text)" }}>{pet.name}</h2>
+          <p style={{ margin: "0", color: "var(--muted)", fontSize: "14px" }}>
             Visit Date: {visit.visitDate || "Not specified"}
+          </p>
+        </div>
+
+        {/* Main Concern — the single most important line, so it comes first and stands out */}
+        <div
+          style={{
+            marginBottom: "18px",
+            padding: "16px 18px",
+            background: "var(--lightBlue)",
+            border: "1px solid var(--blue)",
+            borderRadius: 12
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+            <span style={{ fontSize: 18 }}>🩺</span>
+            <h3
+              style={{
+                margin: 0,
+                color: "var(--blue)",
+                fontSize: 13,
+                fontWeight: 800,
+                textTransform: "uppercase",
+                letterSpacing: "0.4px"
+              }}
+            >
+              Main Concern
+            </h3>
+          </div>
+          <p style={{ margin: 0, fontSize: 19, fontWeight: 700, lineHeight: "1.5", color: "var(--text)" }}>
+            {visit.mainConcern || "(Not provided)"}
           </p>
         </div>
 
         {/* Patient Info (from the pet's profile) */}
         {!!patientRows.length && (
-          <div style={{ marginBottom: "20px" }}>
-            <h4 style={{ margin: "0 0 8px 0", color: "var(--primary)" }}>Patient Info</h4>
-            {patientRows.map((r) => (
-              <div key={r.label} style={{ display: "flex", gap: 8, padding: "3px 0" }}>
-                <div style={{ width: 160, flexShrink: 0, color: "var(--text-muted)", fontSize: 13 }}>
+          <Section title="Patient Info" icon="🐾">
+            {patientRows.map((r, i) => (
+              <div
+                key={r.label}
+                style={{
+                  display: "flex",
+                  gap: 8,
+                  padding: "6px 8px",
+                  background: i % 2 === 1 ? "var(--bg)" : "transparent",
+                  borderRadius: 6
+                }}
+              >
+                <div style={{ width: 160, flexShrink: 0, color: "var(--muted)", fontSize: 13, fontWeight: 600 }}>
                   {r.label}
                 </div>
-                <div style={{ lineHeight: "1.5" }}>{r.value}</div>
+                <div>{r.value}</div>
               </div>
             ))}
-          </div>
+          </Section>
         )}
-
-        {/* Main Concern */}
-        <div style={{ marginBottom: "20px" }}>
-          <h4 style={{ margin: "0 0 8px 0", color: "var(--primary)" }}>Main Concern</h4>
-          <p style={{ margin: "0", lineHeight: "1.6" }}>
-            {visit.mainConcern || "(Not provided)"}
-          </p>
-        </div>
 
         {/* When Did It Start */}
         {visit.whenStart && (
-          <div style={{ marginBottom: "20px" }}>
-            <h4 style={{ margin: "0 0 8px 0", color: "var(--primary)" }}>When Did This Start?</h4>
-            <p style={{ margin: "0", lineHeight: "1.6" }}>{visit.whenStart}</p>
-          </div>
+          <Section title="When Did This Start?" icon="📅">
+            {visit.whenStart}
+          </Section>
         )}
 
         {/* How Is It Progressing */}
         {visit.howProgressing && (
-          <div style={{ marginBottom: "20px" }}>
-            <h4 style={{ margin: "0 0 8px 0", color: "var(--primary)" }}>How Is It Progressing?</h4>
-            <p style={{ margin: "0", lineHeight: "1.6" }}>{visit.howProgressing}</p>
-          </div>
+          <Section title="How Is It Progressing?" icon="📈">
+            {visit.howProgressing}
+          </Section>
         )}
 
         {/* Patterns */}
         {visit.patterns && (
-          <div style={{ marginBottom: "20px" }}>
-            <h4 style={{ margin: "0 0 8px 0", color: "var(--primary)" }}>Patterns or Triggers</h4>
-            <p style={{ margin: "0", lineHeight: "1.6" }}>{visit.patterns}</p>
-          </div>
+          <Section title="Patterns or Triggers" icon="🔁">
+            {visit.patterns}
+          </Section>
         )}
 
         {/* Associated Signs */}
         {visit.associatedSigns && (
-          <div style={{ marginBottom: "20px" }}>
-            <h4 style={{ margin: "0 0 8px 0", color: "var(--primary)" }}>Associated Signs</h4>
-            <p style={{ margin: "0", lineHeight: "1.6" }}>{visit.associatedSigns}</p>
-          </div>
+          <Section title="Associated Signs" icon="👀">
+            {visit.associatedSigns}
+          </Section>
         )}
 
         {/* Current Status */}
         {statusSummary && (
-          <div style={{ marginBottom: "20px" }}>
-            <h4 style={{ margin: "0 0 8px 0", color: "var(--primary)" }}>Current Status</h4>
-            {!!statusSummary.different.length && (
-              <p style={{ margin: "0 0 6px 0", lineHeight: "1.6" }}>
-                <strong>Different:</strong> {statusSummary.different.join(", ")}
-              </p>
-            )}
-            {!!statusSummary.notSure.length && (
-              <p style={{ margin: "0 0 6px 0", lineHeight: "1.6" }}>
-                <strong>N/A / not sure:</strong> {statusSummary.notSure.join(", ")}
-              </p>
-            )}
-            {!!statusSummary.asUsual.length && (
-              <p style={{ margin: "0 0 6px 0", lineHeight: "1.6" }}>
-                <strong>As usual:</strong> {statusSummary.asUsual.join(", ")}
-              </p>
-            )}
+          <Section title="Current Status" icon="❤️">
+            <StatusGroup label="Different" items={statusSummary.different} tone="changed" />
+            <StatusGroup label="N/A / not sure" items={statusSummary.notSure} tone="notSure" />
+            <StatusGroup label="As usual" items={statusSummary.asUsual} tone="asUsual" />
             {statusSummary.otherNotes && (
-              <p style={{ margin: "0", lineHeight: "1.6" }}>{statusSummary.otherNotes}</p>
+              <p style={{ margin: "4px 0 0 0", lineHeight: "1.6" }}>{statusSummary.otherNotes}</p>
             )}
-          </div>
+          </Section>
         )}
 
         {/* Other Details */}
         {visit.otherDetails && (
-          <div style={{ marginBottom: "20px" }}>
-            <h4 style={{ margin: "0 0 8px 0", color: "var(--primary)" }}>Other Details</h4>
-            <p style={{ margin: "0", lineHeight: "1.6" }}>{visit.otherDetails}</p>
-          </div>
+          <Section title="Other Details" icon="📝">
+            {visit.otherDetails}
+          </Section>
         )}
 
         {/* Medications / Supplements */}
         {medicationsSupplements && (
-          <div style={{ marginBottom: "20px" }}>
-            <h4 style={{ margin: "0 0 8px 0", color: "var(--primary)" }}>Meds / Supplements</h4>
-            <p style={{ margin: "0", lineHeight: "1.6" }}>{medicationsSupplements}</p>
-          </div>
+          <Section title="Meds / Supplements" icon="💊">
+            {medicationsSupplements}
+          </Section>
         )}
 
         {/* Known Conditions */}
         {knownConditions && (
-          <div style={{ marginBottom: "20px" }}>
-            <h4 style={{ margin: "0 0 8px 0", color: "var(--primary)" }}>Known Conditions (Vet-Diagnosed)</h4>
-            <p style={{ margin: "0", lineHeight: "1.6" }}>{knownConditions}</p>
-          </div>
+          <Section title="Known Conditions (Vet-Diagnosed)" icon="🏥">
+            {knownConditions}
+          </Section>
         )}
 
         {/* Recent Tests */}
         {recentTests && (
-          <div style={{ marginBottom: "20px" }}>
-            <h4 style={{ margin: "0 0 8px 0", color: "var(--primary)" }}>Recent Tests / Results</h4>
-            <p style={{ margin: "0", lineHeight: "1.6" }}>{recentTests}</p>
-          </div>
+          <Section title="Recent Tests / Results" icon="🧪">
+            {recentTests}
+          </Section>
         )}
 
         {/* Previous Treatment */}
         {visit.previousTreatment && (
-          <div style={{ marginBottom: "20px" }}>
-            <h4 style={{ margin: "0 0 8px 0", color: "var(--primary)" }}>Previous Treatment</h4>
-            <p style={{ margin: "0", lineHeight: "1.6" }}>{visit.previousTreatment}</p>
-          </div>
+          <Section title="Previous Treatment" icon="📋">
+            {visit.previousTreatment}
+          </Section>
         )}
 
         {/* Questions for Vet */}
         {visit.questionsVet && (
-          <div style={{ marginBottom: "20px" }}>
-            <h4 style={{ margin: "0 0 8px 0", color: "var(--primary)" }}>Questions for Your Veterinarian</h4>
-            <p style={{ margin: "0", lineHeight: "1.6" }}>{visit.questionsVet}</p>
-          </div>
+          <Section title="Questions for Your Veterinarian" icon="❓">
+            {visit.questionsVet}
+          </Section>
         )}
 
         {/* Attachments */}
         {!!visit.attachments?.length && (
-          <div style={{ marginBottom: "20px" }}>
-            <h4 style={{ margin: "0 0 8px 0", color: "var(--primary)" }}>Photos, Video & Audio</h4>
+          <Section title="Photos, Video & Audio" icon="📎">
             <AttachmentGallery attachments={visit.attachments} />
-          </div>
+          </Section>
         )}
 
         {/* Visit Notes Section */}
         {note && (
           <>
-            <hr style={{ margin: "24px 0", border: "none", borderTop: "2px solid var(--border)" }} />
+            <div style={{ height: 4, background: "var(--green)", borderRadius: 4, margin: "22px 0 16px 0" }} />
 
-            <h3 style={{ margin: "0 0 16px 0", fontSize: "18px" }}>Visit Notes</h3>
+            <h3 style={{ margin: "0 0 14px 0", fontSize: "18px", color: "var(--green)", fontWeight: 800 }}>
+              Visit Notes
+            </h3>
 
             {note.vetName && (
-              <div style={{ marginBottom: "16px" }}>
-                <h4 style={{ margin: "0 0 8px 0", color: "var(--primary)" }}>Veterinarian</h4>
-                <p style={{ margin: "0" }}>{note.vetName}</p>
-              </div>
+              <Section title="Veterinarian" icon="👩‍⚕️" accent="var(--green)">
+                {note.vetName}
+              </Section>
             )}
 
             {note.diagnosis && (
-              <div style={{ marginBottom: "16px" }}>
-                <h4 style={{ margin: "0 0 8px 0", color: "var(--primary)" }}>Diagnosis / Findings</h4>
-                <p style={{ margin: "0", lineHeight: "1.6" }}>{note.diagnosis}</p>
-              </div>
+              <Section title="Diagnosis / Findings" icon="🔍" accent="var(--green)">
+                {note.diagnosis}
+              </Section>
             )}
 
             {note.testsPerformed && (
-              <div style={{ marginBottom: "16px" }}>
-                <h4 style={{ margin: "0 0 8px 0", color: "var(--primary)" }}>Tests Performed</h4>
-                <p style={{ margin: "0", lineHeight: "1.6" }}>{note.testsPerformed}</p>
-              </div>
+              <Section title="Tests Performed" icon="🧪" accent="var(--green)">
+                {note.testsPerformed}
+              </Section>
             )}
 
             {note.treatmentMeds && (
-              <div style={{ marginBottom: "16px" }}>
-                <h4 style={{ margin: "0 0 8px 0", color: "var(--primary)" }}>Medications / Treatment</h4>
-                <p style={{ margin: "0", lineHeight: "1.6" }}>{note.treatmentMeds}</p>
-              </div>
+              <Section title="Medications / Treatment" icon="💊" accent="var(--green)">
+                {note.treatmentMeds}
+              </Section>
             )}
 
             {note.homeInstructions && (
-              <div style={{ marginBottom: "16px" }}>
-                <h4 style={{ margin: "0 0 8px 0", color: "var(--primary)" }}>Instructions at Home</h4>
-                <p style={{ margin: "0", lineHeight: "1.6" }}>{note.homeInstructions}</p>
-              </div>
+              <Section title="Instructions at Home" icon="🏠" accent="var(--green)">
+                {note.homeInstructions}
+              </Section>
             )}
 
             {note.followUp && (
-              <div style={{ marginBottom: "16px" }}>
-                <h4 style={{ margin: "0 0 8px 0", color: "var(--primary)" }}>Follow-up Plan</h4>
-                <p style={{ margin: "0", lineHeight: "1.6" }}>{note.followUp}</p>
-              </div>
+              <Section title="Follow-up Plan" icon="🔔" accent="var(--green)">
+                {note.followUp}
+              </Section>
             )}
 
             {!!note.attachments?.length && (
-              <div style={{ marginBottom: "16px" }}>
-                <h4 style={{ margin: "0 0 8px 0", color: "var(--primary)" }}>Photos, Video & Audio</h4>
+              <Section title="Photos, Video & Audio" icon="📎" accent="var(--green)">
                 <AttachmentGallery attachments={note.attachments} />
-              </div>
+              </Section>
             )}
           </>
         )}
