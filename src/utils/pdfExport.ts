@@ -2,62 +2,7 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import type { Lang } from "../i18n";
 import type { Attachment, CurrentStatus, Pet, TriState, Visit, VisitNote } from "../firestore";
-
-function vaccineLabel(v: Pet["vaccinationStatus"] | undefined, lang: Lang): string {
-  if (lang === "da") {
-    if (v === "up_to_date") return "Opdateret";
-    if (v === "not_up_to_date") return "Ikke opdateret";
-    if (v === "unknown") return "Ikke sikker";
-    return "";
-  }
-  if (v === "up_to_date") return "Up to date";
-  if (v === "not_up_to_date") return "Not up to date";
-  if (v === "unknown") return "Not sure";
-  return "";
-}
-
-function patientInfoLines(pet: Pet, lang: Lang): string[] {
-  const lines: string[] = [];
-  const push = (label: string, value?: string) => {
-    const v = (value ?? "").trim();
-    if (v) lines.push(`${label}: ${v}`);
-  };
-
-  const vLabel = vaccineLabel(pet.vaccinationStatus, lang);
-  const vDate = pet.vaccinationLastDate?.trim();
-
-  if (lang === "da") {
-    push("Art", pet.species);
-    push("Alder", pet.age);
-    push("Køn", pet.sex);
-    push("Vægt", pet.weight);
-    if (vLabel || vDate) {
-      push("Vaccinationer", [vLabel, vDate ? `Sidst: ${vDate}` : ""].filter(Boolean).join(" • "));
-    }
-    push("Foder", pet.diet);
-    push("Forebyggelse", pet.preventatives);
-    push("Medicin", pet.medications);
-    push("Allergier/reaktioner", pet.allergies);
-    push("Operationer/indgreb", pet.surgeries);
-    push("Livsstil/miljø", pet.lifestyle);
-  } else {
-    push("Species", pet.species);
-    push("Age", pet.age);
-    push("Sex", pet.sex);
-    push("Weight", pet.weight);
-    if (vLabel || vDate) {
-      push("Vaccinations", [vLabel, vDate ? `Last: ${vDate}` : ""].filter(Boolean).join(" • "));
-    }
-    push("Diet / feed", pet.diet);
-    push("Preventatives", pet.preventatives);
-    push("Medications", pet.medications);
-    push("Allergies / reactions", pet.allergies);
-    push("Surgeries / procedures", pet.surgeries);
-    push("Lifestyle / environment", pet.lifestyle);
-  }
-
-  return lines;
-}
+import { patientInfoLines } from "./petInfo";
 
 function currentStatusLines(cs: CurrentStatus | undefined, lang: Lang): string[] {
   if (!cs) return [];

@@ -2,42 +2,8 @@ import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
 import type { CurrentStatus, Pet, TriState, Visit, VisitNote } from "../firestore";
 import { exportToPDF, shareWithVet } from "../utils/pdfExport";
+import { patientInfoRows } from "../utils/petInfo";
 import AttachmentGallery from "./AttachmentGallery";
-
-function vaccineLabel(v?: Pet["vaccinationStatus"]) {
-  if (v === "up_to_date") return "Up to date";
-  if (v === "not_up_to_date") return "Not up to date";
-  if (v === "unknown") return "Not sure";
-  return "";
-}
-
-function patientInfoRows(pet: Pet): { label: string; value: string }[] {
-  const rows: { label: string; value: string }[] = [];
-  const push = (label: string, value?: string) => {
-    const v = (value ?? "").trim();
-    if (v) rows.push({ label, value: v });
-  };
-
-  push("Species", pet.species);
-  push("Age", pet.age);
-  push("Sex", pet.sex);
-  push("Weight", pet.weight);
-
-  const vLabel = vaccineLabel(pet.vaccinationStatus);
-  const vDate = pet.vaccinationLastDate?.trim();
-  if (vLabel || vDate) {
-    push("Vaccinations", [vLabel, vDate ? `Last: ${vDate}` : ""].filter(Boolean).join(" • "));
-  }
-
-  push("Diet / feed", pet.diet);
-  push("Preventatives", pet.preventatives);
-  push("Medications", pet.medications);
-  push("Allergies / reactions", pet.allergies);
-  push("Surgeries / procedures", pet.surgeries);
-  push("Lifestyle / environment", pet.lifestyle);
-
-  return rows;
-}
 
 function currentStatusSummary(cs?: CurrentStatus) {
   if (!cs) return null;
@@ -110,7 +76,7 @@ export default function ViewDocument({
     }
   };
 
-  const patientRows = patientInfoRows(pet);
+  const patientRows = patientInfoRows(pet, lang);
   const statusSummary = currentStatusSummary(visit.currentStatus);
   const medicationsSupplements = visit.medicationsSupplements ?? "";
   const knownConditions = ((visit as any).knownConditions as string) ?? "";
