@@ -71,7 +71,7 @@ export default function HamburgerMenu({
     {
       icon: "auto_awesome",
       title: t.aiAssistant,
-      hint: lang === "da" ? "Åbner i en ny fane" : "Opens in a new tab",
+      hint: lang === "da" ? "Åbner ChatGPT i en ny fane" : "Opens ChatGPT in a new tab",
       onClick: openAiAssistant
     },
     {
