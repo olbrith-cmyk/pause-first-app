@@ -444,13 +444,15 @@ const handleDeleteVisit = async (visitId: string) => {
   </button>
 
   <button
-    className="btn btnSecondary btnSmall"
+    className={`btn ${openNote ? "btnSecondary" : "btnPrimary"} btnSmall`}
     style={{ flex: 1 }}
     onClick={async () => {
       await loadNoteForVisit(openVisit.id!);
     }}
   >
-    {lang === "da" ? "Noter" : "Notes"}
+    {openNote
+      ? (lang === "da" ? "Redigér noter" : "Edit notes")
+      : (lang === "da" ? "+ Tilføj noter" : "+ Add notes")}
   </button>
 
   <button
