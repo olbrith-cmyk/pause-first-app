@@ -349,6 +349,47 @@ export default function PrepareWizard({
     lines.push(lang === "da" ? "VISIT BRIEF (Ejer-observationer)" : "VISIT BRIEF (Owner observations)");
     lines.push(`${lang === "da" ? "Kæledyr" : "Pet"}: ${petName}`);
     if (draft.visitDate) lines.push(`${lang === "da" ? "Besøgsdato" : "Visit date"}: ${draft.visitDate}`);
+
+    if (pet) {
+      const patientLines: string[] = [];
+      const push = (label: string, value?: string) => {
+        const v = (value ?? "").trim();
+        if (v) patientLines.push(`${label}: ${v}`);
+      };
+      const vLabel =
+        pet.vaccinationStatus === "up_to_date"
+          ? (lang === "da" ? "Opdateret" : "Up to date")
+          : pet.vaccinationStatus === "not_up_to_date"
+            ? (lang === "da" ? "Ikke opdateret" : "Not up to date")
+            : pet.vaccinationStatus === "unknown"
+              ? (lang === "da" ? "Ikke sikker" : "Not sure")
+              : "";
+      const vDate = pet.vaccinationLastDate?.trim();
+
+      push(lang === "da" ? "Art" : "Species", pet.species);
+      push(lang === "da" ? "Alder" : "Age", pet.age);
+      push(lang === "da" ? "Køn" : "Sex", pet.sex);
+      push(lang === "da" ? "Vægt" : "Weight", pet.weight);
+      if (vLabel || vDate) {
+        push(
+          lang === "da" ? "Vaccinationer" : "Vaccinations",
+          [vLabel, vDate ? (lang === "da" ? `Sidst: ${vDate}` : `Last: ${vDate}`) : ""].filter(Boolean).join(" • ")
+        );
+      }
+      push(lang === "da" ? "Foder" : "Diet / feed", pet.diet);
+      push(lang === "da" ? "Forebyggelse" : "Preventatives", pet.preventatives);
+      push(lang === "da" ? "Medicin" : "Medications", pet.medications);
+      push(lang === "da" ? "Allergier/reaktioner" : "Allergies / reactions", pet.allergies);
+      push(lang === "da" ? "Operationer/indgreb" : "Surgeries / procedures", pet.surgeries);
+      push(lang === "da" ? "Livsstil/miljø" : "Lifestyle / environment", pet.lifestyle);
+
+      if (patientLines.length) {
+        lines.push("");
+        lines.push(lang === "da" ? "Om patienten:" : "About the patient:");
+        lines.push(...patientLines);
+      }
+    }
+
     lines.push("");
 
     if (draft.mainConcern?.trim()) {

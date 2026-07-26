@@ -1,23 +1,142 @@
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import type { Lang } from "../i18n";
-import type { Attachment, Pet, Visit, VisitNote } from "../firestore";
+import type { Attachment, CurrentStatus, Pet, TriState, Visit, VisitNote } from "../firestore";
+
+function vaccineLabel(v: Pet["vaccinationStatus"] | undefined, lang: Lang): string {
+  if (lang === "da") {
+    if (v === "up_to_date") return "Opdateret";
+    if (v === "not_up_to_date") return "Ikke opdateret";
+    if (v === "unknown") return "Ikke sikker";
+    return "";
+  }
+  if (v === "up_to_date") return "Up to date";
+  if (v === "not_up_to_date") return "Not up to date";
+  if (v === "unknown") return "Not sure";
+  return "";
+}
+
+function patientInfoLines(pet: Pet, lang: Lang): string[] {
+  const lines: string[] = [];
+  const push = (label: string, value?: string) => {
+    const v = (value ?? "").trim();
+    if (v) lines.push(`${label}: ${v}`);
+  };
+
+  const vLabel = vaccineLabel(pet.vaccinationStatus, lang);
+  const vDate = pet.vaccinationLastDate?.trim();
+
+  if (lang === "da") {
+    push("Art", pet.species);
+    push("Alder", pet.age);
+    push("Køn", pet.sex);
+    push("Vægt", pet.weight);
+    if (vLabel || vDate) {
+      push("Vaccinationer", [vLabel, vDate ? `Sidst: ${vDate}` : ""].filter(Boolean).join(" • "));
+    }
+    push("Foder", pet.diet);
+    push("Forebyggelse", pet.preventatives);
+    push("Medicin", pet.medications);
+    push("Allergier/reaktioner", pet.allergies);
+    push("Operationer/indgreb", pet.surgeries);
+    push("Livsstil/miljø", pet.lifestyle);
+  } else {
+    push("Species", pet.species);
+    push("Age", pet.age);
+    push("Sex", pet.sex);
+    push("Weight", pet.weight);
+    if (vLabel || vDate) {
+      push("Vaccinations", [vLabel, vDate ? `Last: ${vDate}` : ""].filter(Boolean).join(" • "));
+    }
+    push("Diet / feed", pet.diet);
+    push("Preventatives", pet.preventatives);
+    push("Medications", pet.medications);
+    push("Allergies / reactions", pet.allergies);
+    push("Surgeries / procedures", pet.surgeries);
+    push("Lifestyle / environment", pet.lifestyle);
+  }
+
+  return lines;
+}
+
+function currentStatusLines(cs: CurrentStatus | undefined, lang: Lang): string[] {
+  if (!cs) return [];
+
+  const items: Array<{ key: keyof CurrentStatus; labelDa: string; labelEn: string; notesKey: keyof CurrentStatus }> = [
+    { key: "appetite", labelDa: "Appetit", labelEn: "Appetite", notesKey: "appetiteNotes" },
+    { key: "drinking", labelDa: "Drikker", labelEn: "Drinking", notesKey: "drinkingNotes" },
+    { key: "energy", labelDa: "Energi", labelEn: "Energy", notesKey: "energyNotes" },
+    { key: "toileting", labelDa: "Toiletvaner", labelEn: "Toileting", notesKey: "toiletingNotes" },
+    { key: "gi", labelDa: "Mave/tarm", labelEn: "GI", notesKey: "giNotes" },
+    { key: "breathing", labelDa: "Vejrtrækning", labelEn: "Breathing", notesKey: "breathingNotes" },
+    { key: "mobilityPain", labelDa: "Bevægelse/smerte", labelEn: "Mobility/pain", notesKey: "mobilityPainNotes" },
+    { key: "skinEars", labelDa: "Hud/ører", labelEn: "Skin/ears", notesKey: "skinEarsNotes" }
+  ];
+
+  const different: string[] = [];
+  const notSure: string[] = [];
+  const asUsual: string[] = [];
+
+  for (const it of items) {
+    const v = (cs[it.key] as TriState) ?? "normal";
+    const notes = ((cs[it.notesKey] as string) ?? "").trim();
+    const label = lang === "da" ? it.labelDa : it.labelEn;
+    const line = notes ? `${label}: ${notes}` : label;
+    if (v === "changed") different.push(line);
+    else if (v === "na") notSure.push(line);
+    else asUsual.push(label);
+  }
+
+  const lines: string[] = [];
+  if (different.length) lines.push(`${lang === "da" ? "Anderledes" : "Different"}: ${different.join(", ")}`);
+  if (notSure.length) lines.push(`${lang === "da" ? "Ikke relevant / ved ikke" : "N/A / not sure"}: ${notSure.join(", ")}`);
+  if (asUsual.length) lines.push(`${lang === "da" ? "Som normalt" : "As usual"}: ${asUsual.join(", ")}`);
+
+  const otherNotes = (cs.otherNotes ?? "").trim();
+  if (otherNotes) lines.push(otherNotes);
+
+  return lines;
+}
 
 function buildShareText(params: { visit: Visit; pet: Pet; note: VisitNote | null; lang: Lang }) {
   const { visit, pet, note, lang } = params;
 
   const lines: string[] = [];
 
+  const medicationsSupplements = visit.medicationsSupplements ?? "";
+  const knownConditions = ((visit as any).knownConditions as string) ?? "";
+  const recentTests = ((visit as any).recentTests as string) ?? "";
+
   if (lang === "da") {
     lines.push(`Pause First™ – forberedelse til dyrlægebesøg`);
     lines.push(`Kæledyr: ${pet.name}`);
     lines.push(`Dato: ${visit.visitDate || "(ingen dato)"}`);
+
+    const patientLines = patientInfoLines(pet, lang);
+    if (patientLines.length) {
+      lines.push("");
+      lines.push("Om patienten:");
+      lines.push(...patientLines);
+    }
+
     lines.push("");
     lines.push(`Hovedbekymring: ${visit.mainConcern || "(ikke angivet)"}`);
     if (visit.whenStart) lines.push(`Hvornår startede det: ${visit.whenStart}`);
     if (visit.howProgressing) lines.push(`Hvordan udvikler det sig: ${visit.howProgressing}`);
     if (visit.patterns) lines.push(`Mønstre/triggere: ${visit.patterns}`);
     if (visit.associatedSigns) lines.push(`Tilknyttede tegn: ${visit.associatedSigns}`);
+
+    const statusLines = currentStatusLines(visit.currentStatus, lang);
+    if (statusLines.length) {
+      lines.push("");
+      lines.push("Status lige nu:");
+      lines.push(...statusLines);
+    }
+
+    if (visit.otherDetails) lines.push(`Andre detaljer: ${visit.otherDetails}`);
+    if (medicationsSupplements) lines.push(`Medicin/tilskud: ${medicationsSupplements}`);
+    if (knownConditions) lines.push(`Kendte tilstande (diagnosticeret): ${knownConditions}`);
+    if (recentTests) lines.push(`Nylige tests/resultater: ${recentTests}`);
     if (visit.previousTreatment) lines.push(`Tidligere behandling: ${visit.previousTreatment}`);
     if (visit.questionsVet) lines.push(`Spørgsmål til dyrlægen: ${visit.questionsVet}`);
 
@@ -35,12 +154,32 @@ function buildShareText(params: { visit: Visit; pet: Pet; note: VisitNote | null
     lines.push(`Pause First™ – vet visit preparation`);
     lines.push(`Pet: ${pet.name}`);
     lines.push(`Date: ${visit.visitDate || "(no date)"}`);
+
+    const patientLines = patientInfoLines(pet, lang);
+    if (patientLines.length) {
+      lines.push("");
+      lines.push("About the patient:");
+      lines.push(...patientLines);
+    }
+
     lines.push("");
     lines.push(`Main concern: ${visit.mainConcern || "(not provided)"}`);
     if (visit.whenStart) lines.push(`When did this start: ${visit.whenStart}`);
     if (visit.howProgressing) lines.push(`How is it progressing: ${visit.howProgressing}`);
     if (visit.patterns) lines.push(`Patterns/triggers: ${visit.patterns}`);
     if (visit.associatedSigns) lines.push(`Associated signs: ${visit.associatedSigns}`);
+
+    const statusLines = currentStatusLines(visit.currentStatus, lang);
+    if (statusLines.length) {
+      lines.push("");
+      lines.push("Current status:");
+      lines.push(...statusLines);
+    }
+
+    if (visit.otherDetails) lines.push(`Other details: ${visit.otherDetails}`);
+    if (medicationsSupplements) lines.push(`Meds/supplements: ${medicationsSupplements}`);
+    if (knownConditions) lines.push(`Known conditions (vet-diagnosed): ${knownConditions}`);
+    if (recentTests) lines.push(`Recent tests/results: ${recentTests}`);
     if (visit.previousTreatment) lines.push(`Previous treatment: ${visit.previousTreatment}`);
     if (visit.questionsVet) lines.push(`Questions for the vet: ${visit.questionsVet}`);
 
