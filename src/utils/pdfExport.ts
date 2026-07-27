@@ -298,47 +298,73 @@ export async function shareWithVet(params: {
   const canShare = (candidateFiles: File[]) =>
     candidateFiles.length > 0 && typeof nav.canShare === "function" && nav.canShare({ files: candidateFiles });
 
+  // Wraps navigator.share so a real failure (e.g. iOS Safari rejecting the
+  // call because too much time passed between the tap and the share — which
+  // can happen while we're generating the PDF/fetching attachments — falls
+  // through to the next tier below instead of surfacing a raw error. A user
+  // deliberately closing the share sheet (AbortError) is left alone either way.
+  const attemptShare = async (payload: { title: string; text: string; files?: File[] }): Promise<"shared" | "cancelled" | "failed"> => {
+    try {
+      await nav.share(payload);
+      return "shared";
+    } catch (e: any) {
+      if (e?.name === "AbortError") return "cancelled";
+      console.error("navigator.share failed", e);
+      return "failed";
+    }
+  };
+
   // Mobile share sheet, with every file attached if the device supports it
   if (nav.share && canShare(files)) {
-    await nav.share({ title: "Pause First™", text, files });
-    if (failedCount) alert((lang === "da" ? "Delt." : "Shared.") + attachmentWarning);
-    return;
+    const result = await attemptShare({ title: "Pause First™", text, files });
+    if (result === "shared") {
+      if (failedCount) alert((lang === "da" ? "Delt." : "Shared.") + attachmentWarning);
+      return;
+    }
+    if (result === "cancelled") return;
+    // "failed" -> fall through and try a smaller share instead of giving up
   }
 
-  // Some Android browsers reject sharing multiple files together (e.g. a mix
-  // of PDF + video/audio) but will happily share the PDF alone — fall back to
-  // that and download the rest for manual attaching, instead of giving up on
-  // native sharing entirely.
+  // Some browsers reject sharing multiple files together (e.g. a mix of PDF +
+  // video/audio) but will happily share the PDF alone — fall back to that and
+  // download the rest for manual attaching, instead of giving up on native
+  // sharing entirely.
   if (nav.share && pdfFile && canShare([pdfFile])) {
-    await nav.share({ title: "Pause First™", text, files: [pdfFile] });
-    if (attachmentFiles.length) {
-      downloadFiles(attachmentFiles);
-      alert(
-        (lang === "da"
-          ? `PDF'en blev delt. Din enhed kan ikke dele flere filer på én gang, så ${attachmentFiles.length} vedhæftning(er) downloades separat — vedhæft dem manuelt.`
-          : `Shared the PDF. Your device can't share multiple files at once, so ${attachmentFiles.length} attachment(s) are downloading separately — attach them manually.`) +
-          attachmentWarning
-      );
-    } else if (failedCount) {
-      alert((lang === "da" ? "PDF'en blev delt." : "Shared the PDF.") + attachmentWarning);
+    const result = await attemptShare({ title: "Pause First™", text, files: [pdfFile] });
+    if (result === "shared") {
+      if (attachmentFiles.length) {
+        downloadFiles(attachmentFiles);
+        alert(
+          (lang === "da"
+            ? `PDF'en blev delt. Din enhed kan ikke dele flere filer på én gang, så ${attachmentFiles.length} vedhæftning(er) downloades separat — vedhæft dem manuelt.`
+            : `Shared the PDF. Your device can't share multiple files at once, so ${attachmentFiles.length} attachment(s) are downloading separately — attach them manually.`) +
+            attachmentWarning
+        );
+      } else if (failedCount) {
+        alert((lang === "da" ? "PDF'en blev delt." : "Shared the PDF.") + attachmentWarning);
+      }
+      return;
     }
-    return;
+    if (result === "cancelled") return;
   }
 
   if (nav.share) {
-    await nav.share({ title: "Pause First™", text });
-    if (files.length) {
-      alert(
-        (lang === "da"
-          ? "Teksten blev delt. Din enhed understøtter ikke deling af filer her — de downloades nu, så du kan vedhæfte dem manuelt."
-          : "Shared the text. Your device doesn't support sharing files this way — downloading them now so you can attach them manually.") +
-          attachmentWarning
-      );
-      downloadFiles(files);
-    } else if (failedCount) {
-      alert((lang === "da" ? "Teksten blev delt." : "Shared the text.") + attachmentWarning);
+    const result = await attemptShare({ title: "Pause First™", text });
+    if (result === "shared") {
+      if (files.length) {
+        alert(
+          (lang === "da"
+            ? "Teksten blev delt. Din enhed understøtter ikke deling af filer her — de downloades nu, så du kan vedhæfte dem manuelt."
+            : "Shared the text. Your device doesn't support sharing files this way — downloading them now so you can attach them manually.") +
+            attachmentWarning
+        );
+        downloadFiles(files);
+      } else if (failedCount) {
+        alert((lang === "da" ? "Teksten blev delt." : "Shared the text.") + attachmentWarning);
+      }
+      return;
     }
-    return;
+    if (result === "cancelled") return;
   }
 
   // Desktop fallback: copy text, download any attachments for manual attaching
