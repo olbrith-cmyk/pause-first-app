@@ -1,7 +1,7 @@
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import type { Lang } from "../i18n";
-import type { Attachment, CurrentStatus, Pet, TriState, Visit, VisitNote } from "../firestore";
+import type { Attachment, AttachmentType, CurrentStatus, Pet, TriState, Visit, VisitNote } from "../firestore";
 import { patientInfoLines } from "./petInfo";
 
 function currentStatusLines(cs: CurrentStatus | undefined, lang: Lang): string[] {
@@ -220,6 +220,12 @@ function filenameFromAttachmentUrl(url: string): string | null {
   }
 }
 
+function fallbackMimeType(type: AttachmentType): string {
+  if (type === "photo") return "image/jpeg";
+  if (type === "video") return "video/mp4";
+  return "audio/mp4";
+}
+
 async function attachmentToFile(attachment: Attachment, index: number): Promise<File | null> {
   try {
     const res = await fetch(attachment.url);
@@ -227,7 +233,11 @@ async function attachmentToFile(attachment: Attachment, index: number): Promise<
     const blob = await res.blob();
     const fallbackExt = attachment.type === "photo" ? "jpg" : attachment.type === "video" ? "mp4" : "m4a";
     const name = filenameFromAttachmentUrl(attachment.url) ?? `${attachment.type}-${index + 1}.${fallbackExt}`;
-    return new File([blob], name, { type: blob.type || undefined });
+    // Android Chrome's Web Share API rejects the whole file list if any file
+    // has an empty/generic MIME type, which happens when Storage doesn't
+    // report one — always fall back to a real, specific type.
+    const type = blob.type && blob.type !== "application/octet-stream" ? blob.type : fallbackMimeType(attachment.type);
+    return new File([blob], name, { type });
   } catch (e) {
     console.error("Failed to fetch attachment for sharing (likely a Storage CORS config issue)", e);
     return null;
@@ -285,12 +295,33 @@ export async function shareWithVet(params: {
       : "") + pdfWarning;
 
   const nav: any = navigator;
-  const canShareFiles = files.length > 0 && typeof nav.canShare === "function" && nav.canShare({ files });
+  const canShare = (candidateFiles: File[]) =>
+    candidateFiles.length > 0 && typeof nav.canShare === "function" && nav.canShare({ files: candidateFiles });
 
-  // Mobile share sheet, with the attached files if the device supports it
-  if (nav.share && canShareFiles) {
+  // Mobile share sheet, with every file attached if the device supports it
+  if (nav.share && canShare(files)) {
     await nav.share({ title: "Pause First™", text, files });
     if (failedCount) alert((lang === "da" ? "Delt." : "Shared.") + attachmentWarning);
+    return;
+  }
+
+  // Some Android browsers reject sharing multiple files together (e.g. a mix
+  // of PDF + video/audio) but will happily share the PDF alone — fall back to
+  // that and download the rest for manual attaching, instead of giving up on
+  // native sharing entirely.
+  if (nav.share && pdfFile && canShare([pdfFile])) {
+    await nav.share({ title: "Pause First™", text, files: [pdfFile] });
+    if (attachmentFiles.length) {
+      downloadFiles(attachmentFiles);
+      alert(
+        (lang === "da"
+          ? `PDF'en blev delt. Din enhed kan ikke dele flere filer på én gang, så ${attachmentFiles.length} vedhæftning(er) downloades separat — vedhæft dem manuelt.`
+          : `Shared the PDF. Your device can't share multiple files at once, so ${attachmentFiles.length} attachment(s) are downloading separately — attach them manually.`) +
+          attachmentWarning
+      );
+    } else if (failedCount) {
+      alert((lang === "da" ? "PDF'en blev delt." : "Shared the PDF.") + attachmentWarning);
+    }
     return;
   }
 
