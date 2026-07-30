@@ -53,6 +53,7 @@ function buildShareText(params: { visit: Visit; pet: Pet; note: VisitNote | null
   const recentTests = ((visit as any).recentTests as string) ?? "";
 
   if (lang === "da") {
+    lines.push(buildEmailTitle(pet, visit, lang));
     lines.push(`Pause First™ – forberedelse til dyrlægebesøg`);
     lines.push(`Dyr: ${pet.name}`);
     lines.push(`Dato: ${visit.visitDate || "(ingen dato)"}`);
@@ -96,6 +97,7 @@ function buildShareText(params: { visit: Visit; pet: Pet; note: VisitNote | null
       if (note.followUp) lines.push(`Opfølgning: ${note.followUp}`);
     }
   } else {
+    lines.push(buildEmailTitle(pet, visit, lang));
     lines.push(`Pause First™ – vet visit preparation`);
     lines.push(`Pet: ${pet.name}`);
     lines.push(`Date: ${visit.visitDate || "(no date)"}`);
@@ -164,6 +166,20 @@ function describeAttachments(attachments: Attachment[], lang: Lang): string {
   return parts.join(", ");
 }
 
+// Used as both the email/share subject (the "title" field passed to
+// navigator.share) and the heading line of the body text, so a vet or
+// clinic staff member can tell what it's about at a glance.
+function buildEmailTitle(pet: Pet, visit: Visit, lang: Lang): string {
+  if (lang === "da") {
+    return visit.visitDate
+      ? `Vedrørende ${pet.name}s besøg i klinikken den ${visit.visitDate}`
+      : `Vedrørende ${pet.name}s besøg i klinikken`;
+  }
+  return visit.visitDate
+    ? `Regarding ${pet.name}'s clinic visit on ${visit.visitDate}`
+    : `Regarding ${pet.name}'s clinic visit`;
+}
+
 // Short cover-note text used when the PDF is actually going out as a real
 // attachment in this share — the PDF already carries the full detail, so the
 // email body just needs to say what's attached instead of repeating it all.
@@ -174,6 +190,7 @@ function buildShortShareText(params: { visit: Visit; pet: Pet; lang: Lang }, att
   if (lang === "da") {
     const attachedList = ["PDF-oversigt", attachmentsDesc].filter(Boolean).join(" + ");
     return [
+      buildEmailTitle(pet, visit, lang),
       `Pause First™ – forberedelse til dyrlægebesøg`,
       `Dyr: ${pet.name}`,
       `Dato: ${visit.visitDate || "(ingen dato)"}`,
@@ -187,6 +204,7 @@ function buildShortShareText(params: { visit: Visit; pet: Pet; lang: Lang }, att
 
   const attachedList = ["PDF summary", attachmentsDesc].filter(Boolean).join(" + ");
   return [
+    buildEmailTitle(pet, visit, lang),
     `Pause First™ – vet visit preparation`,
     `Pet: ${pet.name}`,
     `Date: ${visit.visitDate || "(no date)"}`,
@@ -335,6 +353,7 @@ export async function shareWithVet(params: {
 }) {
   const { visit, pet, note, lang } = params;
   const fullText = buildShareText(params);
+  const emailTitle = buildEmailTitle(pet, visit, lang);
 
   const attachments = [...(visit.attachments ?? []), ...(note?.attachments ?? [])];
   const [pdfFile, attachmentResult] = await Promise.all([
@@ -387,7 +406,7 @@ export async function shareWithVet(params: {
     const shortText = pdfFile
       ? buildShortShareText({ visit, pet, lang }, succeededAttachments)
       : fullText;
-    const result = await attemptShare({ title: "Pause First™", text: shortText, files });
+    const result = await attemptShare({ title: emailTitle, text: shortText, files });
     if (result === "shared") {
       if (failedCount) alert((lang === "da" ? "Delt." : "Shared.") + attachmentWarning);
       return;
@@ -402,7 +421,7 @@ export async function shareWithVet(params: {
   // sharing entirely.
   if (nav.share && pdfFile && canShare([pdfFile])) {
     const shortText = buildShortShareText({ visit, pet, lang }, []);
-    const result = await attemptShare({ title: "Pause First™", text: shortText, files: [pdfFile] });
+    const result = await attemptShare({ title: emailTitle, text: shortText, files: [pdfFile] });
     if (result === "shared") {
       if (attachmentFiles.length) {
         downloadFiles(attachmentFiles);
@@ -424,7 +443,7 @@ export async function shareWithVet(params: {
     // No files are going out with this share, so use the full text — it's
     // the only copy of the detail the recipient will get unless the
     // downloaded files below get attached manually.
-    const result = await attemptShare({ title: "Pause First™", text: fullText });
+    const result = await attemptShare({ title: emailTitle, text: fullText });
     if (result === "shared") {
       if (files.length) {
         alert(
