@@ -7,7 +7,6 @@ import TriToggle from "./TriToggle";
 import PetSnapshotCard from "./PetSnapshotCard";
 import AttachmentManager from "./AttachmentManager";
 import ViewDocument from "./ViewDocument";
-import { patientInfoLines } from "../utils/petInfo";
 import { shareWithVet } from "../utils/pdfExport";
 
 type Props = {
@@ -322,161 +321,6 @@ export default function PrepareWizard({
       closeToMyVisits();
     } catch (e: any) {
       alert(t.error + ": " + (e?.message ?? String(e)));
-    }
-  };
-
-  const buildVisitBriefText = () => {
-    const cs = draft.currentStatus ?? makeEmptyStatus();
-    const lines: string[] = [];
-
-    lines.push(lang === "da" ? "BESØGSFORBEREDELSE (Ejer-observationer)" : "VISIT BRIEF (Owner observations)");
-    lines.push(`${lang === "da" ? "Dyr" : "Pet"}: ${petName}`);
-    if (draft.visitDate) lines.push(`${lang === "da" ? "Besøgsdato" : "Visit date"}: ${draft.visitDate}`);
-
-    if (pet) {
-      const patientLines = patientInfoLines(pet, lang);
-
-      if (patientLines.length) {
-        lines.push("");
-        lines.push(lang === "da" ? "Om patienten:" : "About the patient:");
-        lines.push(...patientLines);
-      }
-    }
-
-    lines.push("");
-
-    if (draft.mainConcern?.trim()) {
-      lines.push(lang === "da" ? "## Hovedbekymring" : "## Chief concern");
-      lines.push(draft.mainConcern.trim());
-      lines.push("");
-    }
-
-    const started = (draft.whenStart ?? "").trim();
-    const change = (draft.howProgressing ?? "").trim();
-    if (started || change) {
-      lines.push(lang === "da" ? "## Tidslinje / ændring" : "## Timeline / change");
-      if (started) lines.push(`**${lang === "da" ? "Start" : "Started"}:** ${started}`);
-      if (change) lines.push(`**${lang === "da" ? "Udvikling" : "Change"}:** ${change}`);
-      lines.push("");
-    }
-
-    const statusItems: Array<{
-      key: keyof CurrentStatus;
-      labelDa: string;
-      labelEn: string;
-      notesKey: keyof CurrentStatus;
-    }> = [
-      { key: "appetite", labelDa: "Appetit", labelEn: "Appetite", notesKey: "appetiteNotes" },
-      { key: "drinking", labelDa: "Drikker", labelEn: "Drinking", notesKey: "drinkingNotes" },
-      { key: "energy", labelDa: "Energi", labelEn: "Energy", notesKey: "energyNotes" },
-      { key: "toileting", labelDa: "Toiletvaner", labelEn: "Toileting", notesKey: "toiletingNotes" },
-      { key: "gi", labelDa: "Mave/tarm", labelEn: "GI", notesKey: "giNotes" },
-      { key: "breathing", labelDa: "Vejrtrækning", labelEn: "Breathing", notesKey: "breathingNotes" },
-      { key: "mobilityPain", labelDa: "Bevægelse/smerte", labelEn: "Mobility/pain", notesKey: "mobilityPainNotes" },
-      { key: "skinEars", labelDa: "Hud/ører", labelEn: "Skin/ears", notesKey: "skinEarsNotes" }
-    ];
-
-    const differentLines: string[] = [];
-    const notSureLines: string[] = [];
-    const asUsualLabels: string[] = [];
-
-    for (const it of statusItems) {
-      const v = (cs[it.key] as TriState) ?? "normal";
-      const notes = ((cs[it.notesKey] as string) ?? "").trim();
-      const label = lang === "da" ? it.labelDa : it.labelEn;
-      const line = notes ? `- **${label}:** ${notes}` : `- **${label}**`;
-
-      if (v === "changed") differentLines.push(line);
-      else if (v === "na") notSureLines.push(line);
-      else asUsualLabels.push(label);
-    }
-
-    if (differentLines.length || notSureLines.length || asUsualLabels.length) {
-      lines.push(lang === "da" ? "## 3) Status lige nu (hurtigt tjek)" : "## 3) Current status (quick check)");
-
-      if (differentLines.length) {
-        lines.push(lang === "da" ? "**Anderledes:**" : "**Different:**");
-        lines.push(...differentLines);
-        lines.push("");
-      }
-
-      if (notSureLines.length) {
-        lines.push(lang === "da" ? "**Ikke relevant / ved ikke:**" : "**N/A / not sure:**");
-        lines.push(...notSureLines);
-        lines.push("");
-      }
-
-      if (asUsualLabels.length) {
-        lines.push(`${lang === "da" ? "**Som normalt:**" : "**As usual:**"} ${asUsualLabels.join(", ")}`);
-        lines.push("");
-      }
-    }
-
-    // FIX: deduplicated otherNotes — was emitted twice (once inside status loop,
-    // once as a separate "additionalNotes" block). Now only emitted here, once.
-    const otherNotes = ((cs.otherNotes as string) ?? "").trim();
-    if (otherNotes) {
-      lines.push(lang === "da" ? "## Yderligere noter (ejer-observationer)" : "## Additional notes (owner observations)");
-      lines.push(otherNotes);
-      lines.push("");
-    }
-
-    if (draft.patterns?.trim()) {
-      lines.push(lang === "da" ? "## Mønstre / triggere" : "## Patterns / triggers");
-      lines.push(draft.patterns.trim());
-      lines.push("");
-    }
-
-    const meds = (((draft as any).medicationsSupplements as string) ?? "").trim();
-    if (meds) {
-      lines.push(lang === "da" ? "## Medicin / tilskud" : "## Meds / supplements");
-      lines.push(meds);
-      lines.push("");
-    }
-
-    const cond = (((draft as any).knownConditions as string) ?? "").trim();
-    if (cond) {
-      lines.push(lang === "da" ? "## Kendte tilstande (diagnosticeret)" : "## Known conditions (vet-diagnosed)");
-      lines.push(cond);
-      lines.push("");
-    }
-
-    const tests = (((draft as any).recentTests as string) ?? "").trim();
-    if (tests) {
-      lines.push(lang === "da" ? "## Nylige tests/resultater" : "## Recent tests/results");
-      lines.push(tests);
-      lines.push("");
-    }
-
-    const od = (draft.otherDetails ?? "").trim();
-    if (od) {
-      lines.push(lang === "da" ? "## Andre detaljer (fakta)" : "## Other details (facts)");
-      lines.push(od);
-      lines.push("");
-    }
-
-    if (draft.questionsVet?.trim()) {
-      lines.push(lang === "da" ? "## Topspørgsmål til dyrlægen" : "## Top questions for the vet");
-      lines.push(draft.questionsVet.trim());
-      lines.push("");
-    }
-
-    lines.push(
-      lang === "da"
-        ? "Ikke medicinsk rådgivning. Denne brief afspejler dine observationer. Dit dyrlægeteam guider diagnose og behandling."
-        : "Not medical advice. This brief reflects your observations. Your veterinary team will guide diagnosis and treatment."
-    );
-
-    return lines.join("\n");
-  };
-
-  const handleCopy = async () => {
-    try {
-      const text = buildVisitBriefText();
-      await navigator.clipboard.writeText(text);
-      alert(lang === "da" ? "Kopieret!" : "Copied!");
-    } catch {
-      alert(lang === "da" ? "Kunne ikke kopiere på denne enhed." : "Could not copy on this device.");
     }
   };
 
@@ -870,10 +714,6 @@ export default function PrepareWizard({
                     : "Ready to share with your veterinary team."}
                 </div>
               </div>
-
-              <button className="btn btnSecondary" onClick={handleCopy} style={{ width: "100%", marginBottom: 12 }}>
-                {lang === "da" ? "Kopiér besøgsforberedelse" : "Copy Visit Brief"}
-              </button>
 
               <div style={{ marginBottom: 12 }}>
                 <ViewDocument lang={lang} visit={draft} pet={pet ?? null} note={null} hideTitle />
