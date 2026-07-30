@@ -100,7 +100,7 @@ const en: Translations = {
   // Auth
   welcome: "Welcome to Pause First",
   accountInfo: "Walk in prepared.",
-  accountInfoDetail: "A simple way to organize your veterinary visits—for every animal you care for.",
+  accountInfoDetail: "A simple way to organize your veterinary visits —for every animal you care for.",
   email: "Email",
   password: "Password",
   createPassword: "Create a password",
