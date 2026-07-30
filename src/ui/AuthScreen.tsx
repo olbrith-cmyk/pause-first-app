@@ -150,7 +150,7 @@ export default function AuthScreen({
               onChange={(e) => setPassword(e.target.value)}
               type="password"
               autoComplete={mode === "signup" ? "new-password" : "current-password"}
-              placeholder={t.createPassword}
+              placeholder={mode === "signup" ? t.createPassword : lang === "da" ? "Indtast adgangskode" : "Enter password"}
             />
           </label>
         )}
