@@ -6,10 +6,12 @@ import horseSil from "../assets/silhouettes/horse.png";
 
 export default function AuthScreen({
   lang,
-  onLangChange
+  onLangChange,
+  onStartDemo
 }: {
   lang: Lang;
   onLangChange?: (next: Lang) => void;
+  onStartDemo?: () => Promise<void>;
 }) {
   const t = useTranslation(lang);
 
@@ -19,6 +21,7 @@ export default function AuthScreen({
 
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [demoLoading, setDemoLoading] = useState(false);
 
   const run = async () => {
     setError(null);
@@ -37,6 +40,19 @@ export default function AuthScreen({
       }
     } catch (e: any) {
       setError(e?.message ?? String(e));
+    }
+  };
+
+  const handleStartDemo = async () => {
+    if (!onStartDemo) return;
+    setError(null);
+    setDemoLoading(true);
+    try {
+      await onStartDemo();
+    } catch (e: any) {
+      setError(e?.message ?? String(e));
+    } finally {
+      setDemoLoading(false);
     }
   };
 
@@ -126,6 +142,23 @@ export default function AuthScreen({
             </button>
           )}
         </div>
+
+        {onStartDemo && (
+          <div style={{ marginTop: 6, textAlign: "center" as const }}>
+            <div className="muted" style={{ fontSize: 13, marginBottom: 8 }}>
+              {lang === "da" ? "Vil du se, hvordan appen fungerer, før du opretter en konto?" : "Want to see how the app works before creating an account?"}
+            </div>
+            <button className="btn btnSecondary" onClick={handleStartDemo} disabled={demoLoading} style={{ width: "100%" }}>
+              {demoLoading
+                ? lang === "da"
+                  ? "Klargør demo…"
+                  : "Setting up demo…"
+                : lang === "da"
+                  ? "Prøv en demo (ingen konto nødvendig)"
+                  : "Try a demo (no account needed)"}
+            </button>
+          </div>
+        )}
 
         <img src={horseSil} className="authHorseSilhouette" alt="" aria-hidden="true" />
       </div>

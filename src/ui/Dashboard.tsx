@@ -31,6 +31,8 @@ type DashboardProps = {
   onLangChange?: (next: Lang) => void;
   onLogout: () => void;
   onDeleteAccount: () => void;
+  isDemo?: boolean;
+  onSignUpFromDemo?: () => void;
 };
 
 export default function Dashboard({
@@ -40,6 +42,8 @@ export default function Dashboard({
   onLangChange,
   onLogout,
   onDeleteAccount,
+  isDemo,
+  onSignUpFromDemo,
 }: DashboardProps) {
   const t = useTranslation(lang);
 
@@ -123,6 +127,21 @@ export default function Dashboard({
           </button>
         )}
       </header>
+
+      {isDemo && (
+        <div className="demoBanner">
+          <span>
+            {lang === "da"
+              ? "Du udforsker en demo — data gemmes ikke permanent. Med en rigtig konto bygger du løbende en besøgshistorik op for hvert dyr."
+              : "You're exploring a demo — nothing here is saved permanently. With a real account, you build up a visit history for each animal over time."}
+          </span>
+          {onSignUpFromDemo && (
+            <button className="btn btnPrimary btnSmall" onClick={onSignUpFromDemo}>
+              {lang === "da" ? "Opret konto" : "Sign up"}
+            </button>
+          )}
+        </div>
+      )}
 
       {/* CONTENT AREA */}
       <main className={`appMain ${mode === "home" ? "appMainHome" : ""}`}>
@@ -305,6 +324,7 @@ export default function Dashboard({
         onClose={() => setMenuOpen(false)}
         onLogout={onLogout}
         onDeleteAccount={onDeleteAccount}
+        isDemo={isDemo}
         onEmergencyGuide={() => {
           setMenuOpen(false);
           setShowEmergencyGuide(true);

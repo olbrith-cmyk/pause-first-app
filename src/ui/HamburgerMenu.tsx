@@ -20,7 +20,8 @@ export default function HamburgerMenu({
   onMedicalDisclaimer,
   onPrivacyPolicy,
   onMyPets,
-  onMyVisits
+  onMyVisits,
+  isDemo
 }: {
   lang: Lang;
   isOpen: boolean;
@@ -32,6 +33,7 @@ export default function HamburgerMenu({
   onPrivacyPolicy: () => void;
   onMyPets: () => void;
   onMyVisits: () => void;
+  isDemo?: boolean;
 }) {
   const t = useTranslation(lang);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -153,28 +155,36 @@ export default function HamburgerMenu({
           >
             <Icon name="logout" />
             <span className="menuText">
-              <span className="menuTitle">{t.logout}</span>
+              <span className="menuTitle">{isDemo ? (lang === "da" ? "Afslut demo" : "Exit demo") : t.logout}</span>
               <span className="menuHint">
-                {lang === "da" ? "Log ud af appen" : "Sign out of the app"}
+                {isDemo
+                  ? lang === "da"
+                    ? "Sletter demo-data og logger ud"
+                    : "Deletes demo data and signs out"
+                  : lang === "da"
+                    ? "Log ud af appen"
+                    : "Sign out of the app"}
               </span>
             </span>
           </button>
 
-          <button
-            className="menuItem menuItemDanger"
-            onClick={() => {
-              onDeleteAccount();
-              onClose();
-            }}
-          >
-            <Icon name="delete_forever" />
-            <span className="menuText">
-              <span className="menuTitle">{t.deleteAccount}</span>
-              <span className="menuHint">
-                {lang === "da" ? "Sletter data permanent" : "Deletes data permanently"}
+          {!isDemo && (
+            <button
+              className="menuItem menuItemDanger"
+              onClick={() => {
+                onDeleteAccount();
+                onClose();
+              }}
+            >
+              <Icon name="delete_forever" />
+              <span className="menuText">
+                <span className="menuTitle">{t.deleteAccount}</span>
+                <span className="menuHint">
+                  {lang === "da" ? "Sletter data permanent" : "Deletes data permanently"}
+                </span>
               </span>
-            </span>
-          </button>
+            </button>
+          )}
         </div>
       </aside>
     </>

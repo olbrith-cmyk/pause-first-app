@@ -2,6 +2,7 @@ import {
   getAuth,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signInAnonymously,
   sendPasswordResetEmail,
   signOut,
   onAuthStateChanged,
@@ -13,6 +14,8 @@ const auth = getAuth(firebaseApp);
 
 export const signUp = (email: string, password: string) =>
   createUserWithEmailAndPassword(auth, email, password);
+
+export const startDemo = () => signInAnonymously(auth);
 
 export const logIn = (email: string, password: string) =>
   signInWithEmailAndPassword(auth, email, password);

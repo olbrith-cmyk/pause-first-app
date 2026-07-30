@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import type { Lang } from "./i18n";
 import { useTranslation } from "./i18n";
-import { onAuthChange, logOut } from "./auth";
+import { onAuthChange, logOut, startDemo } from "./auth";
 import { deleteUserAccount } from "./firestore";
+import { seedDemoData } from "./utils/demoSeed";
 import type { User } from "firebase/auth";
 
 import AuthScreen from "./ui/AuthScreen";
@@ -91,6 +92,26 @@ export default function App() {
     }
   };
 
+  const isDemo = !!user?.isAnonymous;
+
+  const handleStartDemo = async () => {
+    const cred = await startDemo();
+    await seedDemoData(cred.user.uid, lang);
+  };
+
+  // Demo accounts have nothing worth keeping, so exiting always wipes the
+  // seeded data (and the anonymous auth user itself) instead of leaving it
+  // behind — reuses the same cascade-delete as a real account deletion.
+  const handleExitDemo = async () => {
+    if (!user) return;
+    try {
+      await deleteUserAccount(user.uid);
+    } catch (e) {
+      console.error("Failed to clean up demo account", e);
+      await logOut();
+    }
+  };
+
   if (!authReady) {
     return (
       <div className="page">
@@ -111,15 +132,17 @@ export default function App() {
       }}
     >
       {!user ? (
-        <AuthScreen lang={lang} onLangChange={handleLangChange} />
+        <AuthScreen lang={lang} onLangChange={handleLangChange} onStartDemo={handleStartDemo} />
       ) : (
         <Dashboard
           lang={lang}
           userId={user.uid}
           email={user.email ?? ""}
           onLangChange={handleLangChange}
-          onLogout={logOut}
+          onLogout={isDemo ? handleExitDemo : logOut}
           onDeleteAccount={handleDeleteAccount}
+          isDemo={isDemo}
+          onSignUpFromDemo={handleExitDemo}
         />
       )}
     </div>
