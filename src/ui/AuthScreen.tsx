@@ -88,7 +88,7 @@ export default function AuthScreen({
   };
 
   return (
-    <main className="card">
+    <main className="card authScreen">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
         <h2 style={{ margin: 0 }}>{t.welcome}</h2>
         {onLangChange && (
