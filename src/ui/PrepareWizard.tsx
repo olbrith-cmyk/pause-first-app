@@ -8,6 +8,7 @@ import PetSnapshotCard from "./PetSnapshotCard";
 import AttachmentManager from "./AttachmentManager";
 import AttachmentGallery from "./AttachmentGallery";
 import { patientInfoLines, patientInfoRows } from "../utils/petInfo";
+import { shareWithVet } from "../utils/pdfExport";
 
 type Props = {
   lang: Lang;
@@ -55,6 +56,7 @@ export default function PrepareWizard({
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [savingDraft, setSavingDraft] = useState(false);
+  const [sharingFromDone, setSharingFromDone] = useState(false);
   const [mode, setMode] = useState<"wizard" | "preview" | "done">("wizard");
   const [showCurrentStatus, setShowCurrentStatus] = useState(false);
   const [showPatientInfo, setShowPatientInfo] = useState(false);
@@ -265,6 +267,18 @@ export default function PrepareWizard({
     } catch (e: any) {
       alert(t.error + ": " + (e?.message ?? String(e)));
       setSaving(false);
+    }
+  };
+
+  const handleShareFromDone = async () => {
+    if (!pet) return;
+    setSharingFromDone(true);
+    try {
+      await shareWithVet({ visit: { ...draft, status: "final" }, pet, note: null, lang });
+    } catch (e: any) {
+      alert((lang === "da" ? "Fejl ved deling: " : "Error sharing: ") + (e?.message ?? String(e)));
+    } finally {
+      setSharingFromDone(false);
     }
   };
 
@@ -1393,18 +1407,28 @@ export default function PrepareWizard({
                 }}
               >
                 <p style={{ margin: "0 0 6px 0" }}>
-                  <strong>{lang === "da" ? "Gemt!" : "Saved!"}</strong>{" "}
-                  {lang === "da" ? "Din forberedelse er gemt i appen." : "Your visit prep has been saved in the app."}
+                  <strong>✔ {lang === "da" ? "Besøgsforberedelse gemt" : "Visit brief saved"}</strong>
                 </p>
                 <p style={{ margin: 0, color: "var(--muted)", fontSize: 14 }}>
                   {lang === "da"
-                    ? "Gå forberedt ind. Vær en partner i dit dyrs behandling."
-                    : "Walk in prepared. Partner in your pet's care."}
+                    ? "Klar til at dele med din dyrlægeklinik."
+                    : "Ready to share with your veterinary clinic."}
                 </p>
               </div>
 
               <div className="row" style={{ gap: 8, flexDirection: "column" as const }}>
-                <button className="btn btnPrimary" onClick={closeToMyVisits}>
+                {pet && (
+                  <button className="btn btnPrimary" onClick={handleShareFromDone} disabled={sharingFromDone}>
+                    {sharingFromDone
+                      ? lang === "da"
+                        ? "Deler…"
+                        : "Sharing…"
+                      : lang === "da"
+                        ? "Del med dyrlæge"
+                        : "Share with Vet"}
+                  </button>
+                )}
+                <button className="btn btnSecondary" onClick={closeToMyVisits}>
                   {lang === "da" ? "Færdig" : "Done"}
                 </button>
               </div>
