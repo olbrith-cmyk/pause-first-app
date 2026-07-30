@@ -143,6 +143,61 @@ function buildShareText(params: { visit: Visit; pet: Pet; note: VisitNote | null
   return lines.join("\n");
 }
 
+function describeAttachments(attachments: Attachment[], lang: Lang): string {
+  const counts: Record<AttachmentType, number> = { photo: 0, video: 0, audio: 0 };
+  for (const a of attachments) counts[a.type]++;
+
+  const parts: string[] = [];
+  if (counts.photo) {
+    parts.push(lang === "da" ? `${counts.photo} foto${counts.photo > 1 ? "s" : ""}` : `${counts.photo} photo${counts.photo > 1 ? "s" : ""}`);
+  }
+  if (counts.video) {
+    parts.push(lang === "da" ? `${counts.video} video${counts.video > 1 ? "er" : ""}` : `${counts.video} video${counts.video > 1 ? "s" : ""}`);
+  }
+  if (counts.audio) {
+    parts.push(
+      lang === "da"
+        ? `${counts.audio} lydoptagelse${counts.audio > 1 ? "r" : ""}`
+        : `${counts.audio} audio recording${counts.audio > 1 ? "s" : ""}`
+    );
+  }
+  return parts.join(", ");
+}
+
+// Short cover-note text used when the PDF is actually going out as a real
+// attachment in this share — the PDF already carries the full detail, so the
+// email body just needs to say what's attached instead of repeating it all.
+function buildShortShareText(params: { visit: Visit; pet: Pet; lang: Lang }, attachmentsIncluded: Attachment[]): string {
+  const { visit, pet, lang } = params;
+  const attachmentsDesc = describeAttachments(attachmentsIncluded, lang);
+
+  if (lang === "da") {
+    const attachedList = ["PDF-oversigt", attachmentsDesc].filter(Boolean).join(" + ");
+    return [
+      `Pause First™ – forberedelse til dyrlægebesøg`,
+      `Dyr: ${pet.name}`,
+      `Dato: ${visit.visitDate || "(ingen dato)"}`,
+      "",
+      `Vedhæftet: ${attachedList}.`,
+      "",
+      "Se den vedhæftede PDF for alle detaljer (patientinfo, hovedbekymring, status m.m.).",
+      "Ikke medicinsk rådgivning."
+    ].join("\n");
+  }
+
+  const attachedList = ["PDF summary", attachmentsDesc].filter(Boolean).join(" + ");
+  return [
+    `Pause First™ – vet visit preparation`,
+    `Pet: ${pet.name}`,
+    `Date: ${visit.visitDate || "(no date)"}`,
+    "",
+    `Attached: ${attachedList}.`,
+    "",
+    "See the attached PDF for full details (patient info, main concern, status, etc).",
+    "Not medical advice."
+  ].join("\n");
+}
+
 async function renderDocumentPdf(params: { visit: Visit; pet: Pet }): Promise<{ pdf: jsPDF; fileName: string }> {
   const el = document.getElementById("document-content");
   if (!el) throw new Error("Document content not found.");
@@ -244,10 +299,19 @@ async function attachmentToFile(attachment: Attachment, index: number): Promise<
   }
 }
 
-async function attachmentsToFiles(attachments: Attachment[]): Promise<{ files: File[]; failedCount: number }> {
+async function attachmentsToFiles(
+  attachments: Attachment[]
+): Promise<{ files: File[]; succeeded: Attachment[]; failedCount: number }> {
   const results = await Promise.all(attachments.map((a, i) => attachmentToFile(a, i)));
-  const files = results.filter((f): f is File => f !== null);
-  return { files, failedCount: attachments.length - files.length };
+  const files: File[] = [];
+  const succeeded: Attachment[] = [];
+  results.forEach((f, i) => {
+    if (f) {
+      files.push(f);
+      succeeded.push(attachments[i]);
+    }
+  });
+  return { files, succeeded, failedCount: attachments.length - files.length };
 }
 
 function downloadFiles(files: File[]) {
@@ -270,15 +334,17 @@ export async function shareWithVet(params: {
   lang: Lang;
 }) {
   const { visit, pet, note, lang } = params;
-  const text = buildShareText(params);
+  const fullText = buildShareText(params);
 
   const attachments = [...(visit.attachments ?? []), ...(note?.attachments ?? [])];
   const [pdfFile, attachmentResult] = await Promise.all([
     generatePdfFile({ visit, pet }),
-    attachments.length ? attachmentsToFiles(attachments) : Promise.resolve({ files: [] as File[], failedCount: 0 })
+    attachments.length
+      ? attachmentsToFiles(attachments)
+      : Promise.resolve({ files: [] as File[], succeeded: [] as Attachment[], failedCount: 0 })
   ]);
 
-  const { files: attachmentFiles, failedCount } = attachmentResult;
+  const { files: attachmentFiles, succeeded: succeededAttachments, failedCount } = attachmentResult;
   const files = pdfFile ? [pdfFile, ...attachmentFiles] : attachmentFiles;
 
   const pdfWarning = !pdfFile
@@ -314,9 +380,14 @@ export async function shareWithVet(params: {
     }
   };
 
-  // Mobile share sheet, with every file attached if the device supports it
+  // Mobile share sheet, with every file attached if the device supports it.
+  // The PDF already carries every detail, so the body text is just a short
+  // cover note describing what's attached rather than repeating it all.
   if (nav.share && canShare(files)) {
-    const result = await attemptShare({ title: "Pause First™", text, files });
+    const shortText = pdfFile
+      ? buildShortShareText({ visit, pet, lang }, succeededAttachments)
+      : fullText;
+    const result = await attemptShare({ title: "Pause First™", text: shortText, files });
     if (result === "shared") {
       if (failedCount) alert((lang === "da" ? "Delt." : "Shared.") + attachmentWarning);
       return;
@@ -330,7 +401,8 @@ export async function shareWithVet(params: {
   // download the rest for manual attaching, instead of giving up on native
   // sharing entirely.
   if (nav.share && pdfFile && canShare([pdfFile])) {
-    const result = await attemptShare({ title: "Pause First™", text, files: [pdfFile] });
+    const shortText = buildShortShareText({ visit, pet, lang }, []);
+    const result = await attemptShare({ title: "Pause First™", text: shortText, files: [pdfFile] });
     if (result === "shared") {
       if (attachmentFiles.length) {
         downloadFiles(attachmentFiles);
@@ -349,7 +421,10 @@ export async function shareWithVet(params: {
   }
 
   if (nav.share) {
-    const result = await attemptShare({ title: "Pause First™", text });
+    // No files are going out with this share, so use the full text — it's
+    // the only copy of the detail the recipient will get unless the
+    // downloaded files below get attached manually.
+    const result = await attemptShare({ title: "Pause First™", text: fullText });
     if (result === "shared") {
       if (files.length) {
         alert(
@@ -369,7 +444,7 @@ export async function shareWithVet(params: {
 
   // Desktop fallback: copy text, download any attachments for manual attaching
   if (navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(text);
+    await navigator.clipboard.writeText(fullText);
     if (files.length) {
       downloadFiles(files);
       alert(
@@ -389,5 +464,5 @@ export async function shareWithVet(params: {
 
   // Last resort
   if (files.length) downloadFiles(files);
-  alert(text);
+  alert(fullText);
 }
