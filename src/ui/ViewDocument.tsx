@@ -136,12 +136,14 @@ export default function ViewDocument({
   lang,
   visit,
   pet,
-  note
+  note,
+  hideTitle
 }: {
   lang: Lang;
   visit: Visit | null;
   pet: Pet | null;
   note: VisitNote | null;
+  hideTitle?: boolean;
 }) {
   const t = useTranslation(lang);
   const tt = (en: string, da: string) => (lang === "da" ? da : en);
@@ -149,7 +151,7 @@ export default function ViewDocument({
   if (!visit || !pet) {
     return (
       <div className="stack">
-        <h3>{t.viewDocument}</h3>
+        {!hideTitle && <h3>{t.viewDocument}</h3>}
         <div className="muted">{tt("Select a visit to view the document.", "Vælg et besøg for at se dokumentet.")}</div>
       </div>
     );
@@ -179,7 +181,7 @@ export default function ViewDocument({
 
   return (
     <div className="stack">
-      <h3>{t.viewDocument}</h3>
+      {!hideTitle && <h3>{t.viewDocument}</h3>}
 
       <div id="document-content" className="panel" style={{ padding: "24px" }}>
         {/* Top accent bar for a bit of brand color at a glance */}
