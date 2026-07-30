@@ -104,7 +104,7 @@ export default function AuthScreen({
         )}
       </div>
       <p className="muted" style={{ margin: "0 0 2px 0" }}>{t.accountInfo}</p>
-      <p className="muted" style={{ margin: 0 }}>{t.accountInfoDetail}</p>
+      <p className="muted" style={{ margin: 0, fontStyle: "italic" }}>{t.accountInfoDetail}</p>
 
       {onStartDemo && (
         <div className="demoCallout">
