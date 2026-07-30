@@ -11,7 +11,8 @@ import {
   where,
   Timestamp,
   setDoc,
-  writeBatch
+  writeBatch,
+  runTransaction
 } from "firebase/firestore";
 import { deleteUser, getAuth } from "firebase/auth";
 import { firebaseApp } from "./firebase";
@@ -418,6 +419,41 @@ async function deleteAllDocsForUser(params: { collectionName: string; userId: st
   }
 
   return deleted;
+}
+
+// --------------------
+// Activation codes (gate signup behind a purchased code)
+// --------------------
+
+export type ActivationCodeCheckResult = { valid: boolean; reason?: "not_found" | "used" };
+export type ActivationCodeRedeemResult = { ok: boolean; reason?: "not_found" | "used" };
+
+// Read-only pre-check so a bad/used code fails fast, before we create an
+// account for it. The real enforcement is the transaction in
+// redeemActivationCode below — this is just for quick, friendly feedback.
+export async function checkActivationCode(code: string): Promise<ActivationCodeCheckResult> {
+  const ref = doc(db, "activationCodes", code.trim());
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return { valid: false, reason: "not_found" };
+  if ((snap.data() as any).used) return { valid: false, reason: "used" };
+  return { valid: true };
+}
+
+// Atomically flips a code from unused to used. Runs as a transaction so two
+// signups racing on the same code can't both succeed.
+export async function redeemActivationCode(code: string, userId: string): Promise<ActivationCodeRedeemResult> {
+  const ref = doc(db, "activationCodes", code.trim());
+  try {
+    await runTransaction(db, async (tx) => {
+      const snap = await tx.get(ref);
+      if (!snap.exists()) throw new Error("not_found");
+      if ((snap.data() as any).used) throw new Error("used");
+      tx.update(ref, { used: true, usedByUserId: userId, usedAt: Timestamp.now() });
+    });
+    return { ok: true };
+  } catch (e: any) {
+    return { ok: false, reason: e?.message === "used" ? "used" : "not_found" };
+  }
 }
 
 export async function deleteUserAccount(userId: string) {

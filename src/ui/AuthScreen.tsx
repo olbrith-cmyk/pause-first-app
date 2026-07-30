@@ -1,7 +1,8 @@
 import { useState } from "react";
 import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
-import { logIn, resetPassword, signUp } from "../auth";
+import { cancelSignup, logIn, resetPassword, signUp } from "../auth";
+import { checkActivationCode, redeemActivationCode } from "../firestore";
 import horseSil from "../assets/silhouettes/horse.png";
 
 export default function AuthScreen({
@@ -18,10 +19,20 @@ export default function AuthScreen({
   const [mode, setMode] = useState<"login" | "signup" | "reset">("signup");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [activationCode, setActivationCode] = useState("");
 
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [demoLoading, setDemoLoading] = useState(false);
+
+  const invalidCodeMessage = (reason?: "not_found" | "used") =>
+    reason === "used"
+      ? lang === "da"
+        ? "Denne aktiveringskode er allerede brugt."
+        : "This activation code has already been used."
+      : lang === "da"
+        ? "Ugyldig aktiveringskode."
+        : "Invalid activation code.";
 
   const run = async () => {
     setError(null);
@@ -29,7 +40,27 @@ export default function AuthScreen({
 
     try {
       if (mode === "signup") {
-        await signUp(email.trim(), password);
+        const code = activationCode.trim();
+        if (!code) {
+          setError(lang === "da" ? "Indtast venligst din aktiveringskode." : "Please enter your activation code.");
+          return;
+        }
+
+        const check = await checkActivationCode(code);
+        if (!check.valid) {
+          setError(invalidCodeMessage(check.reason));
+          return;
+        }
+
+        const cred = await signUp(email.trim(), password);
+
+        const redeemed = await redeemActivationCode(code, cred.user.uid);
+        if (!redeemed.ok) {
+          await cancelSignup(cred.user);
+          setError(invalidCodeMessage(redeemed.reason));
+          return;
+        }
+
         setStatus(t.saved);
       } else if (mode === "login") {
         await logIn(email.trim(), password);
@@ -95,6 +126,19 @@ export default function AuthScreen({
               type="password"
               autoComplete={mode === "signup" ? "new-password" : "current-password"}
               placeholder={t.createPassword}
+            />
+          </label>
+        )}
+
+        {mode === "signup" && (
+          <label className="label">
+            {t.activationCode}
+            <input
+              className="input"
+              value={activationCode}
+              onChange={(e) => setActivationCode(e.target.value)}
+              autoComplete="off"
+              placeholder={t.activationCodePlaceholder}
             />
           </label>
         )}

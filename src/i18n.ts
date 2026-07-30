@@ -14,6 +14,8 @@ export type Translations = {
   email: string;
   password: string;
   createPassword: string;
+  activationCode: string;
+  activationCodePlaceholder: string;
   signUp: string;
   login: string;
   sendReset: string;
@@ -100,6 +102,8 @@ const en: Translations = {
   email: "Email",
   password: "Password",
   createPassword: "Create a password",
+  activationCode: "Activation code",
+  activationCodePlaceholder: "You received this when you purchased access",
   signUp: "Sign up",
   login: "Log in",
   sendReset: "Send reset link",
@@ -186,6 +190,8 @@ const da: Translations = {
   email: "E-mail",
   password: "Adgangskode",
   createPassword: "Opret en adgangskode",
+  activationCode: "Aktiveringskode",
+  activationCodePlaceholder: "Du fik denne kode, da du købte adgang",
   signUp: "Opret konto",
   login: "Log ind",
   sendReset: "Send nulstillingslink",
