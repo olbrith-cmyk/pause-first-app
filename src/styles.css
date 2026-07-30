@@ -166,7 +166,7 @@ body {
 .form {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 16px;
 }
 
 .authScreen {
@@ -174,12 +174,6 @@ body {
   min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 14px;
-}
-
-.authScreen h2 {
-  font-size: 21px;
-  line-height: 1.15;
 }
 
 .row.authLinksRow {
@@ -193,11 +187,11 @@ body {
 .demoCallout {
   background: var(--lightBlue);
   border-radius: 12px;
-  padding: 10px 14px;
-  margin: 10px 0;
+  padding: 14px 16px;
+  margin: 16px 0;
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 8px;
   text-align: center;
 }
 
@@ -213,7 +207,7 @@ body {
   color: var(--muted);
   font-size: 13px;
   font-weight: 700;
-  margin: 4px 0 10px;
+  margin: 4px 0 16px;
 }
 
 .authDivider::before,
@@ -226,9 +220,9 @@ body {
 
 .authHorseSilhouette {
   display: block;
-  width: 90px;
+  width: 150px;
   height: auto;
-  margin: 6px auto 0;
+  margin: 12px auto 0;
   opacity: 0.85;
   pointer-events: none;
 }
