@@ -699,7 +699,27 @@ export default function PrepareWizard({
                 <h4 style={{ margin: "0 0 6px 0" }}>{stepData[step].title}</h4>
                 <p style={{ color: "var(--muted)", fontSize: 14, margin: 0 }}>{stepData[step].desc}</p>
               </div>
-              {renderStep()}
+              <div
+                onKeyDown={(e) => {
+                  if (e.key !== "Enter" || e.shiftKey) return;
+
+                  const target = e.target as HTMLElement;
+                  if (target.tagName !== "INPUT" && target.tagName !== "TEXTAREA") return;
+
+                  e.preventDefault();
+
+                  const focusables = Array.from(e.currentTarget.querySelectorAll<HTMLElement>("input, textarea"));
+                  const index = focusables.indexOf(target);
+
+                  if (index >= 0 && index < focusables.length - 1) {
+                    focusables[index + 1].focus();
+                  } else {
+                    handleNext();
+                  }
+                }}
+              >
+                {renderStep()}
+              </div>
             </>
           )}
 
