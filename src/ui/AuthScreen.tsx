@@ -20,6 +20,7 @@ export default function AuthScreen({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [activationCode, setActivationCode] = useState("");
+  const [showActivationCode, setShowActivationCode] = useState(false);
 
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -42,6 +43,7 @@ export default function AuthScreen({
       if (mode === "signup") {
         const code = activationCode.trim();
         if (!code) {
+          setShowActivationCode(true);
           setError(lang === "da" ? "Indtast venligst din aktiveringskode." : "Please enter your activation code.");
           return;
         }
@@ -103,6 +105,28 @@ export default function AuthScreen({
       </div>
       <p className="muted">{t.accountInfo}</p>
 
+      {onStartDemo && (
+        <div className="demoCallout">
+          <strong>{lang === "da" ? "Ny her?" : "New here?"}</strong>
+          <div className="muted" style={{ fontSize: 13 }}>
+            {lang === "da"
+              ? "Udforsk appen først. Ingen konto nødvendig."
+              : "Explore the app first. No account required."}
+          </div>
+          <button className="btn btnPrimary" onClick={handleStartDemo} disabled={demoLoading}>
+            {demoLoading
+              ? lang === "da"
+                ? "Klargør demo…"
+                : "Setting up demo…"
+              : lang === "da"
+                ? "Prøv demoen"
+                : "Try the demo"}
+          </button>
+        </div>
+      )}
+
+      <div className="authDivider">{lang === "da" ? "Har du allerede købt adgang?" : "Already purchased access?"}</div>
+
       <div className="form">
         <label className="label">
           {t.email}
@@ -130,18 +154,28 @@ export default function AuthScreen({
           </label>
         )}
 
-        {mode === "signup" && (
-          <label className="label">
-            {t.activationCode}
-            <input
-              className="input"
-              value={activationCode}
-              onChange={(e) => setActivationCode(e.target.value)}
-              autoComplete="off"
-              placeholder={t.activationCodePlaceholder}
-            />
-          </label>
-        )}
+        {mode === "signup" &&
+          (showActivationCode ? (
+            <label className="label">
+              {t.activationCode}
+              <input
+                className="input"
+                value={activationCode}
+                onChange={(e) => setActivationCode(e.target.value)}
+                autoComplete="off"
+                placeholder={t.activationCodePlaceholder}
+              />
+            </label>
+          ) : (
+            <button
+              type="button"
+              className="btn btnLink"
+              onClick={() => setShowActivationCode(true)}
+              style={{ alignSelf: "flex-start" }}
+            >
+              {lang === "da" ? "Har du en aktiveringskode?" : "Have an activation code?"}
+            </button>
+          ))}
 
         {error && <div className="alert alertError">{t.error}: {error}</div>}
         {status && <div className="alert alertOk">{status}</div>}
@@ -186,23 +220,6 @@ export default function AuthScreen({
             </button>
           )}
         </div>
-
-        {onStartDemo && (
-          <div style={{ marginTop: 6, textAlign: "center" as const }}>
-            <div className="muted" style={{ fontSize: 13, marginBottom: 8 }}>
-              {lang === "da" ? "Vil du se, hvordan appen fungerer, før du opretter en konto?" : "Want to see how the app works before creating an account?"}
-            </div>
-            <button className="btn btnSecondary" onClick={handleStartDemo} disabled={demoLoading} style={{ width: "100%" }}>
-              {demoLoading
-                ? lang === "da"
-                  ? "Klargør demo…"
-                  : "Setting up demo…"
-                : lang === "da"
-                  ? "Prøv en demo (ingen konto nødvendig)"
-                  : "Try a demo (no account needed)"}
-            </button>
-          </div>
-        )}
 
         <img src={horseSil} className="authHorseSilhouette" alt="" aria-hidden="true" />
       </div>

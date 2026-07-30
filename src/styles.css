@@ -176,6 +176,40 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 
+.demoCallout {
+  background: var(--lightBlue);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin: 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: center;
+}
+
+.demoCallout strong {
+  color: var(--blue);
+  font-size: 15px;
+}
+
+.authDivider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  margin: 4px 0 16px;
+}
+
+.authDivider::before,
+.authDivider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
 .authHorseSilhouette {
   display: block;
   width: 150px;
