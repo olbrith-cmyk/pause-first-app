@@ -199,7 +199,7 @@ export default function AuthScreen({
           )}
         </div>
 
-        <div className="row rowWrap">
+        <div className="row rowWrap authLinksRow" style={{ justifyContent: "center" }}>
           {mode !== "login" && (
             <button className="btn btnLink" onClick={() => setMode("login")}>
               {t.login}
