@@ -11,6 +11,7 @@ export type Translations = {
   // Auth
   welcome: string;
   accountInfo: string;
+  accountInfoDetail: string;
   email: string;
   password: string;
   createPassword: string;
@@ -98,7 +99,8 @@ const en: Translations = {
 
   // Auth
   welcome: "Welcome to Pause First",
-  accountInfo: "Walk in prepared. Partner in your pet's care.",
+  accountInfo: "Walk in prepared.",
+  accountInfoDetail: "A simple way to organize your veterinary visits—for every animal you care for.",
   email: "Email",
   password: "Password",
   createPassword: "Create a password",
@@ -186,7 +188,8 @@ const da: Translations = {
 
   // Auth
   welcome: "Velkommen til Pause First",
-  accountInfo: "Mød godt forberedt op. Vær en aktiv partner i dit dyrs pleje.",
+  accountInfo: "Mød forberedt op.",
+  accountInfoDetail: "En enkel måde at holde styr på dyrlægebesøg for alle de dyr, du tager dig af.",
   email: "E-mail",
   password: "Adgangskode",
   createPassword: "Opret en adgangskode",
