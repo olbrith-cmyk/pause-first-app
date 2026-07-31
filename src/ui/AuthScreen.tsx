@@ -166,6 +166,9 @@ export default function AuthScreen({
                 autoComplete="off"
                 placeholder={t.activationCodePlaceholder}
               />
+              <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
+                {lang === "da" ? "Krævet for at aktivere købt adgang." : "Required to activate purchased access."}
+              </span>
             </label>
           ) : (
             <button
@@ -174,7 +177,9 @@ export default function AuthScreen({
               onClick={() => setShowActivationCode(true)}
               style={{ alignSelf: "flex-start" }}
             >
-              {lang === "da" ? "Har du en aktiveringskode?" : "Have an activation code?"}
+              {lang === "da"
+                ? "Indtast aktiveringskode (fra din købsmail)"
+                : "Enter activation code (from your purchase email)"}
             </button>
           ))}
 
@@ -223,6 +228,12 @@ export default function AuthScreen({
         </div>
 
         <img src={horseSil} className="authHorseSilhouette" alt="" aria-hidden="true" />
+
+        <p className="muted" style={{ fontSize: 12, textAlign: "center", margin: "4px 0 0" }}>
+          {lang === "da"
+            ? "Pause First hjælper dig med at organisere dine noter før et dyrlægebesøg — det stiller ikke diagnoser, behandler ikke og erstatter ikke professionel dyrlægefaglig rådgivning."
+            : "Pause First helps you organize your notes before a vet visit—it does not diagnose, treat, or replace professional veterinary advice."}
+        </p>
       </div>
     </main>
   );
