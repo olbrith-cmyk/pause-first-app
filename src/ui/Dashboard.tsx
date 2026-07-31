@@ -4,7 +4,6 @@ import dogSil from "../assets/silhouettes/dog.png";
 import birdSil from "../assets/silhouettes/bird.png";
 import catSil from "../assets/silhouettes/cat.png";
 import cowSil from "../assets/silhouettes/cow.png";
-import horseSil from "../assets/silhouettes/horse.png";
 
 import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
@@ -148,7 +147,7 @@ export default function Dashboard({
       <main className={`appMain ${mode === "home" ? "appMainHome" : ""}`}>
         {/* HOME PAGE */}
         {mode === "home" && (
-          <div className="pageContent">
+          <div className="pageContent pageContentNoDock">
             <section className="homeHero homeHeroV2">
               {/* Background silhouettes */}
               <div className="homeSilhouettes" aria-hidden="true">
@@ -221,10 +220,6 @@ export default function Dashboard({
               <div className="homeBottomSilhouettes" aria-hidden="true">
                 <img src={cowSil} className="homeSilhouette homeBottomSilhouetteCow" alt="" />
                 <img src={catSil} className="homeSilhouette homeBottomSilhouetteCat" alt="" />
-              </div>
-
-              <div className="homeExtraSilhouetteWrap" aria-hidden="true">
-                <img src={horseSil} className="homeExtraSilhouetteHorse" alt="" />
               </div>
             </section>
           </div>
