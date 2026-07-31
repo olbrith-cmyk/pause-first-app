@@ -109,7 +109,7 @@ export default function AuthScreen({
       <p className="muted" style={{ margin: "0 0 2px 0", fontWeight: 700 }}>{t.accountInfo}</p>
       <p className="muted" style={{ margin: 0, fontStyle: "italic" }}>{t.accountInfoDetail}</p>
 
-      {onStartDemo && (
+      {onStartDemo && mode !== "signup" && (
         <div className="demoCallout">
           <strong>{lang === "da" ? "Ny her?" : "New here?"}</strong>
           <div className="muted" style={{ fontSize: 13 }}>
@@ -129,7 +129,9 @@ export default function AuthScreen({
         </div>
       )}
 
-      <div className="authDivider">{lang === "da" ? "Har du allerede adgang?" : "Already have access?"}</div>
+      {mode !== "signup" && (
+        <div className="authDivider">{lang === "da" ? "Har du allerede adgang?" : "Already have access?"}</div>
+      )}
 
       {mode === "login" && (
         <div style={{ textAlign: "center", marginBottom: 16 }}>
