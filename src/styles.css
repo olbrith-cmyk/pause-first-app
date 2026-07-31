@@ -239,7 +239,7 @@ body {
 
 .authAnimalHorse { width: 80px; }
 .authAnimalDog { width: 55px; }
-.authAnimalCat { width: 29px; }
+.authAnimalCat { width: 29px; margin-left: 4px; }
 .authAnimalSheep { width: 43px; }
 .authAnimalBird { width: 23px; }
 .authAnimalTurtle { width: 30px; }
