@@ -231,8 +231,8 @@ export default function AuthScreen({
 
         <p className="muted" style={{ fontSize: 12, textAlign: "center", margin: "4px 0 0" }}>
           {lang === "da"
-            ? "Pause First hjælper dig med at organisere dine noter før et dyrlægebesøg — det stiller ikke diagnoser, behandler ikke og erstatter ikke professionel dyrlægefaglig rådgivning."
-            : "Pause First helps you organize your notes before a vet visit—it does not diagnose, treat, or replace professional veterinary advice."}
+            ? "Pause First hjælper dig med at organisere dine noter før et dyrlægebesøg og fungerer sammen med din klinik og andre dyre-apps. Det stiller ikke diagnoser, behandler ikke og erstatter ikke professionel dyrlægefaglig rådgivning."
+            : "Pause First helps you organize your notes before a vet visit and fits alongside your clinic and other pet apps. It does not diagnose, treat, or replace professional veterinary advice."}
         </p>
       </div>
     </main>
