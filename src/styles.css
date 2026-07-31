@@ -222,31 +222,6 @@ body {
   background: var(--border);
 }
 
-.authModeToggle {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
-}
-
-.authModeToggleBtn {
-  flex: 1;
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 2px solid rgba(47, 74, 99, 0.28);
-  background: #fffdf8;
-  color: var(--blue);
-  font-weight: 700;
-  font-size: 14px;
-  cursor: pointer;
-  text-align: center;
-}
-
-.authModeToggleBtn.active {
-  background: var(--lightBlue);
-  color: var(--blue);
-  border-color: var(--blue);
-}
-
 .authHorseSilhouette {
   display: block;
   width: 150px;

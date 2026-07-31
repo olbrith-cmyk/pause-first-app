@@ -126,24 +126,16 @@ export default function AuthScreen({
 
       <div className="authDivider">{lang === "da" ? "Har du allerede adgang?" : "Already have access?"}</div>
 
-      {mode !== "reset" && (
-        <div className="authModeToggle" role="tablist">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={mode === "signup"}
-            className={`authModeToggleBtn${mode === "signup" ? " active" : ""}`}
-            onClick={() => setMode("signup")}
-          >
+      {mode === "login" && (
+        <div style={{ textAlign: "center", marginBottom: 16 }}>
+          <button type="button" className="btn btnLink" onClick={() => setMode("signup")}>
             {lang === "da" ? "Aktivér med kode" : "Activate with code"}
           </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={mode === "login"}
-            className={`authModeToggleBtn${mode === "login" ? " active" : ""}`}
-            onClick={() => setMode("login")}
-          >
+        </div>
+      )}
+      {mode === "signup" && (
+        <div style={{ textAlign: "center", marginBottom: 16 }}>
+          <button type="button" className="btn btnLink" onClick={() => setMode("login")}>
             {t.login}
           </button>
         </div>
@@ -187,7 +179,7 @@ export default function AuthScreen({
               placeholder={t.activationCodePlaceholder}
             />
             <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
-              {lang === "da" ? "Fra din købsmail eller klinik." : "From your purchase email or your clinic."}
+              {lang === "da" ? "Fra din købsmail." : "From your purchase email."}
             </span>
           </label>
         )}
