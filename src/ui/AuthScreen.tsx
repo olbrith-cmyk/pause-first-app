@@ -210,18 +210,20 @@ export default function AuthScreen({
           )}
         </div>
 
-        <div className="row rowWrap authLinksRow" style={{ justifyContent: "center" }}>
-          {mode !== "reset" && (
-            <button className="btn btnLink" onClick={() => setMode("reset")}>
-              {t.forgotPassword}
-            </button>
-          )}
-          {mode === "reset" && (
-            <button className="btn btnLink" onClick={() => setMode("login")}>
-              {t.backToLogin}
-            </button>
-          )}
-        </div>
+        {mode !== "signup" && (
+          <div className="row rowWrap authLinksRow" style={{ justifyContent: "center" }}>
+            {mode === "login" && (
+              <button className="btn btnLink" onClick={() => setMode("reset")}>
+                {t.forgotPassword}
+              </button>
+            )}
+            {mode === "reset" && (
+              <button className="btn btnLink" onClick={() => setMode("login")}>
+                {t.backToLogin}
+              </button>
+            )}
+          </div>
+        )}
 
         <div className="authAnimalRow" aria-hidden="true">
           <img src={horseSil} className="authAnimalImg authAnimalHorse" alt="" />
