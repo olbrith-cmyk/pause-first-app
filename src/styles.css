@@ -242,8 +242,8 @@ body {
 }
 
 .authModeToggleBtn.active {
-  background: var(--blue);
-  color: white;
+  background: var(--lightBlue);
+  color: var(--blue);
   border-color: var(--blue);
 }
 
