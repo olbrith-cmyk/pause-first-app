@@ -4,6 +4,7 @@ import dogSil from "../assets/silhouettes/dog.png";
 import birdSil from "../assets/silhouettes/bird.png";
 import catSil from "../assets/silhouettes/cat.png";
 import cowSil from "../assets/silhouettes/cow.png";
+import horseSil from "../assets/silhouettes/horse.png";
 
 import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
@@ -220,6 +221,10 @@ export default function Dashboard({
               <div className="homeBottomSilhouettes" aria-hidden="true">
                 <img src={cowSil} className="homeSilhouette homeBottomSilhouetteCow" alt="" />
                 <img src={catSil} className="homeSilhouette homeBottomSilhouetteCat" alt="" />
+              </div>
+
+              <div className="homeExtraSilhouetteWrap" aria-hidden="true">
+                <img src={horseSil} className="homeExtraSilhouetteHorse" alt="" />
               </div>
             </section>
           </div>

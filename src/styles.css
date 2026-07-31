@@ -971,6 +971,20 @@ button {
 .homeBottomSilhouetteCow{ bottom: 0%; left: 0%; width: 140px; }
 .homeBottomSilhouetteCat{ bottom: 0%; right: 8%; width: 74px; }
 
+/* Horse, filling the empty space below the cow + cat row */
+.homeExtraSilhouetteWrap{
+  text-align: center;
+  margin-top: 20px;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.homeExtraSilhouetteHorse{
+  display: inline-block;
+  width: 130px;
+  height: auto;
+}
+
 .homeHeroV2 > *{
   position: relative;
   z-index: 1;
