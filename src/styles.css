@@ -169,6 +169,12 @@ body {
   gap: 16px;
 }
 
+/* Tighter field spacing on the Activate-with-code form specifically,
+   since it has an extra field (activation code) the login form doesn't. */
+.form.formCompact {
+  gap: 10px;
+}
+
 .authScreen {
   flex: 1;
   min-height: 0;

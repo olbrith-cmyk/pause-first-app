@@ -141,14 +141,14 @@ export default function AuthScreen({
         </div>
       )}
       {mode === "signup" && (
-        <div style={{ textAlign: "center", marginBottom: 16 }}>
+        <div style={{ textAlign: "center", marginBottom: 8 }}>
           <button type="button" className="btn btnLink" onClick={() => setMode("login")}>
             {t.login}
           </button>
         </div>
       )}
 
-      <div className="form">
+      <div className={mode === "signup" ? "form formCompact" : "form"}>
         <label className="label">
           {t.email}
           <input
