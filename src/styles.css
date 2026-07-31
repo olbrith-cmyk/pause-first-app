@@ -239,8 +239,8 @@ body {
 
 .authAnimalHorse { width: 80px; }
 .authAnimalDog { width: 55px; }
-.authAnimalCat { width: 29px; margin-left: 4px; }
-.authAnimalSheep { width: 43px; }
+.authAnimalCat { width: 29px; margin-left: -11px; }
+.authAnimalSheep { width: 43px; margin-left: 5px; }
 .authAnimalBird { width: 23px; }
 .authAnimalTurtle { width: 30px; }
 
