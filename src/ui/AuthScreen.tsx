@@ -3,7 +3,12 @@ import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
 import { cancelSignup, logIn, resetPassword, signUp } from "../auth";
 import { checkActivationCode, redeemActivationCode } from "../firestore";
-import horseSil from "../assets/silhouettes/horse.png";
+import horseSil from "../assets/silhouettes/horse-outline.png";
+import dogSil from "../assets/silhouettes/dog-outline.png";
+import catSil from "../assets/silhouettes/cat-outline.png";
+import sheepSil from "../assets/silhouettes/sheep.png";
+import birdSil from "../assets/silhouettes/bird-outline.png";
+import turtleSil from "../assets/silhouettes/turtle.png";
 
 export default function AuthScreen({
   lang,
@@ -218,12 +223,19 @@ export default function AuthScreen({
           )}
         </div>
 
-        <img src={horseSil} className="authHorseSilhouette" alt="" aria-hidden="true" />
+        <div className="authAnimalRow" aria-hidden="true">
+          <img src={horseSil} className="authAnimalImg authAnimalHorse" alt="" />
+          <img src={dogSil} className="authAnimalImg authAnimalDog" alt="" />
+          <img src={catSil} className="authAnimalImg authAnimalCat" alt="" />
+          <img src={sheepSil} className="authAnimalImg authAnimalSheep" alt="" />
+          <img src={birdSil} className="authAnimalImg authAnimalBird" alt="" />
+          <img src={turtleSil} className="authAnimalImg authAnimalTurtle" alt="" />
+        </div>
 
         <p className="muted" style={{ fontSize: 12, textAlign: "center", margin: "4px 0 0" }}>
           {lang === "da"
-            ? "Pause First hjælper dig med at organisere dine noter før et dyrlægebesøg. Fungerer sammen med enhver klinik, enhver sundhedsapp til dyr, enhver notesbog. Det stiller ikke diagnoser, behandler ikke og erstatter ikke professionel dyrlægefaglig rådgivning."
-            : "Pause First helps you organize your notes before a vet visit. Fits alongside any clinic, any pet health app, any notebook. It does not diagnose, treat, or replace professional veterinary advice."}
+            ? "Pause First hjælper dig med at forberede bedre samtaler med din dyrlæge. Fungerer sammen med enhver klinik, enhver sundhedsapp til dyr, enhver notesbog. Det stiller ikke diagnoser, behandler ikke og erstatter ikke professionel dyrlægefaglig rådgivning."
+            : "Pause First helps you prepare for better conversations with your veterinarian. Fits alongside any clinic, any pet health app, any notebook. It does not diagnose, treat, or replace professional veterinary advice."}
         </p>
       </div>
     </main>
