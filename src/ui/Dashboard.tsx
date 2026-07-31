@@ -123,7 +123,7 @@ export default function Dashboard({
 
         {onLangChange && (
           <button onClick={toggleLang} className="langBtn" aria-label="Toggle language">
-            {lang === "en" ? "DA" : "EN"}
+            {lang === "en" ? "🇩🇰 DA" : "🇬🇧 EN"}
           </button>
         )}
       </header>

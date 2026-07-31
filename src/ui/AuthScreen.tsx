@@ -102,7 +102,7 @@ export default function AuthScreen({
             className="langBtn"
             aria-label="Toggle language"
           >
-            {lang === "en" ? "DA" : "EN"}
+            {lang === "en" ? "🇩🇰 DA" : "🇬🇧 EN"}
           </button>
         )}
       </div>
