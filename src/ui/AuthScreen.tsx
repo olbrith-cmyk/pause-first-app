@@ -20,7 +20,6 @@ export default function AuthScreen({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [activationCode, setActivationCode] = useState("");
-  const [showActivationCode, setShowActivationCode] = useState(false);
 
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +42,6 @@ export default function AuthScreen({
       if (mode === "signup") {
         const code = activationCode.trim();
         if (!code) {
-          setShowActivationCode(true);
           setError(lang === "da" ? "Indtast venligst din aktiveringskode." : "Please enter your activation code.");
           return;
         }
@@ -126,7 +124,30 @@ export default function AuthScreen({
         </div>
       )}
 
-      <div className="authDivider">{lang === "da" ? "Har du allerede købt adgang?" : "Already purchased access?"}</div>
+      <div className="authDivider">{lang === "da" ? "Har du allerede adgang?" : "Already have access?"}</div>
+
+      {mode !== "reset" && (
+        <div className="authModeToggle" role="tablist">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === "signup"}
+            className={`authModeToggleBtn${mode === "signup" ? " active" : ""}`}
+            onClick={() => setMode("signup")}
+          >
+            {lang === "da" ? "Aktivér med kode" : "Activate with code"}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === "login"}
+            className={`authModeToggleBtn${mode === "login" ? " active" : ""}`}
+            onClick={() => setMode("login")}
+          >
+            {t.login}
+          </button>
+        </div>
+      )}
 
       <div className="form">
         <label className="label">
@@ -155,33 +176,21 @@ export default function AuthScreen({
           </label>
         )}
 
-        {mode === "signup" &&
-          (showActivationCode ? (
-            <label className="label">
-              {t.activationCode}
-              <input
-                className="input"
-                value={activationCode}
-                onChange={(e) => setActivationCode(e.target.value)}
-                autoComplete="off"
-                placeholder={t.activationCodePlaceholder}
-              />
-              <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
-                {lang === "da" ? "Krævet for at aktivere købt adgang." : "Required to activate purchased access."}
-              </span>
-            </label>
-          ) : (
-            <button
-              type="button"
-              className="btn btnLink"
-              onClick={() => setShowActivationCode(true)}
-              style={{ alignSelf: "flex-start" }}
-            >
-              {lang === "da"
-                ? "Indtast aktiveringskode (fra din købsmail)"
-                : "Enter activation code (from your purchase email)"}
-            </button>
-          ))}
+        {mode === "signup" && (
+          <label className="label">
+            {t.activationCode}
+            <input
+              className="input"
+              value={activationCode}
+              onChange={(e) => setActivationCode(e.target.value)}
+              autoComplete="off"
+              placeholder={t.activationCodePlaceholder}
+            />
+            <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
+              {lang === "da" ? "Fra din købsmail eller klinik." : "From your purchase email or your clinic."}
+            </span>
+          </label>
+        )}
 
         {error && <div className="alert alertError">{t.error}: {error}</div>}
         {status && <div className="alert alertOk">{status}</div>}
@@ -205,16 +214,6 @@ export default function AuthScreen({
         </div>
 
         <div className="row rowWrap authLinksRow" style={{ justifyContent: "center" }}>
-          {mode !== "login" && (
-            <button className="btn btnLink" onClick={() => setMode("login")}>
-              {t.login}
-            </button>
-          )}
-          {mode !== "signup" && (
-            <button className="btn btnLink" onClick={() => setMode("signup")}>
-              {t.signUp}
-            </button>
-          )}
           {mode !== "reset" && (
             <button className="btn btnLink" onClick={() => setMode("reset")}>
               {t.forgotPassword}
