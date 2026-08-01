@@ -99,8 +99,8 @@ const en: Translations = {
 
   // Auth
   welcome: "Welcome to Pause First",
-  accountInfo: "Walk in prepared.",
-  accountInfoDetail: "A simple way to organize your veterinary visits —for every animal you care for.",
+  accountInfo: "Every great vet visit starts before you arrive.",
+  accountInfoDetail: "Prepare for a calmer, more productive conversation with your vet.",
   email: "Email",
   password: "Password",
   createPassword: "Create a password",
