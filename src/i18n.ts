@@ -188,8 +188,8 @@ const da: Translations = {
 
   // Auth
   welcome: "Velkommen til Pause First",
-  accountInfo: "Klar til samtalen.",
-  accountInfoDetail: "Saml det vigtigste før dyrlægebesøget.",
+  accountInfo: "Et godt dyrlægebesøg starter, før du træder ind ad døren.",
+  accountInfoDetail: "Saml det vigtigste før besøget.",
   email: "E-mail",
   password: "Adgangskode",
   createPassword: "Opret en adgangskode",
