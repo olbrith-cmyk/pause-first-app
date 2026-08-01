@@ -182,6 +182,11 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 
+.authScreen h2 {
+  font-size: clamp(1rem, calc(6.5vw - 7px), 1.5rem);
+  line-height: 1.25;
+}
+
 .row.authLinksRow {
   flex-direction: row;
 }
