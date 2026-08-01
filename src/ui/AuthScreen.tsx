@@ -136,7 +136,7 @@ export default function AuthScreen({
       {mode === "login" && (
         <div style={{ textAlign: "center", marginBottom: 16 }}>
           <button type="button" className="btn btnLink" onClick={() => setMode("signup")}>
-            {lang === "da" ? "Aktivér med kode" : "Activate with code"}
+            {lang === "da" ? "Opret bruger" : "Activate with code"}
           </button>
         </div>
       )}
