@@ -186,7 +186,9 @@ export default function AuthScreen({
               placeholder={t.activationCodePlaceholder}
             />
             <span className="muted" style={{ fontSize: 12, fontWeight: 400 }}>
-              {lang === "da" ? "Fra din købsmail." : "From your purchase email."}
+              {lang === "da"
+                ? "Bruges én gang til at aktivere dit køb. Derefter logger du ind med e-mail + adgangskode."
+                : "Used once to activate your purchase. After that, log in with email + password."}
             </span>
           </label>
         )}
