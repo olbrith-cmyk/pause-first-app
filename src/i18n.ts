@@ -187,7 +187,7 @@ const da: Translations = {
   saved: "Gemt!",
 
   // Auth
-  welcome: "Velkommen til Pause First",
+  welcome: "Velkommen til Pause First",
   accountInfo: "Saml det vigtigste på forhånd.",
   accountInfoDetail: "Et godt dyrlægebesøg starter før du træder ind ad døren.",
   email: "E-mail",
