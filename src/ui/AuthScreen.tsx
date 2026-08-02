@@ -133,13 +133,6 @@ export default function AuthScreen({
         <div className="authDivider">{lang === "da" ? "Har du allerede adgang?" : "Already have access?"}</div>
       )}
 
-      {mode === "login" && (
-        <div style={{ textAlign: "center", marginBottom: 16 }}>
-          <button type="button" className="btn btnLink" onClick={() => setMode("signup")}>
-            {lang === "da" ? "Opret bruger" : "Create account"}
-          </button>
-        </div>
-      )}
       {mode === "signup" && (
         <div style={{ textAlign: "center", marginBottom: 8 }}>
           <button type="button" className="btn btnLink" onClick={() => setMode("login")}>
@@ -228,6 +221,14 @@ export default function AuthScreen({
                 {t.backToLogin}
               </button>
             )}
+          </div>
+        )}
+
+        {mode === "login" && (
+          <div style={{ textAlign: "center" }}>
+            <button type="button" className="btn btnLink" onClick={() => setMode("signup")}>
+              {lang === "da" ? "Opret bruger" : "Create account"}
+            </button>
           </div>
         )}
 
