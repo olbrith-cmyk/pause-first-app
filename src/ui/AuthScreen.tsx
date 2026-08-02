@@ -29,6 +29,7 @@ export default function AuthScreen({
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [demoLoading, setDemoLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const invalidCodeMessage = (reason?: "not_found" | "used") =>
     reason === "used"
@@ -149,14 +150,28 @@ export default function AuthScreen({
         {mode !== "reset" && (
           <label className="label">
             {t.password}
-            <input
-              className="input"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              type="password"
-              autoComplete={mode === "signup" ? "new-password" : "current-password"}
-              placeholder={mode === "signup" ? t.createPassword : lang === "da" ? "Indtast adgangskode" : "Enter password"}
-            />
+            <div className="pwFieldWrap">
+              <input
+                className="input"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                type={showPassword ? "text" : "password"}
+                autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                placeholder={mode === "signup" ? t.createPassword : lang === "da" ? "Indtast adgangskode" : "Enter password"}
+              />
+              <button
+                type="button"
+                className="pwToggleBtn"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={
+                  showPassword
+                    ? lang === "da" ? "Skjul adgangskode" : "Hide password"
+                    : lang === "da" ? "Vis adgangskode" : "Show password"
+                }
+              >
+                {showPassword ? (lang === "da" ? "Skjul" : "Hide") : (lang === "da" ? "Vis" : "Show")}
+              </button>
+            </div>
           </label>
         )}
 
