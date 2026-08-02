@@ -133,14 +133,6 @@ export default function AuthScreen({
         <div className="authDivider">{lang === "da" ? "Har du allerede adgang?" : "Already have access?"}</div>
       )}
 
-      {mode === "signup" && (
-        <div style={{ textAlign: "center", marginBottom: 8 }}>
-          <button type="button" className="btn btnLink" onClick={() => setMode("login")}>
-            {t.login}
-          </button>
-        </div>
-      )}
-
       <div className={mode === "signup" ? "form formCompact" : "form"}>
         <label className="label">
           {t.email}
@@ -208,6 +200,14 @@ export default function AuthScreen({
             </button>
           )}
         </div>
+
+        {mode === "signup" && (
+          <div style={{ textAlign: "center" }}>
+            <button type="button" className="btn btnLink" onClick={() => setMode("login")}>
+              {t.login}
+            </button>
+          </div>
+        )}
 
         {mode !== "signup" && (
           <div className="row rowWrap authLinksRow" style={{ justifyContent: "center" }}>
