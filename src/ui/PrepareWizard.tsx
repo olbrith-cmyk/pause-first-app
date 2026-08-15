@@ -63,6 +63,7 @@ export default function PrepareWizard({
   const [visitId, setVisitId] = useState<string | null>(null);
   const didInit = useRef(false);
   const autosaveTimer = useRef<number | null>(null);
+  const modalBodyRef = useRef<HTMLDivElement | null>(null);
 
   // FIX: removed redundant local `toast` state — toasts are dispatched via onToast prop only
   const [draft, setDraft] = useState<Visit>({
@@ -149,6 +150,13 @@ export default function PrepareWizard({
       if (autosaveTimer.current) window.clearTimeout(autosaveTimer.current);
     };
   }, [draft, visitId]);
+
+  // Each step (and each mode: wizard/preview/done) is its own "page" inside
+  // the modal — start it scrolled to the top instead of carrying over
+  // wherever the previous step happened to leave the scroll position.
+  useEffect(() => {
+    modalBodyRef.current?.scrollTo({ top: 0, behavior: "auto" });
+  }, [step, mode]);
 
   const stepData = useMemo(
     () => [
@@ -787,7 +795,7 @@ export default function PrepareWizard({
           </button>
         </div>
 
-        <div className="modalBody">
+        <div className="modalBody" ref={modalBodyRef}>
           {/* MODE 1: WIZARD */}
           {mode === "wizard" && (
             <>
