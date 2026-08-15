@@ -65,6 +65,7 @@ export default function PrepareWizard({
   const autosaveTimer = useRef<number | null>(null);
   const modalBodyRef = useRef<HTMLDivElement | null>(null);
   const stepContentRef = useRef<HTMLDivElement | null>(null);
+  const scrollGateStep = useRef<number | null>(null);
 
   // FIX: removed redundant local `toast` state — toasts are dispatched via onToast prop only
   const [draft, setDraft] = useState<Visit>({
@@ -247,15 +248,22 @@ export default function PrepareWizard({
 
     // If there's more of this step below the fold, scroll it into view first
     // instead of jumping straight to the next step — so nothing on the
-    // current step gets skipped just because it wasn't visible yet.
+    // current step gets skipped just because it wasn't visible yet. Only
+    // gate once per step (via scrollGateStep) so a flaky visibility
+    // measurement can never block Next from working entirely — worst case
+    // is one extra tap, not a stuck wizard.
     const body = modalBodyRef.current;
     const content = stepContentRef.current;
-    if (body && content && content.lastElementChild) {
+    if (body && content && content.lastElementChild && scrollGateStep.current !== step) {
       const bodyRect = body.getBoundingClientRect();
       const lastRect = content.lastElementChild.getBoundingClientRect();
       const hiddenBelow = lastRect.bottom - bodyRect.bottom;
       if (hiddenBelow > 4) {
-        body.scrollTo({ top: body.scrollTop + hiddenBelow + 24, behavior: "smooth" });
+        scrollGateStep.current = step;
+        // "auto" (not "smooth") — smooth scrollTo is unreliable inside a
+        // -webkit-overflow-scrolling: touch container on iOS Safari, where
+        // it can silently fail to scroll at all.
+        body.scrollTo({ top: body.scrollTop + hiddenBelow + 24, behavior: "auto" });
         return;
       }
     }
@@ -838,7 +846,9 @@ export default function PrepareWizard({
                   if (index >= 0 && index < focusables.length - 1) {
                     const next = focusables[index + 1];
                     next.focus();
-                    next.scrollIntoView({ behavior: "smooth", block: "center" });
+                    // "auto" — smooth scrollIntoView is unreliable inside a
+                    // -webkit-overflow-scrolling: touch container on iOS Safari.
+                    next.scrollIntoView({ behavior: "auto", block: "center" });
                   } else {
                     handleNext();
                   }
