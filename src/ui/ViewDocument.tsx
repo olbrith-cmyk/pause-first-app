@@ -213,29 +213,27 @@ export default function ViewDocument({
             borderRadius: 12
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 6 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 18 }}>🩺</span>
-              <h3
-                style={{
-                  margin: 0,
-                  color: "var(--blue)",
-                  fontSize: 13,
-                  fontWeight: 800,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.4px"
-                }}
-              >
-                {tt("Main Concern", "Hovedbekymring")}
-              </h3>
-            </div>
-            {visit.urgency && <StatusChip label={urgencyLabel(visit.urgency, lang)} tone={urgencyTone(visit.urgency)!} />}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+            <span style={{ fontSize: 18 }}>🩺</span>
+            <h3
+              style={{
+                margin: 0,
+                color: "var(--blue)",
+                fontSize: 13,
+                fontWeight: 800,
+                textTransform: "uppercase",
+                letterSpacing: "0.4px"
+              }}
+            >
+              {tt("Main Concern", "Hovedbekymring")}
+            </h3>
           </div>
           <p style={{ margin: 0, fontSize: 19, fontWeight: 700, lineHeight: "1.5", color: "var(--text)" }}>
             {visit.mainConcern || tt("(Not provided)", "(Ikke angivet)")}
           </p>
-          {(visit.durationValue || visit.trend) && (
+          {(visit.urgency || visit.durationValue || visit.trend) && (
             <div style={{ marginTop: 10 }}>
+              {visit.urgency && <StatusChip label={urgencyLabel(visit.urgency, lang)} tone={urgencyTone(visit.urgency)!} />}
               {formatDuration(visit.durationValue, visit.durationUnit, lang) && (
                 <StatusChip label={formatDuration(visit.durationValue, visit.durationUnit, lang)} tone="notSure" />
               )}

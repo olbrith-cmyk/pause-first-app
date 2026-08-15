@@ -413,6 +413,27 @@ export default function PrepareWizard({
       case 1:
         return (
           <>
+            <div className="calloutBox" style={{ marginTop: 0 }}>
+              <label className="label">
+                {lang === "da" ? "Hvor bekymret er du?" : "How urgent does this feel to you?"}
+              </label>
+              <div className="row rowWrap" style={{ gap: 8 }}>
+                {(["routine", "concerned", "very_worried"] as Urgency[]).map((u) => (
+                  <button
+                    key={u}
+                    type="button"
+                    className={`btn ${draft.urgency === u ? "btnPrimary" : "btnSecondary"}`}
+                    onClick={() => setDraft({ ...draft, urgency: u })}
+                    style={{ flex: "1 1 120px", minWidth: 120 }}
+                  >
+                    {urgencyLabel(u, lang)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ height: 14 }} />
+
             <label className="label">
               {lang === "da" ? "Hovedbekymring" : "Main concern"}
               <textarea
@@ -427,56 +448,58 @@ export default function PrepareWizard({
                 rows={4}
               />
             </label>
-
-            <div style={{ height: 14 }} />
-
-            <label className="label">
-              {lang === "da" ? "Hvor bekymret er du?" : "How urgent does this feel to you?"}
-            </label>
-            <div className="row rowWrap" style={{ gap: 8 }}>
-              {(["routine", "concerned", "very_worried"] as Urgency[]).map((u) => (
-                <button
-                  key={u}
-                  type="button"
-                  className={`btn ${draft.urgency === u ? "btnPrimary" : "btnSecondary"}`}
-                  onClick={() => setDraft({ ...draft, urgency: u })}
-                  style={{ flex: "1 1 120px", minWidth: 120 }}
-                >
-                  {urgencyLabel(u, lang)}
-                </button>
-              ))}
-            </div>
           </>
         );
 
       case 2:
         return (
           <>
-            <label className="label">
-              {lang === "da" ? "Hvor længe har det stået på?" : "How long has this been going on?"}
-            </label>
-            <div className="row" style={{ gap: 8 }}>
-              <input
-                className="input"
-                type="number"
-                min="0"
-                inputMode="numeric"
-                value={draft.durationValue ?? ""}
-                onChange={(e) => setDraft({ ...draft, durationValue: e.target.value })}
-                placeholder={lang === "da" ? "f.eks. 2" : "e.g., 2"}
-                style={{ maxWidth: 100 }}
-              />
-              <select
-                className="input"
-                value={draft.durationUnit ?? "days"}
-                onChange={(e) => setDraft({ ...draft, durationUnit: e.target.value as DurationUnit })}
-              >
-                {(["hours", "days", "weeks", "months"] as DurationUnit[]).map((u) => (
-                  <option key={u} value={u}>
-                    {durationUnitLabel(u, lang, 2)}
-                  </option>
+            <div className="calloutBox" style={{ marginTop: 0 }}>
+              <label className="label">
+                {lang === "da" ? "Hvor længe har det stået på?" : "How long has this been going on?"}
+              </label>
+              <div className="row" style={{ gap: 8 }}>
+                <input
+                  className="input"
+                  type="number"
+                  min="0"
+                  inputMode="numeric"
+                  value={draft.durationValue ?? ""}
+                  onChange={(e) => setDraft({ ...draft, durationValue: e.target.value })}
+                  placeholder={lang === "da" ? "f.eks. 2" : "e.g., 2"}
+                  style={{ maxWidth: 100 }}
+                />
+                <select
+                  className="input"
+                  value={draft.durationUnit ?? "days"}
+                  onChange={(e) => setDraft({ ...draft, durationUnit: e.target.value as DurationUnit })}
+                >
+                  {(["hours", "days", "weeks", "months"] as DurationUnit[]).map((u) => (
+                    <option key={u} value={u}>
+                      {durationUnitLabel(u, lang, 2)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ height: 14 }} />
+
+              <label className="label">
+                {lang === "da" ? "Bliver det bedre eller værre?" : "Is it getting better or worse?"}
+              </label>
+              <div className="row rowWrap" style={{ gap: 8 }}>
+                {(["worse", "same", "better"] as Trend[]).map((tr) => (
+                  <button
+                    key={tr}
+                    type="button"
+                    className={`btn ${draft.trend === tr ? "btnPrimary" : "btnSecondary"}`}
+                    onClick={() => setDraft({ ...draft, trend: tr })}
+                    style={{ flex: "1 1 120px", minWidth: 120 }}
+                  >
+                    {trendLabel(tr, lang)}
+                  </button>
                 ))}
-              </select>
+              </div>
             </div>
 
             <div style={{ height: 14 }} />
@@ -497,23 +520,6 @@ export default function PrepareWizard({
             </label>
 
             <div style={{ height: 14 }} />
-
-            <label className="label">
-              {lang === "da" ? "Bliver det bedre eller værre?" : "Is it getting better or worse?"}
-            </label>
-            <div className="row rowWrap" style={{ gap: 8, marginBottom: 14 }}>
-              {(["worse", "same", "better"] as Trend[]).map((tr) => (
-                <button
-                  key={tr}
-                  type="button"
-                  className={`btn ${draft.trend === tr ? "btnPrimary" : "btnSecondary"}`}
-                  onClick={() => setDraft({ ...draft, trend: tr })}
-                  style={{ flex: "1 1 120px", minWidth: 120 }}
-                >
-                  {trendLabel(tr, lang)}
-                </button>
-              ))}
-            </div>
 
             <label className="label">
               {lang === "da" ? "Hvordan har det ændret sig siden da?" : "How has it changed since then?"}
