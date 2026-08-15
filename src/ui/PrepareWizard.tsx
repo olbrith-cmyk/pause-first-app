@@ -64,6 +64,7 @@ export default function PrepareWizard({
   const didInit = useRef(false);
   const autosaveTimer = useRef<number | null>(null);
   const modalBodyRef = useRef<HTMLDivElement | null>(null);
+  const stepContentRef = useRef<HTMLDivElement | null>(null);
 
   // FIX: removed redundant local `toast` state — toasts are dispatched via onToast prop only
   const [draft, setDraft] = useState<Visit>({
@@ -243,6 +244,22 @@ export default function PrepareWizard({
 
   const handleNext = () => {
     if (!stepData[step].ok) return;
+
+    // If there's more of this step below the fold, scroll it into view first
+    // instead of jumping straight to the next step — so nothing on the
+    // current step gets skipped just because it wasn't visible yet.
+    const body = modalBodyRef.current;
+    const content = stepContentRef.current;
+    if (body && content && content.lastElementChild) {
+      const bodyRect = body.getBoundingClientRect();
+      const lastRect = content.lastElementChild.getBoundingClientRect();
+      const hiddenBelow = lastRect.bottom - bodyRect.bottom;
+      if (hiddenBelow > 4) {
+        body.scrollTo({ top: body.scrollTop + hiddenBelow + 24, behavior: "smooth" });
+        return;
+      }
+    }
+
     if (isLastWizardStep) {
       setMode("preview");
     } else {
@@ -806,6 +823,7 @@ export default function PrepareWizard({
                 <p style={{ color: "var(--muted)", fontSize: 14, margin: 0 }}>{stepData[step].desc}</p>
               </div>
               <div
+                ref={stepContentRef}
                 onKeyDown={(e) => {
                   if (e.key !== "Enter" || e.shiftKey) return;
 
