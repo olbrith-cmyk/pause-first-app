@@ -4,6 +4,7 @@ import { useTranslation } from "../i18n";
 import type { CurrentStatus, Pet, TriState, Visit, VisitNote } from "../firestore";
 import { exportToPDF, shareWithVet } from "../utils/pdfExport";
 import { patientInfoRows } from "../utils/petInfo";
+import { formatDuration, trendLabel, urgencyLabel, urgencyTone } from "../utils/visitBrief";
 import AttachmentGallery from "./AttachmentGallery";
 
 function currentStatusSummary(cs: CurrentStatus | undefined, lang: Lang) {
@@ -195,7 +196,9 @@ export default function ViewDocument({
           </p>
         </div>
 
-        {/* Main Concern — the single most important line, so it comes first and stands out */}
+        {/* Main Concern — the single most important line, so it comes first and stands out.
+            Duration/trend pills and an urgency badge sit right with it, so the vet gets the
+            whole "what, how long, which direction, how worried" picture in one glance. */}
         <div
           style={{
             marginBottom: "18px",
@@ -205,48 +208,41 @@ export default function ViewDocument({
             borderRadius: 12
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-            <span style={{ fontSize: 18 }}>🩺</span>
-            <h3
-              style={{
-                margin: 0,
-                color: "var(--blue)",
-                fontSize: 13,
-                fontWeight: 800,
-                textTransform: "uppercase",
-                letterSpacing: "0.4px"
-              }}
-            >
-              {tt("Main Concern", "Hovedbekymring")}
-            </h3>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 6 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 18 }}>🩺</span>
+              <h3
+                style={{
+                  margin: 0,
+                  color: "var(--blue)",
+                  fontSize: 13,
+                  fontWeight: 800,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.4px"
+                }}
+              >
+                {tt("Main Concern", "Hovedbekymring")}
+              </h3>
+            </div>
+            {visit.urgency && <StatusChip label={urgencyLabel(visit.urgency, lang)} tone={urgencyTone(visit.urgency)!} />}
           </div>
           <p style={{ margin: 0, fontSize: 19, fontWeight: 700, lineHeight: "1.5", color: "var(--text)" }}>
             {visit.mainConcern || tt("(Not provided)", "(Ikke angivet)")}
           </p>
+          {(visit.durationValue || visit.trend) && (
+            <div style={{ marginTop: 10 }}>
+              {formatDuration(visit.durationValue, visit.durationUnit, lang) && (
+                <StatusChip label={formatDuration(visit.durationValue, visit.durationUnit, lang)} tone="notSure" />
+              )}
+              {visit.trend && (
+                <StatusChip
+                  label={trendLabel(visit.trend, lang)}
+                  tone={visit.trend === "worse" ? "changed" : visit.trend === "better" ? "asUsual" : "notSure"}
+                />
+              )}
+            </div>
+          )}
         </div>
-
-        {/* Patient Info (from the pet's profile) */}
-        {!!patientRows.length && (
-          <Section title={tt("Patient Info", "Patientinfo")} icon="🐾">
-            {patientRows.map((r, i) => (
-              <div
-                key={r.label}
-                style={{
-                  display: "flex",
-                  gap: 8,
-                  padding: "6px 8px",
-                  background: i % 2 === 1 ? "var(--bg)" : "transparent",
-                  borderRadius: 6
-                }}
-              >
-                <div style={{ width: 160, flexShrink: 0, color: "var(--muted)", fontSize: 13, fontWeight: 600 }}>
-                  {r.label}
-                </div>
-                <div>{r.value}</div>
-              </div>
-            ))}
-          </Section>
-        )}
 
         {/* When Did It Start */}
         {visit.whenStart && (
@@ -331,6 +327,30 @@ export default function ViewDocument({
         {visit.questionsVet && (
           <Section title={tt("Questions for Your Veterinarian", "Spørgsmål til din dyrlæge")} icon="❓">
             {visit.questionsVet}
+          </Section>
+        )}
+
+        {/* Patient Info (from the pet's profile) — reference material, placed after the
+            clinical story so it doesn't push today's history below the fold. */}
+        {!!patientRows.length && (
+          <Section title={tt("Patient Info", "Patientinfo")} icon="🐾">
+            {patientRows.map((r, i) => (
+              <div
+                key={r.label}
+                style={{
+                  display: "flex",
+                  gap: 8,
+                  padding: "6px 8px",
+                  background: i % 2 === 1 ? "var(--bg)" : "transparent",
+                  borderRadius: 6
+                }}
+              >
+                <div style={{ width: 160, flexShrink: 0, color: "var(--muted)", fontSize: 13, fontWeight: 600 }}>
+                  {r.label}
+                </div>
+                <div>{r.value}</div>
+              </div>
+            ))}
           </Section>
         )}
 

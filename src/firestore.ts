@@ -157,6 +157,17 @@ export interface Visit {
   patterns: string;
   associatedSigns: string;
 
+  // NEW (optional) — how worried the owner is, shown next to Main Concern
+  // so the vet gets an urgency signal at a glance.
+  urgency?: "routine" | "concerned" | "very_worried";
+
+  // NEW (optional) — structured duration + trend, feeds the scannable
+  // headline line (chief complaint + duration + trend) at the top of the
+  // Brief, instead of relying on freeform text alone.
+  durationValue?: string;
+  durationUnit?: "hours" | "days" | "weeks" | "months";
+  trend?: "better" | "worse" | "same";
+
   // NEW (optional) — broad catch-all “Other details for the vet”
   otherDetails?: string;
 

@@ -8,6 +8,8 @@ import PetSnapshotCard from "./PetSnapshotCard";
 import AttachmentManager from "./AttachmentManager";
 import ViewDocument from "./ViewDocument";
 import { shareWithVet } from "../utils/pdfExport";
+import type { DurationUnit, Trend, Urgency } from "../utils/visitBrief";
+import { durationUnitLabel, trendLabel, urgencyLabel } from "../utils/visitBrief";
 
 type Props = {
   lang: Lang;
@@ -68,7 +70,11 @@ export default function PrepareWizard({
     petId,
     visitDate: "",
     mainConcern: "",
+    urgency: undefined,
     whenStart: "",
+    durationValue: "",
+    durationUnit: "days",
+    trend: undefined,
     howProgressing: "",
     patterns: "",
     associatedSigns: "",
@@ -112,6 +118,7 @@ export default function PrepareWizard({
             petId,
             currentStatus: existing.currentStatus ?? makeEmptyStatus(),
             otherDetails: existing.otherDetails ?? "",
+            durationUnit: existing.durationUnit ?? "days",
             status: existing.status ?? "final"
           });
           return;
@@ -207,8 +214,11 @@ export default function PrepareWizard({
         ok: true
       },
       {
-        title: lang === "da" ? "Topspørgsmål til dyrlægen" : "Top questions for the vet",
-        desc: lang === "da" ? "Hvad vil du gerne have svar på?" : "What do you want answered?",
+        title: lang === "da" ? "Det ene, du har mest brug for svar på" : "The one thing you need answered",
+        desc:
+          lang === "da"
+            ? "Hvilken beslutning skal dyrlægen hjælpe dig med?"
+            : "What decision do you need the vet's help making?",
         ok: true
       },
       {
@@ -404,25 +414,75 @@ export default function PrepareWizard({
 
       case 1:
         return (
-          <label className="label">
-            {lang === "da" ? "Hovedbekymring" : "Main concern"}
-            <textarea
-              className="textarea"
-              value={draft.mainConcern}
-              onChange={(e) => setDraft({ ...draft, mainConcern: e.target.value })}
-              placeholder={
-                lang === "da"
-                  ? "f.eks. halter, spiser ikke, opkast, adfærdsændring"
-                  : "e.g., limping, not eating, vomiting, behavior change"
-              }
-              rows={4}
-            />
-          </label>
+          <>
+            <label className="label">
+              {lang === "da" ? "Hovedbekymring" : "Main concern"}
+              <textarea
+                className="textarea"
+                value={draft.mainConcern}
+                onChange={(e) => setDraft({ ...draft, mainConcern: e.target.value })}
+                placeholder={
+                  lang === "da"
+                    ? "f.eks. halter, spiser ikke, opkast, adfærdsændring"
+                    : "e.g., limping, not eating, vomiting, behavior change"
+                }
+                rows={4}
+              />
+            </label>
+
+            <div style={{ height: 14 }} />
+
+            <label className="label">
+              {lang === "da" ? "Hvor bekymret er du?" : "How urgent does this feel to you?"}
+            </label>
+            <div className="row rowWrap" style={{ gap: 8 }}>
+              {(["routine", "concerned", "very_worried"] as Urgency[]).map((u) => (
+                <button
+                  key={u}
+                  type="button"
+                  className={`btn ${draft.urgency === u ? "btnPrimary" : "btnSecondary"}`}
+                  onClick={() => setDraft({ ...draft, urgency: u })}
+                  style={{ flex: "1 1 120px", minWidth: 120 }}
+                >
+                  {urgencyLabel(u, lang)}
+                </button>
+              ))}
+            </div>
+          </>
         );
 
       case 2:
         return (
           <>
+            <label className="label">
+              {lang === "da" ? "Hvor længe har det stået på?" : "How long has this been going on?"}
+            </label>
+            <div className="row" style={{ gap: 8 }}>
+              <input
+                className="input"
+                type="number"
+                min="0"
+                inputMode="numeric"
+                value={draft.durationValue ?? ""}
+                onChange={(e) => setDraft({ ...draft, durationValue: e.target.value })}
+                placeholder={lang === "da" ? "f.eks. 2" : "e.g., 2"}
+                style={{ maxWidth: 100 }}
+              />
+              <select
+                className="input"
+                value={draft.durationUnit ?? "days"}
+                onChange={(e) => setDraft({ ...draft, durationUnit: e.target.value as DurationUnit })}
+              >
+                {(["hours", "days", "weeks", "months"] as DurationUnit[]).map((u) => (
+                  <option key={u} value={u}>
+                    {durationUnitLabel(u, lang, 2)}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ height: 14 }} />
+
             <label className="label">
               {lang === "da" ? "Hvornår lagde du først mærke til det?" : "When did you first notice this?"}
               <textarea
@@ -439,6 +499,23 @@ export default function PrepareWizard({
             </label>
 
             <div style={{ height: 14 }} />
+
+            <label className="label">
+              {lang === "da" ? "Bliver det bedre eller værre?" : "Is it getting better or worse?"}
+            </label>
+            <div className="row rowWrap" style={{ gap: 8, marginBottom: 14 }}>
+              {(["worse", "same", "better"] as Trend[]).map((tr) => (
+                <button
+                  key={tr}
+                  type="button"
+                  className={`btn ${draft.trend === tr ? "btnPrimary" : "btnSecondary"}`}
+                  onClick={() => setDraft({ ...draft, trend: tr })}
+                  style={{ flex: "1 1 120px", minWidth: 120 }}
+                >
+                  {trendLabel(tr, lang)}
+                </button>
+              ))}
+            </div>
 
             <label className="label">
               {lang === "da" ? "Hvordan har det ændret sig siden da?" : "How has it changed since then?"}
@@ -633,15 +710,20 @@ export default function PrepareWizard({
       case 7:
         return (
           <label className="label">
-            {lang === "da" ? "Vigtigste spørgsmål til dyrlægen" : "Top questions for the vet"}
+            {lang === "da" ? "Det ene, du har mest brug for svar på" : "The one thing you need answered"}
+            <div className="muted" style={{ marginTop: 6, marginBottom: 6, fontWeight: 400 }}>
+              {lang === "da"
+                ? "Ikke bare 'jeg er bekymret' — hvad skal dyrlægen hjælpe dig med at beslutte?"
+                : "Not just \"I'm worried\" — what decision do you need the vet's help making?"}
+            </div>
             <textarea
               className="textarea"
               value={draft.questionsVet}
               onChange={(e) => setDraft({ ...draft, questionsVet: e.target.value })}
               placeholder={
                 lang === "da"
-                  ? "F.eks. Hvad er den mest sandsynlige årsag? Hvad er næste skridt? Hvornår skal jeg kontakte jer igen?"
-                  : "E.g., What's the most likely cause? What's the next step? When should I contact you again?"
+                  ? "F.eks. \"Jeg har brug for at vide, om dette er akut\" eller \"Jeg vil gerne vide, om vi skal teste for X\""
+                  : "E.g., \"I need to know if this is urgent\" or \"I want to know if we should test for X\""
               }
               rows={4}
             />

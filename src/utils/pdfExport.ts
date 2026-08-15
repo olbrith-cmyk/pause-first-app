@@ -3,6 +3,7 @@ import jsPDF from "jspdf";
 import type { Lang } from "../i18n";
 import type { Attachment, AttachmentType, CurrentStatus, Pet, TriState, Visit, VisitNote } from "../firestore";
 import { patientInfoLines } from "./petInfo";
+import { formatDuration, trendLabel, urgencyLabel } from "./visitBrief";
 
 function currentStatusLines(cs: CurrentStatus | undefined, lang: Lang): string[] {
   if (!cs) return [];
@@ -58,15 +59,12 @@ function buildShareText(params: { visit: Visit; pet: Pet; note: VisitNote | null
     lines.push(`Dyr: ${pet.name}`);
     lines.push(`Dato: ${visit.visitDate || "(ingen dato)"}`);
 
-    const patientLines = patientInfoLines(pet, lang);
-    if (patientLines.length) {
-      lines.push("");
-      lines.push("Om patienten:");
-      lines.push(...patientLines);
-    }
-
     lines.push("");
     lines.push(`Hovedbekymring: ${visit.mainConcern || "(ikke angivet)"}`);
+    if (visit.urgency) lines.push(`Bekymringsniveau: ${urgencyLabel(visit.urgency, lang)}`);
+    const duration = formatDuration(visit.durationValue, visit.durationUnit, lang);
+    if (duration) lines.push(`Varighed: ${duration}`);
+    if (visit.trend) lines.push(`Udvikling: ${trendLabel(visit.trend, lang)}`);
     if (visit.whenStart) lines.push(`Hvornår startede det: ${visit.whenStart}`);
     if (visit.howProgressing) lines.push(`Hvordan udvikler det sig: ${visit.howProgressing}`);
     if (visit.patterns) lines.push(`Mønstre/triggere: ${visit.patterns}`);
@@ -86,6 +84,13 @@ function buildShareText(params: { visit: Visit; pet: Pet; note: VisitNote | null
     if (visit.previousTreatment) lines.push(`Tidligere behandling: ${visit.previousTreatment}`);
     if (visit.questionsVet) lines.push(`Spørgsmål til dyrlægen: ${visit.questionsVet}`);
 
+    const patientLines = patientInfoLines(pet, lang);
+    if (patientLines.length) {
+      lines.push("");
+      lines.push("Om patienten:");
+      lines.push(...patientLines);
+    }
+
     if (note) {
       lines.push("");
       lines.push("Besøgsnoter:");
@@ -102,15 +107,12 @@ function buildShareText(params: { visit: Visit; pet: Pet; note: VisitNote | null
     lines.push(`Pet: ${pet.name}`);
     lines.push(`Date: ${visit.visitDate || "(no date)"}`);
 
-    const patientLines = patientInfoLines(pet, lang);
-    if (patientLines.length) {
-      lines.push("");
-      lines.push("About the patient:");
-      lines.push(...patientLines);
-    }
-
     lines.push("");
     lines.push(`Main concern: ${visit.mainConcern || "(not provided)"}`);
+    if (visit.urgency) lines.push(`Urgency: ${urgencyLabel(visit.urgency, lang)}`);
+    const duration = formatDuration(visit.durationValue, visit.durationUnit, lang);
+    if (duration) lines.push(`Duration: ${duration}`);
+    if (visit.trend) lines.push(`Trend: ${trendLabel(visit.trend, lang)}`);
     if (visit.whenStart) lines.push(`When did this start: ${visit.whenStart}`);
     if (visit.howProgressing) lines.push(`How is it progressing: ${visit.howProgressing}`);
     if (visit.patterns) lines.push(`Patterns/triggers: ${visit.patterns}`);
@@ -129,6 +131,13 @@ function buildShareText(params: { visit: Visit; pet: Pet; note: VisitNote | null
     if (recentTests) lines.push(`Recent tests/results: ${recentTests}`);
     if (visit.previousTreatment) lines.push(`Previous treatment: ${visit.previousTreatment}`);
     if (visit.questionsVet) lines.push(`Questions for the vet: ${visit.questionsVet}`);
+
+    const patientLines = patientInfoLines(pet, lang);
+    if (patientLines.length) {
+      lines.push("");
+      lines.push("About the patient:");
+      lines.push(...patientLines);
+    }
 
     if (note) {
       lines.push("");
