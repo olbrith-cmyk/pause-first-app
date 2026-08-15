@@ -79,6 +79,16 @@ function ageOrBirthSummary(pet: Pet): string {
   return (pet.age ?? "").trim();
 }
 
+// Species + breed + age, e.g. "Dog · Labrador · 4 years" — the "signalment"
+// a vet expects right alongside the pet's name, since a name alone doesn't
+// say what they're walking in to see.
+export function signalmentLine(pet: Pet): string {
+  return [pet.species, pet.breedType, ageOrBirthSummary(pet)]
+    .map((p) => (p ?? "").trim())
+    .filter(Boolean)
+    .join(" · ");
+}
+
 export function patientInfoRows(pet: Pet, lang: Lang): { label: string; value: string }[] {
   const rows: { label: string; value: string }[] = [];
   const push = (label: string, value?: string) => {

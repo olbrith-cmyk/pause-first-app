@@ -3,7 +3,7 @@ import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
 import type { CurrentStatus, Pet, TriState, Visit, VisitNote } from "../firestore";
 import { exportToPDF, shareWithVet } from "../utils/pdfExport";
-import { patientInfoRows } from "../utils/petInfo";
+import { patientInfoRows, signalmentLine } from "../utils/petInfo";
 import { formatDuration, trendLabel, urgencyLabel, urgencyTone } from "../utils/visitBrief";
 import AttachmentGallery from "./AttachmentGallery";
 
@@ -175,6 +175,7 @@ export default function ViewDocument({
   };
 
   const patientRows = patientInfoRows(pet, lang);
+  const signalment = signalmentLine(pet);
   const statusSummary = currentStatusSummary(visit.currentStatus, lang);
   const medicationsSupplements = visit.medicationsSupplements ?? "";
   const knownConditions = ((visit as any).knownConditions as string) ?? "";
@@ -188,9 +189,13 @@ export default function ViewDocument({
         {/* Top accent bar for a bit of brand color at a glance */}
         <div style={{ height: 4, background: "var(--blue)", borderRadius: 4, marginBottom: "18px" }} />
 
-        {/* Header */}
+        {/* Header — name + signalment (species/breed/age), so the vet knows what
+            they're walking in to see before reading a single word further. */}
         <div style={{ marginBottom: "20px", paddingBottom: "12px", borderBottom: "2px solid var(--border)" }}>
           <h2 style={{ margin: "0 0 4px 0", fontSize: "26px", fontWeight: 800, color: "var(--text)" }}>{pet.name}</h2>
+          {signalment && (
+            <p style={{ margin: "0 0 4px 0", color: "var(--text)", fontSize: "15px", fontWeight: 600 }}>{signalment}</p>
+          )}
           <p style={{ margin: "0", color: "var(--muted)", fontSize: "14px" }}>
             {tt("Visit Date", "Besøgsdato")}: {visit.visitDate || tt("Not specified", "Ikke angivet")}
           </p>

@@ -2,7 +2,7 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import type { Lang } from "../i18n";
 import type { Attachment, AttachmentType, CurrentStatus, Pet, TriState, Visit, VisitNote } from "../firestore";
-import { patientInfoLines } from "./petInfo";
+import { patientInfoLines, signalmentLine } from "./petInfo";
 import { formatDuration, trendLabel, urgencyLabel } from "./visitBrief";
 
 function currentStatusLines(cs: CurrentStatus | undefined, lang: Lang): string[] {
@@ -57,6 +57,8 @@ function buildShareText(params: { visit: Visit; pet: Pet; note: VisitNote | null
     lines.push(buildEmailTitle(pet, visit, lang));
     lines.push(`Pause First™ – forberedelse til dyrlægebesøg`);
     lines.push(`Dyr: ${pet.name}`);
+    const signalmentDa = signalmentLine(pet);
+    if (signalmentDa) lines.push(signalmentDa);
     lines.push(`Dato: ${visit.visitDate || "(ingen dato)"}`);
 
     lines.push("");
@@ -105,6 +107,8 @@ function buildShareText(params: { visit: Visit; pet: Pet; note: VisitNote | null
     lines.push(buildEmailTitle(pet, visit, lang));
     lines.push(`Pause First™ – vet visit preparation`);
     lines.push(`Pet: ${pet.name}`);
+    const signalmentEn = signalmentLine(pet);
+    if (signalmentEn) lines.push(signalmentEn);
     lines.push(`Date: ${visit.visitDate || "(no date)"}`);
 
     lines.push("");
