@@ -54,12 +54,18 @@ export async function seedDemoData(userId: string, lang: Lang): Promise<void> {
     petId,
     visitDate: isoDateDaysAgo(75),
     mainConcern: isDa ? "Halter på højre forben efter en løbetur" : "Limping on the right front leg after a run",
+    urgency: "concerned",
     whenStart: isDa ? "Opstod pludseligt efter en løbetur i skoven" : "Started suddenly after a run in the woods",
+    durationValue: "2",
+    durationUnit: "days",
+    trend: "better",
     howProgressing: isDa ? "Blev bedre efter et par dages ro" : "Improved after a couple of days of rest",
     patterns: "",
     associatedSigns: isDa ? "Ingen hævelse observeret" : "No swelling observed",
     previousTreatment: isDa ? "Ro og kort snor i 3 dage" : "Rest and short leash walks for 3 days",
-    questionsVet: isDa ? "Skal vi være opmærksomme på noget fremover?" : "Anything we should watch for going forward?",
+    questionsVet: isDa
+      ? "Jeg vil gerne vide, om vi skal have røntgen taget, eller om det er nok at fortsætte med ro"
+      : "I want to know if we should get an X-ray, or if continued rest is enough",
     status: "final"
   };
 
@@ -83,6 +89,7 @@ export async function seedDemoData(userId: string, lang: Lang): Promise<void> {
     petId,
     visitDate: isoDateDaysAgo(0),
     mainConcern: isDa ? "Kløer sig meget om ørerne på det seneste" : "Scratching her ears a lot lately",
+    urgency: "routine",
     whenStart: "",
     howProgressing: "",
     patterns: "",
