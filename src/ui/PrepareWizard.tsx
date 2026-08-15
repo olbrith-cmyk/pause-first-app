@@ -367,6 +367,7 @@ export default function PrepareWizard({
           {lang === "da" ? "Noter (valgfrit)" : "Notes (optional)"}
           <textarea
             className="textarea"
+            enterKeyHint="next"
             value={notesValue}
             onChange={(e) => {
               setDraft({
@@ -402,6 +403,7 @@ export default function PrepareWizard({
               {lang === "da" ? "Besøgsdato" : "Visit date"}
               <input
                 className="input"
+                enterKeyHint="next"
                 type="date"
                 value={draft.visitDate}
                 onChange={(e) => setDraft({ ...draft, visitDate: e.target.value })}
@@ -413,18 +415,17 @@ export default function PrepareWizard({
       case 1:
         return (
           <>
-            <div className="calloutBox" style={{ marginTop: 0 }}>
-              <label className="label">
+            <div className="calloutBox calloutBoxCompact" style={{ marginTop: 0 }}>
+              <div style={{ fontWeight: 700, fontSize: 13, color: "var(--blue)", marginBottom: 8 }}>
                 {lang === "da" ? "Hvor bekymret er du?" : "How urgent does this feel to you?"}
-              </label>
-              <div className="row rowWrap" style={{ gap: 8 }}>
+              </div>
+              <div className="row rowWrap" style={{ gap: 6 }}>
                 {(["routine", "concerned", "very_worried"] as Urgency[]).map((u) => (
                   <button
                     key={u}
                     type="button"
-                    className={`btn ${draft.urgency === u ? "btnPrimary" : "btnSecondary"}`}
+                    className={`btn btnChip ${draft.urgency === u ? "btnPrimary" : "btnSecondary"}`}
                     onClick={() => setDraft({ ...draft, urgency: u })}
-                    style={{ flex: "1 1 120px", minWidth: 120 }}
                   >
                     {urgencyLabel(u, lang)}
                   </button>
@@ -438,6 +439,7 @@ export default function PrepareWizard({
               {lang === "da" ? "Hovedbekymring" : "Main concern"}
               <textarea
                 className="textarea"
+                enterKeyHint="next"
                 value={draft.mainConcern}
                 onChange={(e) => setDraft({ ...draft, mainConcern: e.target.value })}
                 placeholder={
@@ -454,13 +456,14 @@ export default function PrepareWizard({
       case 2:
         return (
           <>
-            <div className="calloutBox" style={{ marginTop: 0 }}>
-              <label className="label">
+            <div className="calloutBox calloutBoxCompact" style={{ marginTop: 0 }}>
+              <div style={{ fontWeight: 700, fontSize: 13, color: "var(--blue)", marginBottom: 8 }}>
                 {lang === "da" ? "Hvor længe har det stået på?" : "How long has this been going on?"}
-              </label>
+              </div>
               <div className="row" style={{ gap: 8 }}>
                 <input
                   className="input"
+                  enterKeyHint="next"
                   type="number"
                   min="0"
                   inputMode="numeric"
@@ -482,19 +485,18 @@ export default function PrepareWizard({
                 </select>
               </div>
 
-              <div style={{ height: 14 }} />
+              <div style={{ height: 10 }} />
 
-              <label className="label">
+              <div style={{ fontWeight: 700, fontSize: 13, color: "var(--blue)", marginBottom: 8 }}>
                 {lang === "da" ? "Bliver det bedre eller værre?" : "Is it getting better or worse?"}
-              </label>
-              <div className="row rowWrap" style={{ gap: 8 }}>
+              </div>
+              <div className="row rowWrap" style={{ gap: 6 }}>
                 {(["worse", "same", "better"] as Trend[]).map((tr) => (
                   <button
                     key={tr}
                     type="button"
-                    className={`btn ${draft.trend === tr ? "btnPrimary" : "btnSecondary"}`}
+                    className={`btn btnChip ${draft.trend === tr ? "btnPrimary" : "btnSecondary"}`}
                     onClick={() => setDraft({ ...draft, trend: tr })}
-                    style={{ flex: "1 1 120px", minWidth: 120 }}
                   >
                     {trendLabel(tr, lang)}
                   </button>
@@ -508,6 +510,7 @@ export default function PrepareWizard({
               {lang === "da" ? "Hvornår lagde du først mærke til det?" : "When did you first notice this?"}
               <textarea
                 className="textarea"
+                enterKeyHint="next"
                 value={draft.whenStart}
                 onChange={(e) => setDraft({ ...draft, whenStart: e.target.value })}
                 placeholder={
@@ -525,6 +528,7 @@ export default function PrepareWizard({
               {lang === "da" ? "Hvordan har det ændret sig siden da?" : "How has it changed since then?"}
               <textarea
                 className="textarea"
+                enterKeyHint="next"
                 value={draft.howProgressing}
                 onChange={(e) => setDraft({ ...draft, howProgressing: e.target.value })}
                 placeholder={
@@ -544,6 +548,7 @@ export default function PrepareWizard({
             {lang === "da" ? "Mønstre & triggere" : "Patterns & triggers"}
             <textarea
               className="textarea"
+              enterKeyHint="next"
               value={draft.patterns}
               onChange={(e) => setDraft({ ...draft, patterns: e.target.value })}
               placeholder={
@@ -587,6 +592,7 @@ export default function PrepareWizard({
               {lang === "da" ? "Andre ændringer / noter (valgfrit)" : "Other changes / notes (optional)"}
               <textarea
                 className="textarea"
+                enterKeyHint="next"
                 value={(draft.currentStatus?.otherNotes as string) ?? ""}
                 onChange={(e) => {
                   const cs = draft.currentStatus ?? makeEmptyStatus();
@@ -612,6 +618,7 @@ export default function PrepareWizard({
               {lang === "da" ? "Andre detaljer (fakta til dyrlægen)" : "Other details (facts for the vet)"}
               <textarea
                 className="textarea"
+                enterKeyHint="next"
                 value={draft.otherDetails ?? ""}
                 onChange={(e) => setDraft({ ...draft, otherDetails: e.target.value })}
                 placeholder={
@@ -642,6 +649,7 @@ export default function PrepareWizard({
               {lang === "da" ? "Medicin & tilskud" : "Meds & supplements"}
               <textarea
                 className="textarea"
+                enterKeyHint="next"
                 value={((draft as any).medicationsSupplements as string) ?? ""}
                 onChange={(e) => setDraft({ ...draft, medicationsSupplements: e.target.value } as any)}
                 placeholder={
@@ -664,6 +672,7 @@ export default function PrepareWizard({
               </div>
               <input
                 className="input"
+                enterKeyHint="next"
                 value={((draft as any).knownConditions as string) ?? ""}
                 onChange={(e) => setDraft({ ...draft, knownConditions: e.target.value } as any)}
                 placeholder={lang === "da" ? "F.eks. Gigt (2019), allergi, CKD stadie 2" : "E.g., Arthritis (2019), allergies, CKD stage 2"}
@@ -681,6 +690,7 @@ export default function PrepareWizard({
               </div>
               <textarea
                 className="textarea"
+                enterKeyHint="next"
                 value={((draft as any).recentTests as string) ?? ""}
                 onChange={(e) => setDraft({ ...draft, recentTests: e.target.value } as any)}
                 placeholder={
@@ -702,6 +712,7 @@ export default function PrepareWizard({
               {lang === "da" ? "Hvad har du prøvet allerede?" : "What have you tried already?"}
               <textarea
                 className="textarea"
+                enterKeyHint="next"
                 value={draft.previousTreatment}
                 onChange={(e) => setDraft({ ...draft, previousTreatment: e.target.value })}
                 placeholder={lang === "da" ? "F.eks. ro, diætændring, skånekost, hvile, varme/kulde..." : "E.g., rest, diet change, bland diet, heat/cold..."}
@@ -722,6 +733,7 @@ export default function PrepareWizard({
             </div>
             <textarea
               className="textarea"
+              enterKeyHint="next"
               value={draft.questionsVet}
               onChange={(e) => setDraft({ ...draft, questionsVet: e.target.value })}
               placeholder={
@@ -798,7 +810,9 @@ export default function PrepareWizard({
                   const index = focusables.indexOf(target);
 
                   if (index >= 0 && index < focusables.length - 1) {
-                    focusables[index + 1].focus();
+                    const next = focusables[index + 1];
+                    next.focus();
+                    next.scrollIntoView({ behavior: "smooth", block: "center" });
                   } else {
                     handleNext();
                   }

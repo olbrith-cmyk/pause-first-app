@@ -688,6 +688,22 @@ button {
   line-height: 1.55;
 }
 
+/* Compact variant, for a quick-pick box that shouldn't tower over the
+   text fields around it (e.g. the urgency/trend pickers). */
+.calloutBoxCompact {
+  padding: 10px 12px;
+}
+
+/* Small pill-style buttons for quick-pick choices, sized to their content
+   instead of the full-size CTA .btn proportions. */
+.btnChip {
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  flex: 0 0 auto;
+}
+
 /* Give breathing room above the Close button inside modals */
 .modalBody .row {
   margin-top: 16px;
