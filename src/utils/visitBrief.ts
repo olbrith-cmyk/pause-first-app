@@ -25,12 +25,17 @@ export function durationUnitLabel(unit: DurationUnit, lang: Lang, count: number)
   return count === 1 ? forms.singular : forms.plural;
 }
 
+// Labeled explicitly ("Duration: ...") rather than a bare "2 days" — an
+// unlabeled number reads as ambiguous next to other durations that can
+// appear elsewhere in the same document (e.g. "leash walks for 3 days" in
+// Previous Treatment), which is a different fact entirely.
 export function formatDuration(value: string | undefined, unit: DurationUnit | undefined, lang: Lang): string {
   const v = (value ?? "").trim();
   if (!v) return "";
   const n = Number(v);
   const unitLabel = durationUnitLabel(unit ?? "days", lang, Number.isFinite(n) ? n : 2);
-  return `${v} ${unitLabel}`;
+  const durationText = `${v} ${unitLabel}`;
+  return lang === "da" ? `Varighed: ${durationText}` : `Duration: ${durationText}`;
 }
 
 export function trendLabel(trend: Trend | undefined, lang: Lang): string {
