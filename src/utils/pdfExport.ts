@@ -3,7 +3,7 @@ import jsPDF from "jspdf";
 import type { Lang } from "../i18n";
 import type { Attachment, AttachmentType, CurrentStatus, Pet, TriState, Visit, VisitNote } from "../firestore";
 import { patientInfoLines, signalmentLine } from "./petInfo";
-import { formatDuration, trendLabel, urgencyLabel } from "./visitBrief";
+import { formatDuration, trendLabel, urgencyIcon, urgencyLabel } from "./visitBrief";
 
 function currentStatusLines(cs: CurrentStatus | undefined, lang: Lang): string[] {
   if (!cs) return [];
@@ -63,7 +63,7 @@ function buildShareText(params: { visit: Visit; pet: Pet; note: VisitNote | null
 
     lines.push("");
     lines.push(`Hovedbekymring: ${visit.mainConcern || "(ikke angivet)"}`);
-    if (visit.urgency) lines.push(`Bekymringsniveau: ${urgencyLabel(visit.urgency, lang)}`);
+    if (visit.urgency) lines.push(`Bekymringsniveau: ${urgencyIcon(visit.urgency)} ${urgencyLabel(visit.urgency, lang)}`);
     const duration = formatDuration(visit.durationValue, visit.durationUnit, lang);
     if (duration) lines.push(`Varighed: ${duration}`);
     if (visit.trend) lines.push(`Udvikling: ${trendLabel(visit.trend, lang)}`);
@@ -113,7 +113,7 @@ function buildShareText(params: { visit: Visit; pet: Pet; note: VisitNote | null
 
     lines.push("");
     lines.push(`Main concern: ${visit.mainConcern || "(not provided)"}`);
-    if (visit.urgency) lines.push(`Urgency: ${urgencyLabel(visit.urgency, lang)}`);
+    if (visit.urgency) lines.push(`Urgency: ${urgencyIcon(visit.urgency)} ${urgencyLabel(visit.urgency, lang)}`);
     const duration = formatDuration(visit.durationValue, visit.durationUnit, lang);
     if (duration) lines.push(`Duration: ${duration}`);
     if (visit.trend) lines.push(`Trend: ${trendLabel(visit.trend, lang)}`);

@@ -61,6 +61,16 @@ export function urgencyTone(urgency: Urgency | undefined): "changed" | "notSure"
   return null;
 }
 
+// A colored dot carries the severity signal on its own, so urgency still
+// reads instantly even when its chip color happens to match a neighboring
+// pill (e.g. "concerned" and the duration pill are both blue).
+export function urgencyIcon(urgency: Urgency | undefined): string {
+  if (urgency === "very_worried") return "🔴";
+  if (urgency === "concerned") return "🟡";
+  if (urgency === "routine") return "🟢";
+  return "";
+}
+
 // The scannable one-liner: chief complaint + duration + trend, so a vet can
 // read it in the seconds they have while walking into the room.
 export function headlineLine(visit: Pick<Visit, "durationValue" | "durationUnit" | "trend">, lang: Lang): string {

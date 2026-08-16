@@ -61,7 +61,22 @@ export async function seedDemoData(userId: string, lang: Lang): Promise<void> {
     trend: "better",
     howProgressing: isDa ? "Blev bedre efter et par dages ro" : "Improved after a couple of days of rest",
     patterns: "",
-    associatedSigns: isDa ? "Ingen hævelse observeret" : "No swelling observed",
+    associatedSigns: "",
+    currentStatus: {
+      appetite: "normal",
+      drinking: "normal",
+      energy: "changed",
+      energyNotes: isDa ? "Mindre legesyg, undgår trapper" : "Less playful, avoiding stairs",
+      toileting: "normal",
+      gi: "normal",
+      breathing: "normal",
+      mobilityPain: "changed",
+      mobilityPainNotes: isDa
+        ? "Undgår at støtte på højre forben, ingen synlig hævelse"
+        : "Avoiding weight on the right front leg, no visible swelling",
+      skinEars: "normal",
+      otherNotes: ""
+    },
     previousTreatment: isDa ? "Ro og kort snor i 3 dage" : "Rest and short leash walks for 3 days",
     questionsVet: isDa
       ? "Jeg vil gerne vide, om vi skal have røntgen taget, eller om det er nok at fortsætte med ro"

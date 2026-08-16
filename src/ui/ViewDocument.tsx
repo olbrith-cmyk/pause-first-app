@@ -4,7 +4,7 @@ import { useTranslation } from "../i18n";
 import type { CurrentStatus, Pet, TriState, Visit, VisitNote } from "../firestore";
 import { exportToPDF, shareWithVet } from "../utils/pdfExport";
 import { patientInfoRows, signalmentLine } from "../utils/petInfo";
-import { formatDuration, trendLabel, urgencyLabel, urgencyTone } from "../utils/visitBrief";
+import { formatDuration, trendLabel, urgencyIcon, urgencyLabel, urgencyTone } from "../utils/visitBrief";
 import AttachmentGallery from "./AttachmentGallery";
 
 function currentStatusSummary(cs: CurrentStatus | undefined, lang: Lang) {
@@ -233,7 +233,12 @@ export default function ViewDocument({
           </p>
           {(visit.urgency || visit.durationValue || visit.trend) && (
             <div style={{ marginTop: 10 }}>
-              {visit.urgency && <StatusChip label={urgencyLabel(visit.urgency, lang)} tone={urgencyTone(visit.urgency)!} />}
+              {visit.urgency && (
+                <StatusChip
+                  label={`${urgencyIcon(visit.urgency)} ${urgencyLabel(visit.urgency, lang)}`}
+                  tone={urgencyTone(visit.urgency)!}
+                />
+              )}
               {formatDuration(visit.durationValue, visit.durationUnit, lang) && (
                 <StatusChip label={formatDuration(visit.durationValue, visit.durationUnit, lang)} tone="notSure" />
               )}
