@@ -175,7 +175,9 @@ export default function ViewDocument({
   };
 
   const patientRows = patientInfoRows(pet, lang);
-  const signalment = signalmentLine(pet);
+  const visitDateParsed = visit.visitDate ? new Date(visit.visitDate) : null;
+  const signalmentAsOf = visitDateParsed && !Number.isNaN(visitDateParsed.getTime()) ? visitDateParsed : new Date();
+  const signalment = signalmentLine(pet, lang, signalmentAsOf);
   const statusSummary = currentStatusSummary(visit.currentStatus, lang);
   const medicationsSupplements = visit.medicationsSupplements ?? "";
   const knownConditions = ((visit as any).knownConditions as string) ?? "";

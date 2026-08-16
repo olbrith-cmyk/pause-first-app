@@ -53,11 +53,14 @@ function buildShareText(params: { visit: Visit; pet: Pet; note: VisitNote | null
   const knownConditions = ((visit as any).knownConditions as string) ?? "";
   const recentTests = ((visit as any).recentTests as string) ?? "";
 
+  const visitDateParsed = visit.visitDate ? new Date(visit.visitDate) : null;
+  const signalmentAsOf = visitDateParsed && !Number.isNaN(visitDateParsed.getTime()) ? visitDateParsed : new Date();
+
   if (lang === "da") {
     lines.push(buildEmailTitle(pet, visit, lang));
     lines.push(`Pause First™ – forberedelse til dyrlægebesøg`);
     lines.push(`Dyr: ${pet.name}`);
-    const signalmentDa = signalmentLine(pet);
+    const signalmentDa = signalmentLine(pet, lang, signalmentAsOf);
     if (signalmentDa) lines.push(signalmentDa);
     lines.push(`Dato: ${visit.visitDate || "(ingen dato)"}`);
 
@@ -107,7 +110,7 @@ function buildShareText(params: { visit: Visit; pet: Pet; note: VisitNote | null
     lines.push(buildEmailTitle(pet, visit, lang));
     lines.push(`Pause First™ – vet visit preparation`);
     lines.push(`Pet: ${pet.name}`);
-    const signalmentEn = signalmentLine(pet);
+    const signalmentEn = signalmentLine(pet, lang, signalmentAsOf);
     if (signalmentEn) lines.push(signalmentEn);
     lines.push(`Date: ${visit.visitDate || "(no date)"}`);
 

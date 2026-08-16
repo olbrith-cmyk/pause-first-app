@@ -79,11 +79,62 @@ function ageOrBirthSummary(pet: Pet): string {
   return (pet.age ?? "").trim();
 }
 
+// dateOfBirth is a freeform text field ("DD/MM/YYYY (or approximate)" is
+// just a placeholder, not enforced) — parse the common case, and let
+// anything else fall through to being shown as typed.
+function parseDateOfBirth(value: string): Date | null {
+  const match = value.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (!match) return null;
+  const day = Number(match[1]);
+  const month = Number(match[2]);
+  const year = Number(match[3]);
+  const d = new Date(year, month - 1, day);
+  if (Number.isNaN(d.getTime()) || d.getMonth() !== month - 1) return null;
+  return d;
+}
+
+function pluralize(n: number, lang: Lang, unit: "year" | "month" | "day"): string {
+  const forms: Record<Lang, Record<"year" | "month" | "day", [string, string]>> = {
+    en: { year: ["year", "years"], month: ["month", "months"], day: ["day", "days"] },
+    da: { year: ["år", "år"], month: ["måned", "måneder"], day: ["dag", "dage"] }
+  };
+  const [singular, plural] = forms[lang][unit];
+  return `${n} ${n === 1 ? singular : plural}`;
+}
+
+// Age as of a given date (the visit date, when known — clinically that's
+// the age that matters, not today's) computed from dateOfBirth: years once
+// the pet is a year or older, otherwise months, otherwise days for very
+// young animals. Falls back to the raw dateOfBirth/age text if it can't be
+// parsed as a date.
+function computedAgeText(pet: Pet, lang: Lang, asOf: Date): string {
+  const dobRaw = pet.dateOfBirth?.trim();
+  const dob = dobRaw ? parseDateOfBirth(dobRaw) : null;
+  if (!dob || dob.getTime() > asOf.getTime()) return ageOrBirthSummary(pet);
+
+  let years = asOf.getFullYear() - dob.getFullYear();
+  let months = asOf.getMonth() - dob.getMonth();
+  let days = asOf.getDate() - dob.getDate();
+  if (days < 0) {
+    months -= 1;
+    days += new Date(asOf.getFullYear(), asOf.getMonth(), 0).getDate();
+  }
+  if (months < 0) {
+    years -= 1;
+    months += 12;
+  }
+
+  if (years >= 1) return pluralize(years, lang, "year");
+  if (months >= 1) return pluralize(months, lang, "month");
+  return pluralize(Math.max(days, 0), lang, "day");
+}
+
 // Species + breed + age, e.g. "Dog · Labrador · 4 years" — the "signalment"
 // a vet expects right alongside the pet's name, since a name alone doesn't
-// say what they're walking in to see.
-export function signalmentLine(pet: Pet): string {
-  return [pet.species, pet.breedType, ageOrBirthSummary(pet)]
+// say what they're walking in to see. Age is computed as of `asOf` (pass
+// the visit date so it reflects the pet's age at that visit, not today).
+export function signalmentLine(pet: Pet, lang: Lang, asOf: Date = new Date()): string {
+  return [pet.species, pet.breedType, computedAgeText(pet, lang, asOf)]
     .map((p) => (p ?? "").trim())
     .filter(Boolean)
     .join(" · ");
