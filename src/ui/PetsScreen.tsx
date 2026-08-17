@@ -415,8 +415,8 @@ export default function PetsScreen({
                   }}
                 >
                   {lang === "da"
-                    ? "Udfyld dette én gang — vi genbruger det til automatisk at udfylde din besøgsforberedelse."
-                    : "Fill this in once — we’ll reuse it to auto‑fill your Visit Briefs."}
+                    ? "Udfyld dette én gang — det genbruges til automatisk at udfylde din besøgsforberedelse."
+                    : "Fill this in once — it'll be reused to auto‑fill your Visit Briefs."}
                 </div>
 
                 <Section title={lang === "da" ? "Om dit dyr" : "About your pet"}>

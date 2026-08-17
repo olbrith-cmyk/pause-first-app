@@ -251,9 +251,9 @@ export function AiAssistantConsent({
   return (
     <ModalShell title={t.aiAssistant} onClose={onClose}>
       <p>
-        You're about to continue in <strong>ChatGPT</strong> (powered by OpenAI) in a new tab.
-        It's a custom GPT we've set up — but anything you type there is processed by OpenAI, not
-        by Pause First™. We don't store anything from that conversation.
+        You're about to continue in <strong>ChatGPT</strong> (powered by OpenAI) in a new tab — a
+        custom GPT set up by Pause First™. Anything you type there is processed by OpenAI, not by
+        Pause First™, and nothing from that conversation is stored.
       </p>
       <div className="row">
         <button className="btn btnSecondary" onClick={onClose}>
@@ -277,15 +277,15 @@ export function PrivacyPolicy({ lang, onClose }: { lang: Lang; onClose: () => vo
 
         <h3>1. Introduktion</h3>
         <p>
-          Pause First™ ("vi," "os," eller "vores") er forpligtet til at beskytte dit privatliv.
-          Denne privatlivspolitik forklarer, hvordan vi indsamler, bruger og beskytter dine
-          oplysninger, når du bruger vores webapplikation ("Tjenesten").
+          Pause First™ er forpligtet til at beskytte dit privatliv. Denne privatlivspolitik
+          forklarer, hvordan Pause First™ indsamler, bruger og beskytter dine oplysninger, når du
+          bruger webapplikationen ("Tjenesten").
         </p>
         <p>
           Pause First™ er en del af <strong>Cykeldyrlægen</strong>.
         </p>
 
-        <h3>2. Oplysninger Vi Indsamler</h3>
+        <h3>2. Indsamlede Oplysninger</h3>
         <p><strong>Oplysninger du giver direkte:</strong></p>
         <ul className="list">
           <li>Kontooplysninger (navn, e-mailadresse, adgangskode)</li>
@@ -302,7 +302,7 @@ export function PrivacyPolicy({ lang, onClose }: { lang: Lang; onClose: () => vo
           <li>Grundlæggende brugsdata, der er nødvendig for at drive og forbedre tjenesten</li>
         </ul>
 
-        <h3>3. Hvordan Vi Bruger Dine Oplysninger</h3>
+        <h3>3. Sådan Bruges Dine Oplysninger</h3>
         <ul className="list">
           <li>For at oprette og vedligeholde din konto</li>
           <li>For at gemme og organisere dine dyreoplysninger og besøgsnoter</li>
@@ -311,18 +311,18 @@ export function PrivacyPolicy({ lang, onClose }: { lang: Lang; onClose: () => vo
           <li>For at overholde juridiske forpligtelser</li>
         </ul>
 
-        <h3>4. Hvad Vi IKKE Gør</h3>
+        <h3>4. Hvad Pause First™ IKKE Gør</h3>
         <ul className="list">
-          <li>Vi sælger ikke dine data</li>
-          <li>Vi deler ikke dine data med tredjeparter til marketing eller annoncering</li>
+          <li>Dine data sælges ikke</li>
+          <li>Dine data deles ikke med tredjeparter til marketing eller annoncering</li>
         </ul>
 
         <h3>5. Datalagring & Sikkerhed</h3>
         <p>
           Dine oplysninger lagres ved hjælp af <strong>Firebase</strong> (Google Cloud
-          infrastruktur), herunder Firebase Authentication og Firestore. Vi bruger kryptering under
-          transmission (SSL/TLS) og adgangskontroller (sikkerhedsregler) designet til at begrænse
-          adgangen til dine egne data.
+          infrastruktur), herunder Firebase Authentication og Firestore. Der bruges kryptering
+          under transmission (SSL/TLS) og adgangskontroller (sikkerhedsregler) designet til at
+          begrænse adgangen til dine egne data.
         </p>
 
         <h3>6. Dine Rettigheder</h3>
@@ -333,13 +333,13 @@ export function PrivacyPolicy({ lang, onClose }: { lang: Lang; onClose: () => vo
 
         <h3>7. Dataopbevaring</h3>
         <p>
-          Dine data opbevares, så længe din konto er aktiv. Hvis du sletter din konto, fjerner vi
-          dine data fra vores systemer inden for 30 dage (underlagt tekniske og juridiske krav).
+          Dine data opbevares, så længe din konto er aktiv. Hvis du sletter din konto, fjernes dine
+          data fra systemerne inden for 30 dage (underlagt tekniske og juridiske krav).
         </p>
 
         <h3>8. Tredjepartstjenester</h3>
         <p>
-          Vi bruger Firebase (af Google) til autentificering og datalagring. Googles
+          Firebase (af Google) bruges til autentificering og datalagring. Googles
           privatlivspraksis er beskrevet her:{" "}
           <a href="https://policies.google.com/privacy" target="_blank" rel="noreferrer">
             https://policies.google.com/privacy
@@ -357,8 +357,8 @@ export function PrivacyPolicy({ lang, onClose }: { lang: Lang; onClose: () => vo
         <p>
           Appen har også en valgfri funktion, <strong>"Pause First AI-assistent"</strong>, som
           åbner en brugerdefineret GPT hostet på OpenAIs ChatGPT-platform i en ny fane. Denne
-          funktion er helt valgfri — vi sender dig kun derhen, hvis du selv vælger at åbne den, og
-          alt hvad du skriver der, behandles af OpenAI og ikke af Pause First™. OpenAIs
+          funktion er helt valgfri — den åbnes kun, hvis du selv vælger det, og alt hvad du
+          skriver der, behandles af OpenAI og ikke af Pause First™. OpenAIs
           privatlivspraksis er beskrevet her:{" "}
           <a href="https://openai.com/policies/privacy-policy" target="_blank" rel="noreferrer">
             openai.com/policies/privacy-policy
@@ -405,15 +405,15 @@ export function PrivacyPolicy({ lang, onClose }: { lang: Lang; onClose: () => vo
 
       <h3>1. Introduction</h3>
       <p>
-        Pause First™ ("we," "us," or "our") is committed to protecting your privacy. This Privacy
-        Policy explains how we collect, use, and safeguard your information when you use our web
+        Pause First™ is committed to protecting your privacy. This Privacy Policy explains how
+        Pause First™ collects, uses, and safeguards your information when you use the web
         application (the "Service").
       </p>
       <p>
         Pause First™ is part of <strong>Cykeldyrlægen</strong>.
       </p>
 
-      <h3>2. Information We Collect</h3>
+      <h3>2. Information Collected</h3>
       <p><strong>Information you provide directly:</strong></p>
       <ul className="list">
         <li>Account information (name, email address, password)</li>
@@ -430,7 +430,7 @@ export function PrivacyPolicy({ lang, onClose }: { lang: Lang; onClose: () => vo
         <li>Basic usage data needed to operate and improve the Service</li>
       </ul>
 
-      <h3>3. How We Use Your Information</h3>
+      <h3>3. How Your Information Is Used</h3>
       <ul className="list">
         <li>To create and maintain your account</li>
         <li>To store and organize your pet's information and visit notes</li>
@@ -439,17 +439,17 @@ export function PrivacyPolicy({ lang, onClose }: { lang: Lang; onClose: () => vo
         <li>To comply with legal obligations</li>
       </ul>
 
-      <h3>4. What We Do NOT Do</h3>
+      <h3>4. What Pause First™ Does NOT Do</h3>
       <ul className="list">
-        <li>We do not sell your data</li>
-        <li>We do not share your data with third parties for marketing/advertising</li>
+        <li>Your data is not sold</li>
+        <li>Your data is not shared with third parties for marketing/advertising</li>
       </ul>
 
       <h3>5. Data Storage & Security</h3>
       <p>
         Your information is stored using <strong>Firebase</strong> (Google Cloud infrastructure),
-        including Firebase Authentication and Firestore. We use encryption in transit (SSL/TLS) and
-        access controls (security rules) designed to limit access to your own data.
+        including Firebase Authentication and Firestore. Encryption in transit (SSL/TLS) and
+        access controls (security rules) are used, designed to limit access to your own data.
       </p>
 
       <h3>6. Your Rights</h3>
@@ -460,13 +460,13 @@ export function PrivacyPolicy({ lang, onClose }: { lang: Lang; onClose: () => vo
 
       <h3>7. Data Retention</h3>
       <p>
-        Your data is kept as long as your account is active. If you delete your account, we remove
-        your data from our systems within 30 days (subject to technical and legal requirements).
+        Your data is kept as long as your account is active. If you delete your account, your data
+        is removed from the systems within 30 days (subject to technical and legal requirements).
       </p>
 
       <h3>8. Third-Party Services</h3>
       <p>
-        We use Firebase (by Google) for authentication and data storage. Google's privacy
+        Firebase (by Google) is used for authentication and data storage. Google's privacy
         practices are described here:{" "}
         <a href="https://policies.google.com/privacy" target="_blank" rel="noreferrer">
           https://policies.google.com/privacy
@@ -484,8 +484,8 @@ export function PrivacyPolicy({ lang, onClose }: { lang: Lang; onClose: () => vo
       <p>
         The app also has an optional <strong>"Pause First AI Assistant"</strong> feature that
         opens a custom GPT hosted on OpenAI's ChatGPT platform in a new tab. This feature is
-        entirely optional — we only send you there if you choose to open it, and anything you
-        type there is processed by OpenAI, not by Pause First™. OpenAI's privacy practices are
+        entirely optional — it only opens if you choose to open it, and anything you type there
+        is processed by OpenAI, not by Pause First™. OpenAI's privacy practices are
         described here:{" "}
         <a href="https://openai.com/policies/privacy-policy" target="_blank" rel="noreferrer">
           openai.com/policies/privacy-policy
