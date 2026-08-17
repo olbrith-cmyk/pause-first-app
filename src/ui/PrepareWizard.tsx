@@ -160,7 +160,20 @@ export default function PrepareWizard({
     modalBodyRef.current?.scrollTo({ top: 0, behavior: "auto" });
   }, [step, mode]);
 
-  const stepData = useMemo(
+  // Routine visits skip the Timeline (case 2) and Patterns & triggers (case 3)
+  // steps — those two are the ones most likely to be empty/unnecessary for a
+  // quick checkup, not a developing problem. `step` (position) always
+  // indexes into this filtered sequence; `caseIndices[step]` maps back to
+  // the fixed content identity that `renderStep()` switches on. Urgency can
+  // only be changed while viewing position 1 (Main concern), and position 1
+  // is index 1 in both sequences, so switching urgency mid-wizard never
+  // leaves `step` pointing past the end of the (possibly shorter) sequence.
+  const caseIndices = useMemo(() => {
+    const all = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+    return draft.urgency === "routine" ? all.filter((i) => i !== 2 && i !== 3) : all;
+  }, [draft.urgency]);
+
+  const allStepData = useMemo(
     () => [
       {
         title: lang === "da" ? "Besøgsdato" : "Visit date",
@@ -240,6 +253,8 @@ export default function PrepareWizard({
     ],
     [draft.visitDate, draft.mainConcern, lang]
   );
+
+  const stepData = useMemo(() => caseIndices.map((i) => allStepData[i]), [caseIndices, allStepData]);
 
   const isLastWizardStep = step === stepData.length - 1;
 
@@ -424,7 +439,7 @@ export default function PrepareWizard({
   };
 
   const renderStep = () => {
-    switch (step) {
+    switch (caseIndices[step]) {
       case 0:
         return (
           <>
@@ -464,6 +479,13 @@ export default function PrepareWizard({
                   </button>
                 ))}
               </div>
+              {draft.urgency === "routine" && (
+                <div className="muted" style={{ marginTop: 8, fontSize: 12 }}>
+                  {lang === "da"
+                    ? "Rutinebesøg bruger en kortere version af denne formular."
+                    : "Routine visits use a shorter version of this form."}
+                </div>
+              )}
             </div>
 
             <div style={{ height: 14 }} />
