@@ -212,7 +212,61 @@ export function MedicalDisclaimer({ lang, onClose }: { lang: Lang; onClose: () =
     </ModalShell>
   );
 }
-  
+
+// Shown once, the first time someone taps "Pause First AI Assistant" — both
+// a consent moment (the disclosure otherwise only lives in the Privacy
+// Policy, easy to miss) and a heads-up that they're about to leave the app,
+// so the brand switch to ChatGPT doesn't feel like a broken link.
+export function AiAssistantConsent({
+  lang,
+  onConfirm,
+  onClose
+}: {
+  lang: Lang;
+  onConfirm: () => void;
+  onClose: () => void;
+}) {
+  const t = useTranslation(lang);
+
+  if (lang === "da") {
+    return (
+      <ModalShell title={t.aiAssistant} onClose={onClose}>
+        <p>
+          Du fortsætter nu i <strong>ChatGPT</strong> (drevet af OpenAI) i en ny fane. Det er en
+          brugerdefineret GPT, vi har sat op — men alt hvad du skriver der, behandles af OpenAI,
+          ikke af Pause First™. Vi gemmer ikke noget fra den samtale.
+        </p>
+        <div className="row">
+          <button className="btn btnSecondary" onClick={onClose}>
+            {lang === "da" ? "Annuller" : "Cancel"}
+          </button>
+          <button className="btn btnPrimary" onClick={onConfirm}>
+            {lang === "da" ? "Fortsæt til ChatGPT" : "Continue to ChatGPT"}
+          </button>
+        </div>
+      </ModalShell>
+    );
+  }
+
+  return (
+    <ModalShell title={t.aiAssistant} onClose={onClose}>
+      <p>
+        You're about to continue in <strong>ChatGPT</strong> (powered by OpenAI) in a new tab.
+        It's a custom GPT we've set up — but anything you type there is processed by OpenAI, not
+        by Pause First™. We don't store anything from that conversation.
+      </p>
+      <div className="row">
+        <button className="btn btnSecondary" onClick={onClose}>
+          Cancel
+        </button>
+        <button className="btn btnPrimary" onClick={onConfirm}>
+          Continue to ChatGPT
+        </button>
+      </div>
+    </ModalShell>
+  );
+}
+
 export function PrivacyPolicy({ lang, onClose }: { lang: Lang; onClose: () => void }) {
   const t = useTranslation(lang);
 

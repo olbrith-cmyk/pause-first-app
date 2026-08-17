@@ -1,6 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
+import { AiAssistantConsent } from "./Modals";
+import { hasAiAssistantConsent, openChatGpt, setAiAssistantConsent } from "../utils/chatGptHandoff";
 
 function Icon({ name }: { name: string }) {
   return (
@@ -37,6 +39,7 @@ export default function HamburgerMenu({
 }) {
   const t = useTranslation(lang);
   const menuRef = useRef<HTMLDivElement>(null);
+  const [showAiConsent, setShowAiConsent] = useState(false);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -51,10 +54,17 @@ export default function HamburgerMenu({
   }, [isOpen, onClose]);
 
   const openAiAssistant = () => {
-    window.open(
-      "https://chatgpt.com/g/g-695a7a9e17d08191bd88b76d39f9e54f-pause-firsttm",
-      "_blank"
-    );
+    if (hasAiAssistantConsent()) {
+      openChatGpt(lang);
+    } else {
+      setShowAiConsent(true);
+    }
+  };
+
+  const confirmAiAssistant = () => {
+    setAiAssistantConsent();
+    setShowAiConsent(false);
+    openChatGpt(lang);
   };
 
   const items = [
@@ -187,6 +197,10 @@ export default function HamburgerMenu({
           )}
         </div>
       </aside>
+
+      {showAiConsent && (
+        <AiAssistantConsent lang={lang} onConfirm={confirmAiAssistant} onClose={() => setShowAiConsent(false)} />
+      )}
     </>
   );
 }

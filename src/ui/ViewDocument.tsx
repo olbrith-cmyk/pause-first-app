@@ -1,11 +1,13 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
 import type { CurrentStatus, Pet, TriState, Visit, VisitNote } from "../firestore";
 import { exportToPDF, shareWithVet } from "../utils/pdfExport";
 import { patientInfoRows, signalmentLine } from "../utils/petInfo";
 import { formatDuration, trendLabel, urgencyIcon, urgencyLabel, urgencyTone } from "../utils/visitBrief";
+import { hasAiAssistantConsent, openChatGpt, setAiAssistantConsent } from "../utils/chatGptHandoff";
 import AttachmentGallery from "./AttachmentGallery";
+import { AiAssistantConsent } from "./Modals";
 
 function currentStatusSummary(cs: CurrentStatus | undefined, lang: Lang) {
   if (!cs) return null;
@@ -148,6 +150,7 @@ export default function ViewDocument({
 }) {
   const t = useTranslation(lang);
   const tt = (en: string, da: string) => (lang === "da" ? da : en);
+  const [showAiConsent, setShowAiConsent] = useState(false);
 
   if (!visit || !pet) {
     return (
@@ -172,6 +175,22 @@ export default function ViewDocument({
     } catch (e: any) {
       alert(tt("Error sharing: ", "Fejl ved deling: ") + (e?.message ?? String(e)));
     }
+  };
+
+  const aiContext = { mainConcern: visit.mainConcern, question: visit.questionsVet };
+
+  const handleAskAiAssistant = () => {
+    if (hasAiAssistantConsent()) {
+      openChatGpt(lang, aiContext);
+    } else {
+      setShowAiConsent(true);
+    }
+  };
+
+  const confirmAiAssistant = () => {
+    setAiAssistantConsent();
+    setShowAiConsent(false);
+    openChatGpt(lang, aiContext);
   };
 
   const patientRows = patientInfoRows(pet, lang);
@@ -433,7 +452,14 @@ export default function ViewDocument({
         <button className="btn btnSecondary" onClick={handleShareWithVet}>
           📤 {tt("Share with Vet", "Del med dyrlæge")}
         </button>
+        <button className="btn btnSecondary" onClick={handleAskAiAssistant}>
+          ✨ {t.aiAssistant}
+        </button>
       </div>
+
+      {showAiConsent && (
+        <AiAssistantConsent lang={lang} onConfirm={confirmAiAssistant} onClose={() => setShowAiConsent(false)} />
+      )}
     </div>
   );
 }
