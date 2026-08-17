@@ -232,9 +232,9 @@ export function AiAssistantConsent({
     return (
       <ModalShell title={t.aiAssistant} onClose={onClose}>
         <p>
-          Du fortsætter nu i <strong>ChatGPT</strong> (drevet af OpenAI) i en ny fane. Det er en
-          brugerdefineret GPT, vi har sat op — men alt hvad du skriver der, behandles af OpenAI,
-          ikke af Pause First™. Vi gemmer ikke noget fra den samtale.
+          Du fortsætter nu i <strong>ChatGPT</strong> (drevet af OpenAI) i en ny fane — en
+          brugerdefineret GPT sat op af Pause First™. Alt, hvad du skriver der, behandles af
+          OpenAI, ikke af Pause First™, og intet fra samtalen bliver gemt.
         </p>
         <div className="row">
           <button className="btn btnSecondary" onClick={onClose}>
