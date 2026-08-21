@@ -59,6 +59,10 @@ export default function PrepareWizard({
   const [savingDraft, setSavingDraft] = useState(false);
   const [sharingFromDone, setSharingFromDone] = useState(false);
   const [mode, setMode] = useState<"wizard" | "preview" | "done">("wizard");
+  // For routine visits, the 8-card Current Status checklist starts collapsed
+  // behind a single "is everything normal?" question — set true once the
+  // owner says something's different, so the full checklist stays open.
+  const [statusExpanded, setStatusExpanded] = useState(false);
 
   const [visitId, setVisitId] = useState<string | null>(null);
   const didInit = useRef(false);
@@ -160,17 +164,18 @@ export default function PrepareWizard({
     modalBodyRef.current?.scrollTo({ top: 0, behavior: "auto" });
   }, [step, mode]);
 
-  // Routine visits skip the Timeline (case 2) and Patterns & triggers (case 3)
-  // steps — those two are the ones most likely to be empty/unnecessary for a
-  // quick checkup, not a developing problem. `step` (position) always
-  // indexes into this filtered sequence; `caseIndices[step]` maps back to
-  // the fixed content identity that `renderStep()` switches on. Urgency can
-  // only be changed while viewing position 1 (Main concern), and position 1
-  // is index 1 in both sequences, so switching urgency mid-wizard never
-  // leaves `step` pointing past the end of the (possibly shorter) sequence.
+  // Routine visits skip Timeline (case 2), Patterns & triggers (case 3), and
+  // Other details (case 5) — those are the ones most likely to be empty for
+  // a quick checkup rather than a developing problem. `step` (position)
+  // always indexes into this filtered sequence; `caseIndices[step]` maps
+  // back to the fixed content identity that `renderStep()` switches on.
+  // Urgency can only be changed while viewing position 1 (Main concern),
+  // and position 1 is index 1 in both sequences, so switching urgency
+  // mid-wizard never leaves `step` pointing past the end of the (possibly
+  // shorter) sequence.
   const caseIndices = useMemo(() => {
     const all = [0, 1, 2, 3, 4, 5, 6, 7, 8];
-    return draft.urgency === "routine" ? all.filter((i) => i !== 2 && i !== 3) : all;
+    return draft.urgency === "routine" ? all.filter((i) => ![2, 3, 5].includes(i)) : all;
   }, [draft.urgency]);
 
   const allStepData = useMemo(
@@ -621,7 +626,52 @@ export default function PrepareWizard({
           </label>
         );
 
-      case 4:
+      case 4: {
+        const cs = draft.currentStatus ?? makeEmptyStatus();
+        const hasDeviation =
+          cs.appetite !== "normal" ||
+          !!cs.appetiteNotes?.trim() ||
+          cs.drinking !== "normal" ||
+          !!cs.drinkingNotes?.trim() ||
+          cs.energy !== "normal" ||
+          !!cs.energyNotes?.trim() ||
+          cs.toileting !== "normal" ||
+          !!cs.toiletingNotes?.trim() ||
+          cs.gi !== "normal" ||
+          !!cs.giNotes?.trim() ||
+          cs.breathing !== "normal" ||
+          !!cs.breathingNotes?.trim() ||
+          cs.mobilityPain !== "normal" ||
+          !!cs.mobilityPainNotes?.trim() ||
+          cs.skinEars !== "normal" ||
+          !!cs.skinEarsNotes?.trim() ||
+          !!cs.otherNotes?.trim();
+
+        // For routine visits, assume everything's normal (the checklist's
+        // default) and skip straight past it unless the owner says
+        // otherwise or there's already deviation data to review.
+        if (draft.urgency === "routine" && !statusExpanded && !hasDeviation) {
+          return (
+            <div className="calloutBox calloutBoxCompact" style={{ marginTop: 0 }}>
+              <div style={{ fontWeight: 700, fontSize: 13, color: "var(--blue)", marginBottom: 8 }}>
+                {lang === "da" ? "Er alt normalt lige nu?" : "Is everything normal right now?"}
+              </div>
+              <div className="muted" style={{ marginBottom: 10 }}>
+                {lang === "da"
+                  ? "Antaget: appetit, energi, vejrtrækning m.m. er som normalt."
+                  : "Assumed: appetite, energy, breathing, etc. are all as usual."}
+              </div>
+              <button
+                type="button"
+                className="btn btnChip btnSecondary"
+                onClick={() => setStatusExpanded(true)}
+              >
+                {lang === "da" ? "Nej, noget er anderledes" : "No, something's different"}
+              </button>
+            </div>
+          );
+        }
+
         return (
           <>
             <div className="muted" style={{ marginBottom: 10 }}>
@@ -665,6 +715,7 @@ export default function PrepareWizard({
             </label>
           </>
         );
+      }
 
       case 5:
         return (
