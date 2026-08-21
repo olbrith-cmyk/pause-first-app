@@ -23,6 +23,7 @@ export default function HamburgerMenu({
   onPrivacyPolicy,
   onMyPets,
   onMyVisits,
+  onGoHome,
   isDemo
 }: {
   lang: Lang;
@@ -35,6 +36,7 @@ export default function HamburgerMenu({
   onPrivacyPolicy: () => void;
   onMyPets: () => void;
   onMyVisits: () => void;
+  onGoHome: () => void;
   isDemo?: boolean;
 }) {
   const t = useTranslation(lang);
@@ -68,6 +70,12 @@ export default function HamburgerMenu({
   };
 
   const items = [
+    {
+      icon: "home",
+      title: lang === "da" ? "Hjem" : "Home",
+      hint: lang === "da" ? "Gå til forsiden" : "Go to the home screen",
+      onClick: onGoHome
+    },
     {
       icon: "pets",
       title: t.myPets,

@@ -383,6 +383,10 @@ export default function Dashboard({
           setMode("myVisits");
           setMenuOpen(false);
         }}
+        onGoHome={() => {
+          setMode("home");
+          setMenuOpen(false);
+        }}
       />
 
       {/* REAL MODALS */}
