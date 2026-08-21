@@ -56,6 +56,11 @@ export default function Dashboard({
 
   // Tracks PrepareWizard open state (even when launched from My Visits)
   const [wizardOpen, setWizardOpen] = useState(false);
+
+  // Bottom dock starts collapsed on every screen so it doesn't eat into the
+  // content above it — tap the handle to reveal Prepare visit/My Animals/My
+  // visits/Home when needed.
+  const [dockCollapsed, setDockCollapsed] = useState(true);
   const [animalsStartInAddMode, setAnimalsStartInAddMode] = useState(false);
 
   // NEW: track whether a visit detail is open inside VisitsScreen
@@ -71,6 +76,21 @@ export default function Dashboard({
 
   const hideBottomDock =
     mode === "home" || mode === "prepare" || anyModalOpen || menuOpen || wizardOpen;
+
+  // Re-collapse the dock each time the screen changes, so it always starts
+  // out of the way rather than remembering an expanded state from before.
+  useEffect(() => {
+    setDockCollapsed(true);
+  }, [mode]);
+
+  // Only reserve the dock's clearance space on .pageContent while it's both
+  // visible and collapsed — a scoped body class (rather than always-on)
+  // keeps this from clobbering the home screen's own no-dock padding.
+  useEffect(() => {
+    const collapsedAndVisible = !hideBottomDock && dockCollapsed;
+    document.body.classList.toggle("dockCollapsed", collapsedAndVisible);
+    return () => document.body.classList.remove("dockCollapsed");
+  }, [dockCollapsed, hideBottomDock]);
 
   const handlePrepareClick = () => setMode("prepare");
 
@@ -273,47 +293,65 @@ export default function Dashboard({
 
       {/* BOTTOM NAV (hide on home, and hide when any modal/menu/wizard is open) */}
       {!hideBottomDock && (
-        <footer className="bottomDock">
-          <div className="bottomDockInner">
-            <button onClick={handlePrepareClick} className="btn btnPrimary btnLg">
-              {lang === "da" ? "Forbered besøg" : "Prepare visit"}
-            </button>
+        <footer className={`bottomDock ${dockCollapsed ? "bottomDockCollapsed" : ""}`}>
+          <button
+            type="button"
+            className="bottomDockHandle"
+            onClick={() => setDockCollapsed((c) => !c)}
+            aria-expanded={!dockCollapsed}
+          >
+            <span aria-hidden="true">{dockCollapsed ? "▲" : "▼"}</span>
+            {dockCollapsed
+              ? lang === "da"
+                ? "Vis menu"
+                : "Show menu"
+              : lang === "da"
+                ? "Skjul menu"
+                : "Hide menu"}
+          </button>
 
-            <div className="bottomDockGrid">
-              <button
-  onClick={() => {
-    if (wizardOpen) {
-      setPendingNav("pets");
-      return;
-    }
-    goToAnimals(false);
-  }}
-  className="btn btnSecondary"
->
-  {t.myPets}
-</button>
-
-<button
-  onClick={() => {
-    if (wizardOpen) {
-      setPendingNav("myVisits");
-      return;
-    }
-    handleMyVisitsNav();
-  }}
-  className="btn btnSecondary"
->
-  {lang === "da" ? "Mine besøg" : "My visits"}
-</button>
-
-              <button
-                onClick={() => setMode("home")}
-                className="btn btnSecondary bottomDockHome"
-              >
-                {lang === "da" ? "Hjem" : "Home"}
+          {!dockCollapsed && (
+            <div className="bottomDockInner">
+              <button onClick={handlePrepareClick} className="btn btnPrimary btnLg">
+                {lang === "da" ? "Forbered besøg" : "Prepare visit"}
               </button>
+
+              <div className="bottomDockGrid">
+                <button
+                  onClick={() => {
+                    if (wizardOpen) {
+                      setPendingNav("pets");
+                      return;
+                    }
+                    goToAnimals(false);
+                  }}
+                  className="btn btnSecondary"
+                >
+                  {t.myPets}
+                </button>
+
+                <button
+                  onClick={() => {
+                    if (wizardOpen) {
+                      setPendingNav("myVisits");
+                      return;
+                    }
+                    handleMyVisitsNav();
+                  }}
+                  className="btn btnSecondary"
+                >
+                  {lang === "da" ? "Mine besøg" : "My visits"}
+                </button>
+
+                <button
+                  onClick={() => setMode("home")}
+                  className="btn btnSecondary bottomDockHome"
+                >
+                  {lang === "da" ? "Hjem" : "Home"}
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </footer>
       )}
 

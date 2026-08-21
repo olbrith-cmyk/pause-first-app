@@ -1191,6 +1191,32 @@ button {
   padding: 10px 12px;
 }
 
+/* Collapsed: just the handle strip, no button padding beneath it */
+.bottomDock.bottomDockCollapsed {
+  padding: 0 12px;
+}
+
+.bottomDockHandle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  padding: 10px 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--blue);
+  cursor: pointer;
+}
+
+/* Reserve just enough space for the collapsed handle strip instead of the
+   full dock height, so content isn't pushed down by a mostly-empty dock. */
+body.dockCollapsed .pageContent {
+  padding-bottom: 56px;
+}
+
 .bottomDockInner {
   width: 100%;
   max-width: 420px;
