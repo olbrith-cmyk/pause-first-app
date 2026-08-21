@@ -1,4 +1,5 @@
 import type { Pet } from "../firestore";
+import PetAvatar from "./PetAvatar";
 
 function Row({ label, value }: { label: string; value?: string }) {
   if (!value) return null;
@@ -13,7 +14,10 @@ function Row({ label, value }: { label: string; value?: string }) {
 export function ViewOnlyPet({ pet }: { pet: Pet }) {
   return (
     <div className="vo">
-      <h3 className="vo-title">Pet Profile</h3>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <PetAvatar photoUrl={pet.photoUrl} size={44} />
+        <h3 className="vo-title" style={{ margin: 0 }}>Pet Profile</h3>
+      </div>
       <div className="vo-card">
         <Row label="Name" value={pet.name} />
         <Row label="Species" value={pet.species} />
