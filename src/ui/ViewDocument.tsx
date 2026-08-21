@@ -201,6 +201,14 @@ export default function ViewDocument({
   const medicationsSupplements = visit.medicationsSupplements ?? "";
   const knownConditions = ((visit as any).knownConditions as string) ?? "";
   const recentTests = ((visit as any).recentTests as string) ?? "";
+  const notAnswered = tt("Not answered", "Ikke besvaret");
+  // Routine visits skip the Timeline/Patterns/Other details steps in the
+  // wizard entirely (see PrepareWizard), so those questions were never
+  // actually asked — show them only if there's real content, same as
+  // before. Every other wizard question always renders, with a "Not
+  // answered" fallback, so the vet can tell "asked, left blank" apart from
+  // "never asked."
+  const routineSkipsExtras = visit.urgency === "routine";
 
   return (
     <div className="stack">
@@ -250,7 +258,7 @@ export default function ViewDocument({
             </h3>
           </div>
           <p style={{ margin: 0, fontSize: 19, fontWeight: 700, lineHeight: "1.5", color: "var(--text)" }}>
-            {visit.mainConcern || tt("(Not provided)", "(Ikke angivet)")}
+            {visit.mainConcern || notAnswered}
           </p>
           {(visit.urgency || visit.durationValue || visit.trend) && (
             <div style={{ marginTop: 10 }}>
@@ -274,23 +282,23 @@ export default function ViewDocument({
         </div>
 
         {/* When Did It Start */}
-        {visit.whenStart && (
+        {(visit.whenStart || !routineSkipsExtras) && (
           <Section title={tt("When Did This Start?", "Hvornår startede det?")} icon="📅">
-            {visit.whenStart}
+            {visit.whenStart || notAnswered}
           </Section>
         )}
 
         {/* How Is It Progressing */}
-        {visit.howProgressing && (
+        {(visit.howProgressing || !routineSkipsExtras) && (
           <Section title={tt("How Is It Progressing?", "Hvordan udvikler det sig?")} icon="📈">
-            {visit.howProgressing}
+            {visit.howProgressing || notAnswered}
           </Section>
         )}
 
         {/* Patterns */}
-        {visit.patterns && (
+        {(visit.patterns || !routineSkipsExtras) && (
           <Section title={tt("Patterns or Triggers", "Mønstre eller udløsende faktorer")} icon="🔁">
-            {visit.patterns}
+            {visit.patterns || notAnswered}
           </Section>
         )}
 
@@ -318,46 +326,36 @@ export default function ViewDocument({
         )}
 
         {/* Other Details */}
-        {visit.otherDetails && (
+        {(visit.otherDetails || !routineSkipsExtras) && (
           <Section title={tt("Other Details", "Andre detaljer")} icon="📝">
-            {visit.otherDetails}
+            {visit.otherDetails || notAnswered}
           </Section>
         )}
 
         {/* Medications / Supplements */}
-        {medicationsSupplements && (
-          <Section title={tt("Meds / Supplements", "Medicin / Tilskud")} icon="💊">
-            {medicationsSupplements}
-          </Section>
-        )}
+        <Section title={tt("Meds / Supplements", "Medicin / Tilskud")} icon="💊">
+          {medicationsSupplements || notAnswered}
+        </Section>
 
         {/* Known Conditions */}
-        {knownConditions && (
-          <Section title={tt("Known Conditions (Vet-Diagnosed)", "Kendte tilstande (dyrlæge-diagnosticeret)")} icon="🏥">
-            {knownConditions}
-          </Section>
-        )}
+        <Section title={tt("Known Conditions (Vet-Diagnosed)", "Kendte tilstande (dyrlæge-diagnosticeret)")} icon="🏥">
+          {knownConditions || notAnswered}
+        </Section>
 
         {/* Recent Tests */}
-        {recentTests && (
-          <Section title={tt("Recent Tests / Results", "Nylige tests / resultater")} icon="🧪">
-            {recentTests}
-          </Section>
-        )}
+        <Section title={tt("Recent Tests / Results", "Nylige tests / resultater")} icon="🧪">
+          {recentTests || notAnswered}
+        </Section>
 
         {/* Previous Treatment */}
-        {visit.previousTreatment && (
-          <Section title={tt("Previous Treatment", "Tidligere behandling")} icon="📋">
-            {visit.previousTreatment}
-          </Section>
-        )}
+        <Section title={tt("Previous Treatment", "Tidligere behandling")} icon="📋">
+          {visit.previousTreatment || notAnswered}
+        </Section>
 
         {/* Questions for Vet */}
-        {visit.questionsVet && (
-          <Section title={tt("Questions for Your Veterinarian", "Spørgsmål til din dyrlæge")} icon="❓">
-            {visit.questionsVet}
-          </Section>
-        )}
+        <Section title={tt("Questions for Your Veterinarian", "Spørgsmål til din dyrlæge")} icon="❓">
+          {visit.questionsVet || notAnswered}
+        </Section>
 
         {/* Patient Info (from the pet's profile) — reference material, placed after the
             clinical story so it doesn't push today's history below the fold. */}

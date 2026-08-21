@@ -10,6 +10,7 @@ import type {
   PetPreventativeItem
 } from "../firestore";
 import { addPet, deletePet, getUserPets, updatePet, getUserVisits, getVisitNote } from "../firestore";
+import { indoorOutdoorLabel } from "../utils/petInfo";
 import { ViewOnlyPet } from "./ViewOnlyPet";
 import ViewDocument from "./ViewDocument";
 import PrepareWizard from "./PrepareWizard";
@@ -497,6 +498,22 @@ export default function PetsScreen({
                             : "Neutered / Spayed / Not neutered / Not sure"
                         }
                       />
+                    </label>
+
+                    <label className="label">
+                      {lang === "da" ? "Indendørs/udendørs (valgfrit)" : "Indoor/outdoor (optional)"}
+                      <div className="row rowWrap" style={{ gap: 6, marginTop: 6 }}>
+                        {(["indoor", "outdoor", "both"] as const).map((v) => (
+                          <button
+                            key={v}
+                            type="button"
+                            className={`btn btnChip ${editing.indoorOutdoor === v ? "btnPrimary" : "btnSecondary"}`}
+                            onClick={() => setEditing({ ...editing, indoorOutdoor: v })}
+                          >
+                            {indoorOutdoorLabel(v, lang)}
+                          </button>
+                        ))}
+                      </div>
                     </label>
                   </div>
                 </Section>

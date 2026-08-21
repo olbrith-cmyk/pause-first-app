@@ -94,7 +94,8 @@ export interface Pet {
   preventatives?: string;
 
   surgeries?: string;
-  lifestyle?: string; // indoor/outdoor, other animals, travel, etc.
+  indoorOutdoor?: "indoor" | "outdoor" | "both"; // structured, feeds Patient Info
+  lifestyle?: string; // other animals, travel, etc. (indoor/outdoor now its own field above)
 
   updatedAt?: Timestamp;
   createdAt?: Timestamp;

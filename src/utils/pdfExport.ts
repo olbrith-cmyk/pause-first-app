@@ -52,6 +52,11 @@ function buildShareText(params: { visit: Visit; pet: Pet; note: VisitNote | null
   const medicationsSupplements = visit.medicationsSupplements ?? "";
   const knownConditions = ((visit as any).knownConditions as string) ?? "";
   const recentTests = ((visit as any).recentTests as string) ?? "";
+  const notAnswered = lang === "da" ? "Ikke besvaret" : "Not answered";
+  // Keep in sync with ViewDocument.tsx: routine visits skip the
+  // Timeline/Patterns/Other details wizard steps entirely, so those
+  // questions were never asked and stay omitted rather than "Not answered".
+  const routineSkipsExtras = visit.urgency === "routine";
 
   const visitDateParsed = visit.visitDate ? new Date(visit.visitDate) : null;
   const signalmentAsOf = visitDateParsed && !Number.isNaN(visitDateParsed.getTime()) ? visitDateParsed : new Date();
@@ -65,14 +70,15 @@ function buildShareText(params: { visit: Visit; pet: Pet; note: VisitNote | null
     lines.push(`Dato: ${visit.visitDate || "(ingen dato)"}`);
 
     lines.push("");
-    lines.push(`Hovedbekymring: ${visit.mainConcern || "(ikke angivet)"}`);
+    lines.push(`Hovedbekymring: ${visit.mainConcern || notAnswered}`);
     if (visit.urgency) lines.push(`Bekymringsniveau: ${urgencyIcon(visit.urgency)} ${urgencyLabel(visit.urgency, lang)}`);
     const duration = formatDuration(visit.durationValue, visit.durationUnit, lang);
     if (duration) lines.push(`Varighed: ${duration}`);
     if (visit.trend) lines.push(`Udvikling: ${trendLabel(visit.trend, lang)}`);
-    if (visit.whenStart) lines.push(`Hvornår startede det: ${visit.whenStart}`);
-    if (visit.howProgressing) lines.push(`Hvordan udvikler det sig: ${visit.howProgressing}`);
-    if (visit.patterns) lines.push(`Mønstre/triggere: ${visit.patterns}`);
+    if (visit.whenStart || !routineSkipsExtras) lines.push(`Hvornår startede det: ${visit.whenStart || notAnswered}`);
+    if (visit.howProgressing || !routineSkipsExtras)
+      lines.push(`Hvordan udvikler det sig: ${visit.howProgressing || notAnswered}`);
+    if (visit.patterns || !routineSkipsExtras) lines.push(`Mønstre/triggere: ${visit.patterns || notAnswered}`);
     if (visit.associatedSigns) lines.push(`Tilknyttede tegn: ${visit.associatedSigns}`);
 
     const statusLines = currentStatusLines(visit.currentStatus, lang);
@@ -82,12 +88,12 @@ function buildShareText(params: { visit: Visit; pet: Pet; note: VisitNote | null
       lines.push(...statusLines);
     }
 
-    if (visit.otherDetails) lines.push(`Andre detaljer: ${visit.otherDetails}`);
-    if (medicationsSupplements) lines.push(`Medicin/tilskud: ${medicationsSupplements}`);
-    if (knownConditions) lines.push(`Kendte tilstande (diagnosticeret): ${knownConditions}`);
-    if (recentTests) lines.push(`Nylige tests/resultater: ${recentTests}`);
-    if (visit.previousTreatment) lines.push(`Tidligere behandling: ${visit.previousTreatment}`);
-    if (visit.questionsVet) lines.push(`Spørgsmål til dyrlægen: ${visit.questionsVet}`);
+    if (visit.otherDetails || !routineSkipsExtras) lines.push(`Andre detaljer: ${visit.otherDetails || notAnswered}`);
+    lines.push(`Medicin/tilskud: ${medicationsSupplements || notAnswered}`);
+    lines.push(`Kendte tilstande (diagnosticeret): ${knownConditions || notAnswered}`);
+    lines.push(`Nylige tests/resultater: ${recentTests || notAnswered}`);
+    lines.push(`Tidligere behandling: ${visit.previousTreatment || notAnswered}`);
+    lines.push(`Spørgsmål til dyrlægen: ${visit.questionsVet || notAnswered}`);
 
     const patientLines = patientInfoLines(pet, lang);
     if (patientLines.length) {
@@ -115,14 +121,15 @@ function buildShareText(params: { visit: Visit; pet: Pet; note: VisitNote | null
     lines.push(`Date: ${visit.visitDate || "(no date)"}`);
 
     lines.push("");
-    lines.push(`Main concern: ${visit.mainConcern || "(not provided)"}`);
+    lines.push(`Main concern: ${visit.mainConcern || notAnswered}`);
     if (visit.urgency) lines.push(`Urgency: ${urgencyIcon(visit.urgency)} ${urgencyLabel(visit.urgency, lang)}`);
     const duration = formatDuration(visit.durationValue, visit.durationUnit, lang);
     if (duration) lines.push(`Duration: ${duration}`);
     if (visit.trend) lines.push(`Trend: ${trendLabel(visit.trend, lang)}`);
-    if (visit.whenStart) lines.push(`When did this start: ${visit.whenStart}`);
-    if (visit.howProgressing) lines.push(`How is it progressing: ${visit.howProgressing}`);
-    if (visit.patterns) lines.push(`Patterns/triggers: ${visit.patterns}`);
+    if (visit.whenStart || !routineSkipsExtras) lines.push(`When did this start: ${visit.whenStart || notAnswered}`);
+    if (visit.howProgressing || !routineSkipsExtras)
+      lines.push(`How is it progressing: ${visit.howProgressing || notAnswered}`);
+    if (visit.patterns || !routineSkipsExtras) lines.push(`Patterns/triggers: ${visit.patterns || notAnswered}`);
     if (visit.associatedSigns) lines.push(`Associated signs: ${visit.associatedSigns}`);
 
     const statusLines = currentStatusLines(visit.currentStatus, lang);
@@ -132,12 +139,12 @@ function buildShareText(params: { visit: Visit; pet: Pet; note: VisitNote | null
       lines.push(...statusLines);
     }
 
-    if (visit.otherDetails) lines.push(`Other details: ${visit.otherDetails}`);
-    if (medicationsSupplements) lines.push(`Meds/supplements: ${medicationsSupplements}`);
-    if (knownConditions) lines.push(`Known conditions (vet-diagnosed): ${knownConditions}`);
-    if (recentTests) lines.push(`Recent tests/results: ${recentTests}`);
-    if (visit.previousTreatment) lines.push(`Previous treatment: ${visit.previousTreatment}`);
-    if (visit.questionsVet) lines.push(`Questions for the vet: ${visit.questionsVet}`);
+    if (visit.otherDetails || !routineSkipsExtras) lines.push(`Other details: ${visit.otherDetails || notAnswered}`);
+    lines.push(`Meds/supplements: ${medicationsSupplements || notAnswered}`);
+    lines.push(`Known conditions (vet-diagnosed): ${knownConditions || notAnswered}`);
+    lines.push(`Recent tests/results: ${recentTests || notAnswered}`);
+    lines.push(`Previous treatment: ${visit.previousTreatment || notAnswered}`);
+    lines.push(`Questions for the vet: ${visit.questionsVet || notAnswered}`);
 
     const patientLines = patientInfoLines(pet, lang);
     if (patientLines.length) {

@@ -43,7 +43,8 @@ export async function seedDemoData(userId: string, lang: Lang): Promise<void> {
     emergencyContact: "",
     notes: "",
     surgeries: "",
-    lifestyle: isDa ? "Indendørs/udendørs, ingen andre dyr i hjemmet" : "Indoor/outdoor, no other pets at home"
+    indoorOutdoor: "both",
+    lifestyle: isDa ? "Ingen andre dyr i hjemmet" : "No other pets at home"
   };
 
   const petRef = await addPet(pet);
