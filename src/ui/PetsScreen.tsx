@@ -333,6 +333,10 @@ export default function PetsScreen({
             {/* VIEW MODE */}
             {mode === "view" && selected && !viewingVisit && (
               <>
+                <button className="btn btnSecondary btnSmall" style={{ marginBottom: 12 }} onClick={cancel}>
+                  ← {lang === "da" ? "Tilbage til Mine dyr" : "Back to My animals"}
+                </button>
+
                 <ViewOnlyPet pet={selected} />
 
                 <div className="row" style={{ marginTop: 12 }}>

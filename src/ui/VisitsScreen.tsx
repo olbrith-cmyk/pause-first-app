@@ -212,6 +212,12 @@ useEffect(() => {
     }
   };
 
+  const closeOpenVisit = () => {
+    setOpenVisitId(null);
+    onOpenVisitChange?.(null);
+    setOpenNote(null);
+  };
+
   const loadNoteForVisit = async (visitId: string) => {
     setNoteVisitId(visitId);
     try {
@@ -435,6 +441,14 @@ const handleDeleteVisit = async (visitId: string) => {
 
           {openVisit && (
             <div className="panel">
+                <button
+                  className="btn btnSecondary btnSmall"
+                  style={{ marginBottom: 12 }}
+                  onClick={closeOpenVisit}
+                >
+                  ← {lang === "da" ? "Tilbage til Mine besøg" : "Back to My visits"}
+                </button>
+
                 <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
   <button
     className="btn btnSecondary btnSmall"
