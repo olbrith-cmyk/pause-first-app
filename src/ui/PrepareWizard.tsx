@@ -661,13 +661,18 @@ export default function PrepareWizard({
                   ? "Antaget: appetit, energi, vejrtrækning m.m. er som normalt."
                   : "Assumed: appetite, energy, breathing, etc. are all as usual."}
               </div>
-              <button
-                type="button"
-                className="btn btnChip btnSecondary"
-                onClick={() => setStatusExpanded(true)}
-              >
-                {lang === "da" ? "Nej, noget er anderledes" : "No, something's different"}
-              </button>
+              <div className="row rowWrap" style={{ gap: 6 }}>
+                <button type="button" className="btn btnChip btnPrimary" onClick={handleNext}>
+                  {lang === "da" ? "Ja, fortsæt" : "Yes, continue"}
+                </button>
+                <button
+                  type="button"
+                  className="btn btnChip btnSecondary"
+                  onClick={() => setStatusExpanded(true)}
+                >
+                  {lang === "da" ? "Nej, noget er anderledes" : "No, something's different"}
+                </button>
+              </div>
             </div>
           );
         }
