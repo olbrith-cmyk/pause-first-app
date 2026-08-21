@@ -63,6 +63,10 @@ export default function PrepareWizard({
   // behind a single "is everything normal?" question — set true once the
   // owner says something's different, so the full checklist stays open.
   const [statusExpanded, setStatusExpanded] = useState(false);
+  // Meds/known conditions/recent tests/tried-at-home start collapsed behind
+  // a single "anything to mention?" question, for every visit (not just
+  // routine) — most visits have nothing to report here.
+  const [medsExpanded, setMedsExpanded] = useState(false);
 
   const [visitId, setVisitId] = useState<string | null>(null);
   const didInit = useRef(false);
@@ -747,7 +751,36 @@ export default function PrepareWizard({
           </>
         );
 
-      case 6:
+      case 6: {
+        const medicationsSupplementsVal = ((draft as any).medicationsSupplements as string) ?? "";
+        const knownConditionsVal = ((draft as any).knownConditions as string) ?? "";
+        const recentTestsVal = ((draft as any).recentTests as string) ?? "";
+        const hasMedsData =
+          !!medicationsSupplementsVal.trim() ||
+          !!knownConditionsVal.trim() ||
+          !!recentTestsVal.trim() ||
+          !!draft.previousTreatment?.trim();
+
+        if (!medsExpanded && !hasMedsData) {
+          return (
+            <div className="calloutBox calloutBoxCompact" style={{ marginTop: 0 }}>
+              <div style={{ fontWeight: 700, fontSize: 13, color: "var(--blue)", marginBottom: 8 }}>
+                {lang === "da"
+                  ? "Er der medicin, kendte tilstande, tests eller ting du har prøvet hjemme, du vil nævne?"
+                  : "Any meds, known conditions, recent tests, or things tried at home to mention?"}
+              </div>
+              <div className="row rowWrap" style={{ gap: 6 }}>
+                <button type="button" className="btn btnChip btnPrimary" onClick={handleNext}>
+                  {lang === "da" ? "Nej, intet at nævne" : "No, nothing to mention"}
+                </button>
+                <button type="button" className="btn btnChip btnSecondary" onClick={() => setMedsExpanded(true)}>
+                  {lang === "da" ? "Ja, tilføj detaljer" : "Yes, add details"}
+                </button>
+              </div>
+            </div>
+          );
+        }
+
         return (
           <>
             <div className="muted" style={{ marginBottom: 8 }}>
@@ -832,6 +865,7 @@ export default function PrepareWizard({
             </label>
           </>
         );
+      }
 
       case 7:
         return (
