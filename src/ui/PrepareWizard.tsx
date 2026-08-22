@@ -273,61 +273,73 @@ export default function PrepareWizard({
   const handleNext = () => {
     if (!stepData[step].ok) return;
 
-    // Current Status (case 4) stacks 8 status cards + a final notes field —
-    // too tall to fit on one screen. Reveal it one card at a time instead of
-    // jumping straight to the next wizard step, so tapping Next walks
-    // Appetite → Drinking → Energy → ... one at a time, the same as if notes
-    // had been typed in each, rather than scrolling straight past everything
-    // to the last card and out of the step entirely. Other steps keep the
-    // simpler "scroll remainder into view, then advance" behavior below.
-    const body = modalBodyRef.current;
-    const content = stepContentRef.current;
-    if (body && content && caseIndices[step] === 4) {
-      const bodyRect = body.getBoundingClientRect();
-      const children = Array.from(content.children) as HTMLElement[];
-      const nextHidden = children.find(
-        (el) => el.getBoundingClientRect().bottom - bodyRect.bottom > 4
-      );
-      const gateCount = scrollGateCount.current[step] ?? 0;
+    // If a notes field is focused, the on-screen keyboard is covering part
+    // of the screen and may have scrolled things into a transient position
+    // (mobile browsers auto-scroll a focused field into view). Blur it and
+    // wait a frame for that to settle before measuring what's actually
+    // visible below — otherwise the scroll-gate math below can be based on
+    // stale geometry and overshoot by several cards instead of one.
+    const active = document.activeElement as HTMLElement | null;
+    if (active && active !== document.body) active.blur();
 
-      if (nextHidden && gateCount < children.length) {
-        scrollGateCount.current[step] = gateCount + 1;
-        const hiddenBelow = nextHidden.getBoundingClientRect().bottom - bodyRect.bottom;
-        // "auto" (not "smooth") — smooth scrollTo is unreliable inside a
-        // -webkit-overflow-scrolling: touch container on iOS Safari, where
-        // it can silently fail to scroll at all.
-        body.scrollTo({ top: body.scrollTop + hiddenBelow + 24, behavior: "auto" });
-        return;
+    requestAnimationFrame(() => {
+      // Current Status (case 4) stacks 8 status cards + a final notes field —
+      // too tall to fit on one screen. Reveal it one card at a time instead
+      // of jumping straight to the next wizard step, so tapping Next walks
+      // Appetite → Drinking → Energy → ... one at a time, the same as if
+      // notes had been typed in each, rather than scrolling straight past
+      // everything to the last card and out of the step entirely. Other
+      // steps keep the simpler "scroll remainder into view" behavior below.
+      const body = modalBodyRef.current;
+      const content = stepContentRef.current;
+      if (body && content && caseIndices[step] === 4) {
+        const bodyRect = body.getBoundingClientRect();
+        const children = Array.from(content.children) as HTMLElement[];
+        const nextHidden = children.find(
+          (el) => el.getBoundingClientRect().bottom - bodyRect.bottom > 4
+        );
+        const gateCount = scrollGateCount.current[step] ?? 0;
+
+        if (nextHidden && gateCount < children.length) {
+          scrollGateCount.current[step] = gateCount + 1;
+          // Native scrollIntoView (not a hand-computed offset) so it's
+          // always correct against the current, settled layout.
+          nextHidden.scrollIntoView({ behavior: "auto", block: "end" });
+          return;
+        }
       }
-    }
 
-    // All other steps: if there's more below the fold, scroll it into view
-    // once instead of jumping straight to the next step, so nothing gets
-    // skipped just because it wasn't visible yet. Only gate once per step so
-    // a flaky visibility measurement can never block Next from working
-    // entirely — worst case is one extra tap, not a stuck wizard.
-    if (
-      body &&
-      content &&
-      content.lastElementChild &&
-      caseIndices[step] !== 4 &&
-      scrollGateCount.current[step] === undefined
-    ) {
-      const bodyRect = body.getBoundingClientRect();
-      const lastRect = content.lastElementChild.getBoundingClientRect();
-      const hiddenBelow = lastRect.bottom - bodyRect.bottom;
-      if (hiddenBelow > 4) {
-        scrollGateCount.current[step] = 1;
-        body.scrollTo({ top: body.scrollTop + hiddenBelow + 24, behavior: "auto" });
-        return;
+      // All other steps: if there's more below the fold, scroll it into
+      // view once instead of jumping straight to the next step, so nothing
+      // gets skipped just because it wasn't visible yet. Only gate once per
+      // step so a flaky visibility measurement can never block Next from
+      // working entirely — worst case is one extra tap, not a stuck wizard.
+      if (
+        body &&
+        content &&
+        content.lastElementChild &&
+        caseIndices[step] !== 4 &&
+        scrollGateCount.current[step] === undefined
+      ) {
+        const bodyRect = body.getBoundingClientRect();
+        const lastRect = (content.lastElementChild as HTMLElement).getBoundingClientRect();
+        const hiddenBelow = lastRect.bottom - bodyRect.bottom;
+        if (hiddenBelow > 4) {
+          scrollGateCount.current[step] = 1;
+          (content.lastElementChild as HTMLElement).scrollIntoView({
+            behavior: "auto",
+            block: "end"
+          });
+          return;
+        }
       }
-    }
 
-    if (isLastWizardStep) {
-      setMode("preview");
-    } else {
-      setStep((s) => s + 1);
-    }
+      if (isLastWizardStep) {
+        setMode("preview");
+      } else {
+        setStep((s) => s + 1);
+      }
+    });
   };
 
   const handleBack = () => {
