@@ -378,7 +378,7 @@ const handleDeleteVisit = async (visitId: string) => {
         return (
           <button
             key={v.id}
-            className="itemCard"
+            className="itemCard itemCardDraft"
             onClick={() => openVisitCard(v.id!)}   // ✅ open details screen (not wizard)
             style={{ cursor: "pointer", textAlign: "left" }}
           >
@@ -428,7 +428,7 @@ const handleDeleteVisit = async (visitId: string) => {
       return (
         <button
           key={v.id}
-          className="itemCard"
+          className="itemCard itemCardFinal"
           onClick={() => openVisitCard(v.id!)}
           style={{ cursor: "pointer", textAlign: "left" }}
         >
