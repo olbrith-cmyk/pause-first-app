@@ -424,7 +424,6 @@ export default function PrepareWizard({
           {lang === "da" ? "Noter (valgfrit)" : "Notes (optional)"}
           <textarea
             className="textarea"
-            enterKeyHint="next"
             value={notesValue}
             onChange={(e) => {
               setDraft({
@@ -503,7 +502,6 @@ export default function PrepareWizard({
               {lang === "da" ? "Hovedbekymring" : "Main concern"}
               <textarea
                 className="textarea"
-                enterKeyHint="next"
                 value={draft.mainConcern}
                 onChange={(e) => setDraft({ ...draft, mainConcern: e.target.value })}
                 placeholder={
@@ -523,7 +521,6 @@ export default function PrepareWizard({
                   {lang === "da" ? "Hvordan påvirker det hverdagen?" : "How is this affecting normal life?"}
                   <textarea
                     className="textarea"
-                    enterKeyHint="next"
                     value={draft.functionalImpact ?? ""}
                     onChange={(e) => setDraft({ ...draft, functionalImpact: e.target.value })}
                     placeholder={
@@ -596,7 +593,6 @@ export default function PrepareWizard({
               {lang === "da" ? "Hvornår lagde du først mærke til det?" : "When did you first notice this?"}
               <textarea
                 className="textarea"
-                enterKeyHint="next"
                 value={draft.whenStart}
                 onChange={(e) => setDraft({ ...draft, whenStart: e.target.value })}
                 placeholder={
@@ -614,7 +610,6 @@ export default function PrepareWizard({
               {lang === "da" ? "Hvordan har det ændret sig siden da?" : "How has it changed since then?"}
               <textarea
                 className="textarea"
-                enterKeyHint="next"
                 value={draft.howProgressing}
                 onChange={(e) => setDraft({ ...draft, howProgressing: e.target.value })}
                 placeholder={
@@ -634,7 +629,6 @@ export default function PrepareWizard({
             {lang === "da" ? "Mønstre & triggere" : "Patterns & triggers"}
             <textarea
               className="textarea"
-              enterKeyHint="next"
               value={draft.patterns}
               onChange={(e) => setDraft({ ...draft, patterns: e.target.value })}
               placeholder={
@@ -728,7 +722,6 @@ export default function PrepareWizard({
               {lang === "da" ? "Andre ændringer / noter (valgfrit)" : "Other changes / notes (optional)"}
               <textarea
                 className="textarea"
-                enterKeyHint="next"
                 value={(draft.currentStatus?.otherNotes as string) ?? ""}
                 onChange={(e) => {
                   const cs = draft.currentStatus ?? makeEmptyStatus();
@@ -755,7 +748,6 @@ export default function PrepareWizard({
               {lang === "da" ? "Andre detaljer (fakta til dyrlægen)" : "Other details (facts for the vet)"}
               <textarea
                 className="textarea"
-                enterKeyHint="next"
                 value={draft.otherDetails ?? ""}
                 onChange={(e) => setDraft({ ...draft, otherDetails: e.target.value })}
                 placeholder={
@@ -820,7 +812,6 @@ export default function PrepareWizard({
               {lang === "da" ? "Medicin & tilskud" : "Meds & supplements"}
               <textarea
                 className="textarea"
-                enterKeyHint="next"
                 value={((draft as any).medicationsSupplements as string) ?? ""}
                 onChange={(e) => setDraft({ ...draft, medicationsSupplements: e.target.value } as any)}
                 placeholder={
@@ -861,7 +852,6 @@ export default function PrepareWizard({
               </div>
               <textarea
                 className="textarea"
-                enterKeyHint="next"
                 value={((draft as any).recentTests as string) ?? ""}
                 onChange={(e) => setDraft({ ...draft, recentTests: e.target.value } as any)}
                 placeholder={
@@ -883,7 +873,6 @@ export default function PrepareWizard({
               {lang === "da" ? "Hvad har du prøvet allerede?" : "What have you tried already?"}
               <textarea
                 className="textarea"
-                enterKeyHint="next"
                 value={draft.previousTreatment}
                 onChange={(e) => setDraft({ ...draft, previousTreatment: e.target.value })}
                 placeholder={lang === "da" ? "F.eks. ro, diætændring, skånekost, hvile, varme/kulde..." : "E.g., rest, diet change, bland diet, heat/cold..."}
@@ -905,7 +894,6 @@ export default function PrepareWizard({
             </div>
             <textarea
               className="textarea"
-              enterKeyHint="next"
               value={draft.questionsVet}
               onChange={(e) => setDraft({ ...draft, questionsVet: e.target.value })}
               placeholder={
@@ -974,8 +962,15 @@ export default function PrepareWizard({
                 onKeyDown={(e) => {
                   if (e.key !== "Enter" || e.shiftKey) return;
 
+                  // Only single-line <input> fields auto-advance on Enter.
+                  // <textarea> fields (notes, free text) must let Enter insert
+                  // a normal newline — otherwise typing a multi-line note (e.g.
+                  // hitting Enter between points) silently bumps focus into the
+                  // next field on every keystroke, which on the Current Status
+                  // step (8 stacked textareas) can walk focus several fields
+                  // forward without the person noticing.
                   const target = e.target as HTMLElement;
-                  if (target.tagName !== "INPUT" && target.tagName !== "TEXTAREA") return;
+                  if (target.tagName !== "INPUT") return;
 
                   e.preventDefault();
 
