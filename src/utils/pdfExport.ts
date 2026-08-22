@@ -57,6 +57,12 @@ function buildShareText(params: { visit: Visit; pet: Pet; note: VisitNote | null
   // Timeline/Patterns/Other details wizard steps entirely, so those
   // questions were never asked and stay omitted rather than "Not answered".
   const routineSkipsExtras = visit.urgency === "routine";
+  // Same as ViewDocument.tsx: a fully-blank meds/conditions/tests/tried
+  // group on a routine visit means the owner explicitly declined the
+  // "anything to mention?" gate, not that it went unanswered — omit rather
+  // than show "Not answered" four times.
+  const medsGroupAllBlank = !medicationsSupplements && !knownConditions && !recentTests && !visit.previousTreatment;
+  const medsGroupDeclined = routineSkipsExtras && medsGroupAllBlank;
 
   const visitDateParsed = visit.visitDate ? new Date(visit.visitDate) : null;
   const signalmentAsOf = visitDateParsed && !Number.isNaN(visitDateParsed.getTime()) ? visitDateParsed : new Date();
@@ -91,10 +97,12 @@ function buildShareText(params: { visit: Visit; pet: Pet; note: VisitNote | null
     }
 
     if (visit.otherDetails || !routineSkipsExtras) lines.push(`Andre detaljer: ${visit.otherDetails || notAnswered}`);
-    lines.push(`Medicin/tilskud: ${medicationsSupplements || notAnswered}`);
-    lines.push(`Kendte tilstande (diagnosticeret): ${knownConditions || notAnswered}`);
-    lines.push(`Nylige tests/resultater: ${recentTests || notAnswered}`);
-    lines.push(`Tidligere behandling: ${visit.previousTreatment || notAnswered}`);
+    if (!medsGroupDeclined) {
+      lines.push(`Medicin/tilskud: ${medicationsSupplements || notAnswered}`);
+      lines.push(`Kendte tilstande (diagnosticeret): ${knownConditions || notAnswered}`);
+      lines.push(`Nylige tests/resultater: ${recentTests || notAnswered}`);
+      lines.push(`Tidligere behandling: ${visit.previousTreatment || notAnswered}`);
+    }
     lines.push(`Spørgsmål til dyrlægen: ${visit.questionsVet || notAnswered}`);
 
     const patientLines = patientInfoLines(pet, lang);
@@ -144,10 +152,12 @@ function buildShareText(params: { visit: Visit; pet: Pet; note: VisitNote | null
     }
 
     if (visit.otherDetails || !routineSkipsExtras) lines.push(`Other details: ${visit.otherDetails || notAnswered}`);
-    lines.push(`Meds/supplements: ${medicationsSupplements || notAnswered}`);
-    lines.push(`Known conditions (vet-diagnosed): ${knownConditions || notAnswered}`);
-    lines.push(`Recent tests/results: ${recentTests || notAnswered}`);
-    lines.push(`Previous treatment: ${visit.previousTreatment || notAnswered}`);
+    if (!medsGroupDeclined) {
+      lines.push(`Meds/supplements: ${medicationsSupplements || notAnswered}`);
+      lines.push(`Known conditions (vet-diagnosed): ${knownConditions || notAnswered}`);
+      lines.push(`Recent tests/results: ${recentTests || notAnswered}`);
+      lines.push(`Previous treatment: ${visit.previousTreatment || notAnswered}`);
+    }
     lines.push(`Questions for the vet: ${visit.questionsVet || notAnswered}`);
 
     const patientLines = patientInfoLines(pet, lang);

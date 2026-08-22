@@ -210,6 +210,18 @@ export default function ViewDocument({
   // "never asked."
   const routineSkipsExtras = visit.urgency === "routine";
 
+  // The meds/conditions/tests/tried-at-home step is collapsed behind a
+  // "anything to mention?" gate (see PrepareWizard). If every one of those
+  // fields is blank on a routine visit, that's virtually always because the
+  // owner explicitly answered "No, nothing to mention" — not because the
+  // question went unasked or was left blank. Showing "Not answered" four
+  // times over would misrepresent an explicit "no" as unanswered, so treat
+  // a fully-blank group on a routine visit as declined and omit it, the
+  // same way the skipped Timeline/Patterns/Other details steps are omitted.
+  // A partially-filled group still gets the normal per-field fallback.
+  const medsGroupAllBlank = !medicationsSupplements && !knownConditions && !recentTests && !visit.previousTreatment;
+  const medsGroupDeclined = routineSkipsExtras && medsGroupAllBlank;
+
   return (
     <div className="stack">
       {!hideTitle && <h3>{t.viewDocument}</h3>}
@@ -342,25 +354,29 @@ export default function ViewDocument({
           </Section>
         )}
 
-        {/* Medications / Supplements */}
-        <Section title={tt("Meds / Supplements", "Medicin / Tilskud")} icon="💊">
-          {medicationsSupplements || notAnswered}
-        </Section>
+        {!medsGroupDeclined && (
+          <>
+            {/* Medications / Supplements */}
+            <Section title={tt("Meds / Supplements", "Medicin / Tilskud")} icon="💊">
+              {medicationsSupplements || notAnswered}
+            </Section>
 
-        {/* Known Conditions */}
-        <Section title={tt("Known Conditions (Vet-Diagnosed)", "Kendte tilstande (dyrlæge-diagnosticeret)")} icon="🏥">
-          {knownConditions || notAnswered}
-        </Section>
+            {/* Known Conditions */}
+            <Section title={tt("Known Conditions (Vet-Diagnosed)", "Kendte tilstande (dyrlæge-diagnosticeret)")} icon="🏥">
+              {knownConditions || notAnswered}
+            </Section>
 
-        {/* Recent Tests */}
-        <Section title={tt("Recent Tests / Results", "Nylige tests / resultater")} icon="🧪">
-          {recentTests || notAnswered}
-        </Section>
+            {/* Recent Tests */}
+            <Section title={tt("Recent Tests / Results", "Nylige tests / resultater")} icon="🧪">
+              {recentTests || notAnswered}
+            </Section>
 
-        {/* Previous Treatment */}
-        <Section title={tt("Previous Treatment", "Tidligere behandling")} icon="📋">
-          {visit.previousTreatment || notAnswered}
-        </Section>
+            {/* Previous Treatment */}
+            <Section title={tt("Previous Treatment", "Tidligere behandling")} icon="📋">
+              {visit.previousTreatment || notAnswered}
+            </Section>
+          </>
+        )}
 
         {/* Questions for Vet */}
         <Section title={tt("Questions for Your Veterinarian", "Spørgsmål til din dyrlæge")} icon="❓">
