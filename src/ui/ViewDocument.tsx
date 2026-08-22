@@ -211,16 +211,14 @@ export default function ViewDocument({
   const routineSkipsExtras = visit.urgency === "routine";
 
   // The meds/conditions/tests/tried-at-home step is collapsed behind a
-  // "anything to mention?" gate (see PrepareWizard). If every one of those
-  // fields is blank on a routine visit, that's virtually always because the
+  // "anything to mention?" gate for every visit (see PrepareWizard). If
+  // every one of those fields is blank, that's virtually always because the
   // owner explicitly answered "No, nothing to mention" — not because the
-  // question went unasked or was left blank. Showing "Not answered" four
-  // times over would misrepresent an explicit "no" as unanswered, so treat
-  // a fully-blank group on a routine visit as declined and omit it, the
-  // same way the skipped Timeline/Patterns/Other details steps are omitted.
-  // A partially-filled group still gets the normal per-field fallback.
+  // question went unasked or was left blank — so show one clear "Nothing to
+  // mention" line instead of "Not answered" four times over, which would
+  // misrepresent an explicit "no" as unanswered. A partially-filled group
+  // still gets the normal per-field fallback for whichever ones are blank.
   const medsGroupAllBlank = !medicationsSupplements && !knownConditions && !recentTests && !visit.previousTreatment;
-  const medsGroupDeclined = routineSkipsExtras && medsGroupAllBlank;
 
   return (
     <div className="stack">
@@ -354,7 +352,11 @@ export default function ViewDocument({
           </Section>
         )}
 
-        {!medsGroupDeclined && (
+        {medsGroupAllBlank ? (
+          <Section title={tt("Meds, Conditions, Tests & Tried", "Medicin, tilstande, tests & prøvet")} icon="💊">
+            {tt("Nothing to mention", "Intet at nævne")}
+          </Section>
+        ) : (
           <>
             {/* Medications / Supplements */}
             <Section title={tt("Meds / Supplements", "Medicin / Tilskud")} icon="💊">
