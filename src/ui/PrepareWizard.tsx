@@ -362,6 +362,13 @@ export default function PrepareWizard({
     setSaving(true);
     try {
       await updateVisit(visitId, { ...draft, status: "final" });
+      // Keep local state in sync with what was just written — the done
+      // screen's ✕ button goes through handleSaveDraftAndClose, which
+      // decides whether to preserve "final" based on draft.status. Without
+      // this, a freshly-finalized visit would still read "draft" locally
+      // (status here was never final until the write above) and tapping ✕
+      // instead of "Done" would silently revert it.
+      setDraft((d) => ({ ...d, status: "final" }));
       // Don't call onComplete()/onNavigateAfterClose() here — in VisitsScreen
       // that closes (unmounts) this wizard, which would happen before the
       // "done" screen below ever gets a chance to render. The done screen's
