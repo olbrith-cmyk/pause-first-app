@@ -34,7 +34,7 @@ function currentStatusSummary(cs: CurrentStatus | undefined, lang: Lang) {
     const line = notes ? `${label}: ${notes}` : label;
     if (v === "changed") different.push(line);
     else if (v === "na") notSure.push(line);
-    else asUsual.push(label);
+    else asUsual.push(line);
   }
 
   const otherNotes = (cs.otherNotes ?? "").trim();

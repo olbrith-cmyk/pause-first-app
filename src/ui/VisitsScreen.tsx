@@ -633,12 +633,6 @@ const handleDeleteVisit = async (visitId: string) => {
               setSelectedPetForWizard(null);
               await load();
             }}
-            onComplete={async () => {
-              setShowWizard(false);
-              setEditingVisitId(null);
-              setSelectedPetForWizard(null);
-              await load();
-            }}
             onToast={showToast}
           />
         )}
@@ -824,13 +818,6 @@ const handleDeleteVisit = async (visitId: string) => {
           pet={selectedPetForWizard}
           visitId={editingVisitId ?? undefined}
           onClose={async () => {
-            setShowWizard(false);
-            setEditingVisitId(null);
-            setSelectedPetForWizard(null);
-            setShowChoosePetModal(false);
-            await load();
-          }}
-          onComplete={async () => {
             setShowWizard(false);
             setEditingVisitId(null);
             setSelectedPetForWizard(null);

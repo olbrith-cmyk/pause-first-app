@@ -20,7 +20,6 @@ type Props = {
   visitId?: string;
   mode?: "prepare";
   onClose: () => void;
-  onComplete?: () => void | Promise<void>;
   onNavigateAfterClose?: (target: "home" | "myVisits") => void;
   onToast?: (message: string) => void;
 };
@@ -48,7 +47,6 @@ export default function PrepareWizard({
   pet,
   visitId: visitIdProp,
   onClose,
-  onComplete,
   onNavigateAfterClose,
   onToast,
 }: Props) {
@@ -364,12 +362,16 @@ export default function PrepareWizard({
     setSaving(true);
     try {
       await updateVisit(visitId, { ...draft, status: "final" });
-      if (onComplete) await onComplete();
+      // Don't call onComplete()/onNavigateAfterClose() here — in VisitsScreen
+      // that closes (unmounts) this wizard, which would happen before the
+      // "done" screen below ever gets a chance to render. The done screen's
+      // own "Done" button (closeToMyVisits) is what actually closes the
+      // wizard and navigates away, once the person has seen it and had a
+      // chance to tap "Share with Vet".
       setMode("done");
-      setSaving(false);
-      onNavigateAfterClose?.("myVisits");
     } catch (e: any) {
       alert(t.error + ": " + (e?.message ?? String(e)));
+    } finally {
       setSaving(false);
     }
   };
@@ -398,13 +400,22 @@ export default function PrepareWizard({
 
     setSavingDraft(true);
     try {
-      await updateVisit(visitId, { ...draft, status: "draft" });
+      // Reopening an already-finished visit just to look at it, then tapping
+      // ✕ or "Save & close" instead of "Save visit", must not silently
+      // demote it back to draft — only fall back to "draft" if it somehow
+      // has no status yet (a genuinely new, still-in-progress visit).
+      const wasFinal = draft.status === "final";
+      await updateVisit(visitId, { ...draft, status: draft.status ?? "draft" });
       // FIX: removed setToast (local state was unused/broken after unmount);
       // toast is correctly dispatched to parent via onToast prop only
       onToast?.(
-        lang === "da"
-          ? "Kladde gemt. Du kan fortsætte under Mine besøg."
-          : "Draft saved. You can continue from My visits."
+        wasFinal
+          ? lang === "da"
+            ? "Gemt."
+            : "Saved."
+          : lang === "da"
+            ? "Kladde gemt. Du kan fortsætte under Mine besøg."
+            : "Draft saved. You can continue from My visits."
       );
       closeToMyVisits();
     } catch (e: any) {
@@ -803,7 +814,7 @@ export default function PrepareWizard({
             </label>
 
             <div className="muted" style={{ marginTop: 8 }}>
-              {lang === "da" ? "Tip: Du kan tilføje fotos/videoer i Preview." : "Tip: You can attach photos/videos in Preview."}
+              {lang === "da" ? "Tip: Du kan tilføje fotos/videoer under Gennemse." : "Tip: You can attach photos/videos in Preview."}
             </div>
           </>
         );
