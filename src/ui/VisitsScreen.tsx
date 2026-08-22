@@ -362,7 +362,7 @@ const handleDeleteVisit = async (visitId: string) => {
     </div>
 
     <div className="stack">
-      {draftVisits.slice(0, 3).map((v) => {
+      {draftVisits.map((v) => {
         const pet = pets.find((p) => p.id === v.petId);
         return (
           <button
