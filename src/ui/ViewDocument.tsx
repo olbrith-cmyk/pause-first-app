@@ -281,6 +281,12 @@ export default function ViewDocument({
           )}
         </div>
 
+        {/* Functional Impact — severity framed as observable impact on daily
+            life, rather than a false-precision 1-10 scale. */}
+        <Section title={tt("Impact on Daily Life", "Indvirkning på hverdagen")} icon="⚖️">
+          {visit.functionalImpact || notAnswered}
+        </Section>
+
         {/* When Did It Start */}
         {(visit.whenStart || !routineSkipsExtras) && (
           <Section title={tt("When Did This Start?", "Hvornår startede det?")} icon="📅">
@@ -311,7 +317,7 @@ export default function ViewDocument({
 
         {/* Current Status */}
         {statusSummary && (
-          <Section title={tt("Current Status", "Nuværende status")} icon="❤️">
+          <Section title={tt("Current Status (vs. Normal)", "Nuværende status (ift. normalt)")} icon="❤️">
             <StatusGroup label={tt("Different", "Anderledes")} items={statusSummary.different} tone="changed" />
             <StatusGroup
               label={tt("N/A / not sure", "Ikke relevant / ved ikke")}

@@ -75,6 +75,7 @@ function buildShareText(params: { visit: Visit; pet: Pet; note: VisitNote | null
     const duration = formatDuration(visit.durationValue, visit.durationUnit, lang);
     if (duration) lines.push(`Varighed: ${duration}`);
     if (visit.trend) lines.push(`Udvikling: ${trendLabel(visit.trend, lang)}`);
+    lines.push(`Indvirkning på hverdagen: ${visit.functionalImpact || notAnswered}`);
     if (visit.whenStart || !routineSkipsExtras) lines.push(`Hvornår startede det: ${visit.whenStart || notAnswered}`);
     if (visit.howProgressing || !routineSkipsExtras)
       lines.push(`Hvordan udvikler det sig: ${visit.howProgressing || notAnswered}`);
@@ -84,7 +85,7 @@ function buildShareText(params: { visit: Visit; pet: Pet; note: VisitNote | null
     const statusLines = currentStatusLines(visit.currentStatus, lang);
     if (statusLines.length) {
       lines.push("");
-      lines.push("Status lige nu:");
+      lines.push("Status lige nu (ift. normalt):");
       lines.push(...statusLines);
     }
 
@@ -126,6 +127,7 @@ function buildShareText(params: { visit: Visit; pet: Pet; note: VisitNote | null
     const duration = formatDuration(visit.durationValue, visit.durationUnit, lang);
     if (duration) lines.push(`Duration: ${duration}`);
     if (visit.trend) lines.push(`Trend: ${trendLabel(visit.trend, lang)}`);
+    lines.push(`Impact on daily life: ${visit.functionalImpact || notAnswered}`);
     if (visit.whenStart || !routineSkipsExtras) lines.push(`When did this start: ${visit.whenStart || notAnswered}`);
     if (visit.howProgressing || !routineSkipsExtras)
       lines.push(`How is it progressing: ${visit.howProgressing || notAnswered}`);
@@ -135,7 +137,7 @@ function buildShareText(params: { visit: Visit; pet: Pet; note: VisitNote | null
     const statusLines = currentStatusLines(visit.currentStatus, lang);
     if (statusLines.length) {
       lines.push("");
-      lines.push("Current status:");
+      lines.push("Current status (vs. normal):");
       lines.push(...statusLines);
     }
 

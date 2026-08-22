@@ -56,6 +56,9 @@ export async function seedDemoData(userId: string, lang: Lang): Promise<void> {
     visitDate: isoDateDaysAgo(75),
     mainConcern: isDa ? "Halter på højre forben efter en løbetur" : "Limping on the right front leg after a run",
     urgency: "concerned",
+    functionalImpact: isDa
+      ? "Undgår trapper, tøver med at gå tur, mindre legesyg end normalt"
+      : "Avoiding stairs, reluctant to go on walks, less playful than usual",
     whenStart: isDa ? "Opstod pludseligt efter en løbetur i skoven" : "Started suddenly after a run in the woods",
     durationValue: "2",
     durationUnit: "days",

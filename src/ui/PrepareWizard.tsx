@@ -438,8 +438,8 @@ export default function PrepareWizard({
             rows={2}
             placeholder={
               lang === "da"
-                ? "Skriv kort hvis noget er anderledes..."
-                : "Add a short note if something is different..."
+                ? "Hvad er normalt, og hvad er anderledes lige nu?"
+                : "What's normal, and what's different right now?"
             }
           />
         </label>
@@ -512,6 +512,24 @@ export default function PrepareWizard({
                     : "e.g., limping, not eating, vomiting, behavior change"
                 }
                 rows={4}
+              />
+            </label>
+
+            <div style={{ height: 14 }} />
+
+            <label className="label">
+              {lang === "da" ? "Hvordan påvirker det hverdagen?" : "How is this affecting normal life?"}
+              <textarea
+                className="textarea"
+                enterKeyHint="next"
+                value={draft.functionalImpact ?? ""}
+                onChange={(e) => setDraft({ ...draft, functionalImpact: e.target.value })}
+                placeholder={
+                  lang === "da"
+                    ? "F.eks. spiser ikke, vil ikke gå tur, sover mere end normalt, leger ikke"
+                    : "E.g., not eating, reluctant to walk, sleeping more than usual, not playing"
+                }
+                rows={3}
               />
             </label>
           </>
@@ -662,8 +680,8 @@ export default function PrepareWizard({
               </div>
               <div className="muted" style={{ marginBottom: 10 }}>
                 {lang === "da"
-                  ? "Antaget: appetit, energi, vejrtrækning m.m. er som normalt."
-                  : "Assumed: appetite, energy, breathing, etc. are all as usual."}
+                  ? `Antaget: appetit, energi, vejrtrækning m.m. er som normalt for ${petName || "dit dyr"}.`
+                  : `Assumed: appetite, energy, breathing, etc. are all as usual for ${petName || "your pet"}.`}
               </div>
               <div className="row rowWrap" style={{ gap: 6 }}>
                 <button type="button" className="btn btnChip btnPrimary" onClick={handleNext}>
@@ -685,8 +703,8 @@ export default function PrepareWizard({
           <>
             <div className="muted" style={{ marginBottom: 10 }}>
               {lang === "da"
-                ? "Vælg det, der passer bedst. Tilføj en kort note hvis du vil."
-                : "Choose what fits best. Add a short note if you want."}
+                ? `Dyrlæger læser dette ved at sammenligne med, hvad der er normalt for ${petName || "dit dyr"}. Vælg 'Anderledes', hvis det ikke er typisk lige nu.`
+                : `Vets read this by comparing to what's normal for ${petName || "your pet"}. Choose 'Different' if today isn't typical.`}
             </div>
 
             {renderCurrentStatusRow(lang === "da" ? "Appetit" : "Appetite", "appetite", "appetiteNotes")}

@@ -172,6 +172,10 @@ export interface Visit {
   // NEW (optional) — broad catch-all “Other details for the vet”
   otherDetails?: string;
 
+  // NEW (optional) — severity, framed as observable impact on daily life
+  // rather than a false-precision 1–10 scale.
+  functionalImpact?: string;
+
   previousTreatment: string;
   medicationsSupplements?: string;
   questionsVet: string;
