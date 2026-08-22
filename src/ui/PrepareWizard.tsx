@@ -788,8 +788,8 @@ export default function PrepareWizard({
             <div className="calloutBox calloutBoxCompact" style={{ marginTop: 0 }}>
               <div style={{ fontWeight: 700, fontSize: 13, color: "var(--blue)", marginBottom: 8 }}>
                 {lang === "da"
-                  ? "Er der medicin, kendte tilstande, tests eller ting du har prøvet hjemme, du vil nævne?"
-                  : "Any meds, known conditions, recent tests, or things tried at home to mention?"}
+                  ? "Er der medicin (recept, håndkøb eller kosttilskud), kendte tilstande, tests eller ting du har prøvet hjemme, du vil nævne?"
+                  : "Any medication (prescription, over-the-counter, or supplements), known conditions, tests, or things tried at home to mention?"}
               </div>
               <div className="row rowWrap" style={{ gap: 6 }}>
                 <button type="button" className="btn btnChip btnPrimary" onClick={handleNext}>
@@ -807,8 +807,8 @@ export default function PrepareWizard({
           <>
             <div className="muted" style={{ marginBottom: 8 }}>
               {lang === "da"
-                ? "Husk: Inkludér al medicin/tilskud — også selvom det er for noget helt andet."
-                : "Remember: Include all meds/supplements — even if it's for something else."}
+                ? "Husk: Inkludér alt — recept, håndkøb, kosttilskud eller naturmedicin — også selvom det er for noget helt andet."
+                : "Remember: Include everything — prescription, over-the-counter, supplements, or homeopathic remedies — even if it's for something else."}
             </div>
 
             <label className="label">
