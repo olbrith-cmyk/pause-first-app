@@ -500,9 +500,9 @@ button {
    background) so the two are easy to tell apart at a glance, not just by
    reading the section heading above them. */
 .itemCardDraft {
-  background: #fef3c7;
-  border-color: #f5d78e;
-  border-left: 4px solid #f59e0b;
+  background: #faf3e2;
+  border-color: #e6d7ae;
+  border-left: 4px solid #c9a227;
 }
 
 .itemCardFinal {
