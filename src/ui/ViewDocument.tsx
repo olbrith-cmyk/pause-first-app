@@ -282,10 +282,14 @@ export default function ViewDocument({
         </div>
 
         {/* Functional Impact — severity framed as observable impact on daily
-            life, rather than a false-precision 1-10 scale. */}
-        <Section title={tt("Impact on Daily Life", "Indvirkning på hverdagen")} icon="⚖️">
-          {visit.functionalImpact || notAnswered}
-        </Section>
+            life, rather than a false-precision 1-10 scale. Not asked for
+            routine visits (e.g. a vaccination), so stays hidden unless
+            there's content to show. */}
+        {(visit.functionalImpact || !routineSkipsExtras) && (
+          <Section title={tt("Impact on Daily Life", "Indvirkning på hverdagen")} icon="⚖️">
+            {visit.functionalImpact || notAnswered}
+          </Section>
+        )}
 
         {/* When Did It Start */}
         {(visit.whenStart || !routineSkipsExtras) && (

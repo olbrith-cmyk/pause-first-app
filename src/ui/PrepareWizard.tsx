@@ -515,23 +515,27 @@ export default function PrepareWizard({
               />
             </label>
 
-            <div style={{ height: 14 }} />
+            {draft.urgency !== "routine" && (
+              <>
+                <div style={{ height: 14 }} />
 
-            <label className="label">
-              {lang === "da" ? "Hvordan påvirker det hverdagen?" : "How is this affecting normal life?"}
-              <textarea
-                className="textarea"
-                enterKeyHint="next"
-                value={draft.functionalImpact ?? ""}
-                onChange={(e) => setDraft({ ...draft, functionalImpact: e.target.value })}
-                placeholder={
-                  lang === "da"
-                    ? "F.eks. spiser ikke, vil ikke gå tur, sover mere end normalt, leger ikke"
-                    : "E.g., not eating, reluctant to walk, sleeping more than usual, not playing"
-                }
-                rows={3}
-              />
-            </label>
+                <label className="label">
+                  {lang === "da" ? "Hvordan påvirker det hverdagen?" : "How is this affecting normal life?"}
+                  <textarea
+                    className="textarea"
+                    enterKeyHint="next"
+                    value={draft.functionalImpact ?? ""}
+                    onChange={(e) => setDraft({ ...draft, functionalImpact: e.target.value })}
+                    placeholder={
+                      lang === "da"
+                        ? "F.eks. spiser ikke, vil ikke gå tur, sover mere end normalt, leger ikke"
+                        : "E.g., not eating, reluctant to walk, sleeping more than usual, not playing"
+                    }
+                    rows={3}
+                  />
+                </label>
+              </>
+            )}
           </>
         );
 
