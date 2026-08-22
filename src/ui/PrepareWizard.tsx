@@ -786,10 +786,15 @@ export default function PrepareWizard({
         if (!medsExpanded && !hasMedsData) {
           return (
             <div className="calloutBox calloutBoxCompact" style={{ marginTop: 0 }}>
-              <div style={{ fontWeight: 700, fontSize: 13, color: "var(--blue)", marginBottom: 8 }}>
+              <div style={{ fontWeight: 700, fontSize: 13, color: "var(--blue)", marginBottom: 6 }}>
                 {lang === "da"
-                  ? "Er der medicin (recept, håndkøb eller kosttilskud), kendte tilstande, tests eller ting du har prøvet hjemme, du vil nævne?"
-                  : "Any medication (prescription, over-the-counter, or supplements), known conditions, tests, or things tried at home to mention?"}
+                  ? "Noget at nævne om medicin, tilstande, tests eller hjemmebehandling?"
+                  : "Anything to mention on meds, conditions, tests, or home care?"}
+              </div>
+              <div className="muted" style={{ marginBottom: 10 }}>
+                {lang === "da"
+                  ? "Inkluderer recept-/håndkøbsmedicin, kosttilskud, kendte tilstande, testresultater og hjemmemidler du har prøvet (fx ro, diætændring, varme/kulde)."
+                  : "Includes prescription/OTC medication, supplements, known conditions, test results, and home remedies you've tried (e.g. rest, diet change, heat/cold)."}
               </div>
               <div className="row rowWrap" style={{ gap: 6 }}>
                 <button type="button" className="btn btnChip btnPrimary" onClick={handleNext}>
