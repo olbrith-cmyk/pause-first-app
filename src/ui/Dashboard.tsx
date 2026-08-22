@@ -65,9 +65,6 @@ export default function Dashboard({
     // NEW: signal to VisitsScreen to "go back" (close open visit)
   const [backSignal, setBackSignal] = useState(0);
 
-  // NEW: queue nav requests when wizard is open
-  const [pendingNav, setPendingNav] = useState<null | "pets" | "myVisits">(null);
-
   const handlePrepareClick = () => setMode("prepare");
 
   const goToAnimals = (openForm?: boolean) => {
@@ -232,9 +229,6 @@ export default function Dashboard({
             onModeChange={(m) => setMode(m)}   // IMPORTANT so VisitsScreen can switch mode
             onOpenVisitChange={setOpenVisitIdFromVisits}
             backSignal={backSignal}
-
-            pendingNav={pendingNav}
-            onPendingNavHandled={() => setPendingNav(null)}
           />
         )} 
 
@@ -249,9 +243,6 @@ export default function Dashboard({
             onModeChange={(m) => setMode(m)}
             onOpenVisitChange={setOpenVisitIdFromVisits}
             backSignal={backSignal}
-
-            pendingNav={pendingNav}
-            onPendingNavHandled={() => setPendingNav(null)}
           />
         )}
         

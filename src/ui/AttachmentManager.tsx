@@ -32,8 +32,12 @@ export default function AttachmentManager({
 
     setError(null);
     setUploading(true);
+    // Each file is uploaded (and any failure caught) individually, and
+    // onChange fires in `finally` with whatever succeeded — so one file
+    // failing partway through a multi-file batch doesn't discard files that
+    // already finished uploading before it.
+    const uploaded: Attachment[] = [];
     try {
-      const uploaded: Attachment[] = [];
       for (const file of Array.from(files)) {
         if (!isSupportedAttachment(file)) {
           setError(
@@ -51,12 +55,14 @@ export default function AttachmentManager({
           );
           continue;
         }
-        uploaded.push(await uploadAttachment({ userId, scopeId, file }));
+        try {
+          uploaded.push(await uploadAttachment({ userId, scopeId, file }));
+        } catch (e: any) {
+          setError(e?.message ?? String(e));
+        }
       }
-      if (uploaded.length) onChange([...attachments, ...uploaded]);
-    } catch (e: any) {
-      setError(e?.message ?? String(e));
     } finally {
+      if (uploaded.length) onChange([...attachments, ...uploaded]);
       setUploading(false);
       if (inputRef.current) inputRef.current.value = "";
     }

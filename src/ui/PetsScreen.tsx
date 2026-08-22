@@ -1009,8 +1009,10 @@ export default function PetsScreen({
     userId={userId}
     petId={selected.id!}
     petName={selected.name || "Your pet"}
-    onClose={() => {
+    pet={selected}
+    onClose={async () => {
       setShowWizard(false);
+      await load();
     }}
   />
 )}

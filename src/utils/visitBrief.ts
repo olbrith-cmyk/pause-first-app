@@ -1,5 +1,4 @@
 import type { Lang } from "../i18n";
-import type { Visit } from "../firestore";
 
 export type DurationUnit = "hours" | "days" | "weeks" | "months";
 export type Trend = "better" | "worse" | "same";
@@ -74,15 +73,4 @@ export function urgencyIcon(urgency: Urgency | undefined): string {
   if (urgency === "concerned") return "🟡";
   if (urgency === "routine") return "🟢";
   return "";
-}
-
-// The scannable one-liner: chief complaint + duration + trend, so a vet can
-// read it in the seconds they have while walking into the room.
-export function headlineLine(visit: Pick<Visit, "durationValue" | "durationUnit" | "trend">, lang: Lang): string {
-  const bits: string[] = [];
-  const duration = formatDuration(visit.durationValue, visit.durationUnit, lang);
-  if (duration) bits.push(duration);
-  const trend = trendLabel(visit.trend, lang);
-  if (trend) bits.push(trend);
-  return bits.join(" · ");
 }

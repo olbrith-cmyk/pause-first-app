@@ -18,9 +18,7 @@ type Props = {
   petName: string;
   pet?: Pet | null;
   visitId?: string;
-  mode?: "prepare";
   onClose: () => void;
-  onNavigateAfterClose?: (target: "home" | "myVisits") => void;
   onToast?: (message: string) => void;
 };
 
@@ -47,7 +45,6 @@ export default function PrepareWizard({
   pet,
   visitId: visitIdProp,
   onClose,
-  onNavigateAfterClose,
   onToast,
 }: Props) {
   const t = useTranslation(lang);
@@ -104,7 +101,6 @@ export default function PrepareWizard({
 
   const closeToMyVisits = () => {
     onClose();
-    onNavigateAfterClose?.("myVisits");
   };
 
   useEffect(() => {
@@ -1092,6 +1088,20 @@ export default function PrepareWizard({
           {/* MODE 3: DONE */}
           {mode === "done" && (
             <>
+              {/* generatePdfFile() finds the document to render by looking
+                  for #document-content, which only exists inside the visible
+                  ViewDocument rendered during MODE 2 above — by the time this
+                  screen shows, that's already unmounted. Keep an off-screen
+                  copy mounted here so "Share with Vet" below can still
+                  produce a PDF instead of silently falling back to text-only
+                  sharing. */}
+              <div
+                style={{ position: "fixed", top: -99999, left: -99999, width: 720, pointerEvents: "none" }}
+                aria-hidden="true"
+              >
+                <ViewDocument lang={lang} visit={draft} pet={pet ?? null} note={null} hideTitle />
+              </div>
+
               <div
                 style={{
                   backgroundColor: "var(--lightGreen)",
