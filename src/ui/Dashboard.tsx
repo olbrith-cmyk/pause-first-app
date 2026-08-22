@@ -57,10 +57,6 @@ export default function Dashboard({
   // Tracks PrepareWizard open state (even when launched from My Visits)
   const [wizardOpen, setWizardOpen] = useState(false);
 
-  // Bottom dock starts collapsed on every screen so it doesn't eat into the
-  // content above it — tap the handle to reveal Prepare visit/My Animals/My
-  // visits/Home when needed.
-  const [dockCollapsed, setDockCollapsed] = useState(true);
   const [animalsStartInAddMode, setAnimalsStartInAddMode] = useState(false);
 
   // NEW: track whether a visit detail is open inside VisitsScreen
@@ -71,26 +67,6 @@ export default function Dashboard({
 
   // NEW: queue nav requests when wizard is open
   const [pendingNav, setPendingNav] = useState<null | "pets" | "myVisits">(null);
-
-  const anyModalOpen = showEmergencyGuide || showPrivacyPolicy || showMedicalDisclaimer;
-
-  const hideBottomDock =
-    mode === "home" || mode === "prepare" || anyModalOpen || menuOpen || wizardOpen;
-
-  // Re-collapse the dock each time the screen changes, so it always starts
-  // out of the way rather than remembering an expanded state from before.
-  useEffect(() => {
-    setDockCollapsed(true);
-  }, [mode]);
-
-  // Only reserve the dock's clearance space on .pageContent while it's both
-  // visible and collapsed — a scoped body class (rather than always-on)
-  // keeps this from clobbering the home screen's own no-dock padding.
-  useEffect(() => {
-    const collapsedAndVisible = !hideBottomDock && dockCollapsed;
-    document.body.classList.toggle("dockCollapsed", collapsedAndVisible);
-    return () => document.body.classList.remove("dockCollapsed");
-  }, [dockCollapsed, hideBottomDock]);
 
   const handlePrepareClick = () => setMode("prepare");
 
@@ -104,7 +80,7 @@ export default function Dashboard({
     onLangChange(lang === "en" ? "da" : "en");
   };
 
-  // Make `.keyboardOpen .bottomDock { display:none; }` work when wizard is open
+  // Make `.keyboardOpen .appMain { padding-bottom: ... }` work when wizard is open
   useEffect(() => {
     if (wizardOpen) document.body.classList.add("keyboardOpen");
     else document.body.classList.remove("keyboardOpen");
@@ -113,16 +89,6 @@ export default function Dashboard({
       document.body.classList.remove("keyboardOpen");
     };
   }, [wizardOpen]);
-
-  // NEW: unified handler for the footer "My visits" button
-  const handleMyVisitsNav = () => {
-    // If we're already on My Visits AND a visit detail is open, act like Back
-    if (mode === "myVisits" && openVisitIdFromVisits) {
-      setBackSignal((n) => n + 1);
-      return;
-    }
-    setMode("myVisits");
-  };
 
   return (
     <div className="appShell">
@@ -167,7 +133,7 @@ export default function Dashboard({
       <main className={`appMain ${mode === "home" ? "appMainHome" : ""}`}>
         {/* HOME PAGE */}
         {mode === "home" && (
-          <div className="pageContent pageContentNoDock">
+          <div className="pageContent">
             <section className="homeHero homeHeroV2">
               {/* Background silhouettes */}
               <div className="homeSilhouettes" aria-hidden="true">
@@ -290,70 +256,6 @@ export default function Dashboard({
         )}
         
       </main>
-
-      {/* BOTTOM NAV (hide on home, and hide when any modal/menu/wizard is open) */}
-      {!hideBottomDock && (
-        <footer className={`bottomDock ${dockCollapsed ? "bottomDockCollapsed" : ""}`}>
-          <button
-            type="button"
-            className="bottomDockHandle"
-            onClick={() => setDockCollapsed((c) => !c)}
-            aria-expanded={!dockCollapsed}
-          >
-            <span aria-hidden="true">{dockCollapsed ? "▲" : "▼"}</span>
-            {dockCollapsed
-              ? lang === "da"
-                ? "Vis menu"
-                : "Show menu"
-              : lang === "da"
-                ? "Skjul menu"
-                : "Hide menu"}
-          </button>
-
-          {!dockCollapsed && (
-            <div className="bottomDockInner">
-              <button onClick={handlePrepareClick} className="btn btnPrimary btnLg">
-                {lang === "da" ? "Forbered besøg" : "Prepare visit"}
-              </button>
-
-              <div className="bottomDockGrid">
-                <button
-                  onClick={() => {
-                    if (wizardOpen) {
-                      setPendingNav("pets");
-                      return;
-                    }
-                    goToAnimals(false);
-                  }}
-                  className="btn btnSecondary"
-                >
-                  {t.myPets}
-                </button>
-
-                <button
-                  onClick={() => {
-                    if (wizardOpen) {
-                      setPendingNav("myVisits");
-                      return;
-                    }
-                    handleMyVisitsNav();
-                  }}
-                  className="btn btnSecondary"
-                >
-                  {lang === "da" ? "Mine besøg" : "My visits"}
-                </button>
-
-                <button
-                  onClick={() => setMode("home")}
-                  className="btn btnSecondary bottomDockHome"
-                >
-                  {lang === "da" ? "Hjem" : "Home"}
-                </button>
-              </div>
-            </div>
-          )}
-        </footer>
-      )}
 
       {/* HAMBURGER MENU */}
       <HamburgerMenu

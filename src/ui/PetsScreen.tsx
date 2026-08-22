@@ -263,8 +263,8 @@ export default function PetsScreen({
         <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
   <h3 style={{ margin: 0 }}>{lang === "da" ? "Mine dyr" : "My animals"}</h3>
 
-  {mode === "edit" ? (
-    <button className="btn btnSecondary" 
+  {mode === "edit" && (
+    <button className="btn btnSecondary"
       onClick={() => {
   cancel();
   onGoHome?.();
@@ -272,7 +272,11 @@ export default function PetsScreen({
       >
       {lang === "da" ? "Annuller" : "Cancel"}
     </button>
-  ) : (
+  )}
+</div>
+
+{mode !== "edit" && (
+  <div className="splitActionRow">
     <button className="btn btnPrimary" onClick={startNew}>
       {pets.length === 0
         ? lang === "da"
@@ -282,8 +286,11 @@ export default function PetsScreen({
           ? "+ Tilføj endnu et dyr"
           : "+ Add another animal"}
     </button>
-  )}
-</div>
+    <button className="btn btnSecondary" onClick={() => onGoHome?.()}>
+      {lang === "da" ? "Hjem" : "Home"}
+    </button>
+  </div>
+)}
 
         {mode === "view" && selected && !viewingVisit && (
           <button className="btn btnSecondary btnSmall" onClick={cancel}>

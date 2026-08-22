@@ -354,6 +354,17 @@ const handleDeleteVisit = async (visitId: string) => {
         <div className="stack">
           <h3>{t.myVisits}</h3>
 
+          {!openVisit && (
+            <div className="splitActionRow">
+              <button className="btn btnPrimary" onClick={() => onModeChange?.("prepare")}>
+                {lang === "da" ? "+ Tilføj endnu et besøg" : "+ Add another visit"}
+              </button>
+              <button className="btn btnSecondary" onClick={() => onGoHome?.()}>
+                {lang === "da" ? "Hjem" : "Home"}
+              </button>
+            </div>
+          )}
+
           {/* Continue draft */}
 {draftVisits.length > 0 && !openVisit && (
   <div className="panel" style={{ marginBottom: 12 }}>

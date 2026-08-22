@@ -15,9 +15,6 @@
   --lightBlue: #eef3f6;   /* subtle cool for info states */
   --lightGreen: #eef6f1;  /* subtle sage */
   --lightRed: #fbefef;    /* subtle blush */
-
-  /* Bottom dock height buffer so content can scroll above it */
-  --bottomDockSpace: 220px; /* adjust if needed */
 }
 
 * {
@@ -65,7 +62,15 @@ body {
   max-width: 920px;
   margin: 0 auto;
   width: 100%;
-  padding-bottom: var(--bottomDockSpace);
+  padding-bottom: 20px;
+}
+
+/* Two buttons side by side (e.g. "Add another..." + "Home"), staying
+   side-by-side even on the narrow mobile layout where .row stacks. */
+.splitActionRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
 }
 
 .header {
@@ -558,10 +563,6 @@ button {
   .textarea {
     font-size: 16px; /* prevents iOS zoom */
   }
-
-  :root {
-    --bottomDockSpace: 240px;
-  }
 }
 
 /* Modal */
@@ -1034,12 +1035,6 @@ button {
 .homeBottomSilhouetteCow{ bottom: 0%; left: 0%; width: 140px; }
 .homeBottomSilhouetteCat{ bottom: 0%; right: 8%; width: 74px; }
 
-/* Home screen never shows the bottom nav dock, so it doesn't need the
-   dock-clearance padding that .pageContent normally reserves. */
-.pageContent.pageContentNoDock {
-  padding-bottom: 20px;
-}
-
 .homeHeroV2 > *{
   position: relative;
   z-index: 1;
@@ -1178,70 +1173,8 @@ button {
   color: rgba(47, 74, 99, 0.55);
 }
 
-/* Bottom dock */
-.bottomDock {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 50;
-  background: rgba(232, 240, 247, 0.92);
-  backdrop-filter: blur(8px);
-  border-top: 1px solid #d0e0f0;
-  padding: 10px 12px;
-}
-
-/* Collapsed: just the handle strip, no button padding beneath it */
-.bottomDock.bottomDockCollapsed {
-  padding: 0 12px;
-}
-
-.bottomDockHandle {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  background: transparent;
-  border: none;
-  padding: 10px 0;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--blue);
-  cursor: pointer;
-}
-
-/* Reserve just enough space for the collapsed handle strip instead of the
-   full dock height, so content isn't pushed down by a mostly-empty dock. */
-body.dockCollapsed .pageContent {
-  padding-bottom: 56px;
-}
-
-.bottomDockInner {
-  width: 100%;
-  max-width: 420px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.bottomDockGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
-.bottomDockHome {
-  grid-column: 1 / span 2;
-}
-
-/* When keyboard is open, don't let the fixed bottom dock cover inputs/buttons */
-.keyboardOpen .bottomDock {
-  display: none;
-}
-
-/* Also reduce bottom padding when dock is hidden */
+/* When keyboard is open (wizard active), reduce the scroll container's
+   bottom padding since there's no fixed bottom dock to clear anymore. */
 .keyboardOpen .appMain {
   padding-bottom: 16px;
 }
