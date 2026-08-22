@@ -760,8 +760,8 @@ export default function PrepareWizard({
                 onChange={(e) => setDraft({ ...draft, otherDetails: e.target.value })}
                 placeholder={
                   lang === "da"
-                    ? "F.eks. foderændringer, rejse, nye godbidder, løbetid, mulig eksponering, timing, videoer du har... (ikke spørgsmål)"
-                    : "E.g., new food/treats, travel, boarding, heat cycle, possible exposure, timing, videos you have... (not questions)"
+                    ? "F.eks. foderændringer, rejse, nylig skade/fald, flåter/lopper, mulig forgiftning, løbetid, timing, videoer du har... (ikke spørgsmål)"
+                    : "E.g., new food/treats, travel, recent injury or fall, ticks/fleas, possible toxin exposure, heat cycle, timing, videos you have... (not questions)"
                 }
                 rows={4}
               />
