@@ -222,7 +222,6 @@ const handleDeleteVisit = async (visitId: string) => {
       v.whenStart?.trim() ||
       v.howProgressing?.trim() ||
       v.patterns?.trim() ||
-      v.associatedSigns?.trim() ||
       v.previousTreatment?.trim() ||
       v.questionsVet?.trim() ||
       (v.currentStatus && Object.keys(v.currentStatus).length > 0)

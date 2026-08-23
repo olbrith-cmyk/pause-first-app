@@ -160,7 +160,6 @@ export interface Visit {
   whenStart: string;
   howProgressing: string;
   patterns: string;
-  associatedSigns: string;
 
   // NEW (optional) — how worried the owner is, shown next to Main Concern
   // so the vet gets an urgency signal at a glance.

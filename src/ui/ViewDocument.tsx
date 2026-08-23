@@ -333,13 +333,6 @@ export default function ViewDocument({
           </Section>
         )}
 
-        {/* Associated Signs */}
-        {visit.associatedSigns && (
-          <Section title={tt("Associated Signs", "Tilknyttede tegn")} icon="👀">
-            {visit.associatedSigns}
-          </Section>
-        )}
-
         {/* Current Status */}
         {statusSummary && (
           <Section title={tt("Current Status (vs. Normal)", "Nuværende status (ift. normalt)")} icon="❤️">

@@ -66,7 +66,6 @@ export async function seedDemoData(userId: string, lang: Lang): Promise<void> {
     trend: "better",
     howProgressing: isDa ? "Blev bedre efter et par dages ro" : "Improved after a couple of days of rest",
     patterns: "",
-    associatedSigns: "",
     currentStatus: {
       appetite: "normal",
       drinking: "normal",
@@ -114,7 +113,6 @@ export async function seedDemoData(userId: string, lang: Lang): Promise<void> {
     whenStart: "",
     howProgressing: "",
     patterns: "",
-    associatedSigns: "",
     previousTreatment: "",
     questionsVet: "",
     status: "draft",

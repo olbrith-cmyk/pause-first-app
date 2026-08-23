@@ -86,7 +86,6 @@ export default function PrepareWizard({
     durationUnit: "days",
     howProgressing: "",
     patterns: "",
-    associatedSigns: "",
     otherDetails: "",
     previousTreatment: "",
     questionsVet: "",
@@ -741,8 +740,7 @@ export default function PrepareWizard({
           !!cs.mobilityPainNotes?.trim() ||
           cs.skinEars !== "normal" ||
           !!cs.skinEarsNotes?.trim() ||
-          !!cs.otherNotes?.trim() ||
-          !!draft.associatedSigns?.trim();
+          !!cs.otherNotes?.trim();
 
         // For routine visits, assume everything's normal (the checklist's
         // default) and skip straight past it unless the owner says
@@ -794,28 +792,6 @@ export default function PrepareWizard({
               "mobilityPainNotes"
             )}
             {renderCurrentStatusRow(lang === "da" ? "Hud/ører" : "Skin / ears", "skinEars", "skinEarsNotes")}
-
-            <div style={{ height: 14 }} />
-
-            <label className="label">
-              {lang === "da" ? "Tilknyttede tegn" : "Associated signs"}
-              <textarea
-                className="textarea"
-                value={draft.associatedSigns}
-                onChange={(e) => setDraft({ ...draft, associatedSigns: e.target.value })}
-                placeholder={
-                  lang === "da"
-                    ? "Andet der sker samtidig? F.eks. drikker mere, halter lidt, er holdt op med at lege..."
-                    : "Anything else happening alongside it? E.g., drinking more, a slight limp, stopped playing..."
-                }
-                rows={3}
-              />
-              <div className="muted" style={{ marginTop: 8 }}>
-                {lang === "da"
-                  ? "Hvis der ikke er andre tegn, kan du lade feltet stå tomt."
-                  : "If there's nothing else, you can leave this blank."}
-              </div>
-            </label>
 
             <label className="label" style={{ marginTop: 6 }}>
               {lang === "da" ? "Andre ændringer / noter (valgfrit)" : "Other changes / notes (optional)"}

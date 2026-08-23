@@ -86,7 +86,6 @@ function buildShareText(params: { visit: Visit; pet: Pet; note: VisitNote | null
     if (visit.howProgressing || !routineSkipsExtras)
       lines.push(`Hvordan udvikler det sig: ${visit.howProgressing || notAnswered}`);
     if (visit.patterns || !routineSkipsExtras) lines.push(`Mønstre/triggere: ${visit.patterns || notAnswered}`);
-    if (visit.associatedSigns) lines.push(`Tilknyttede tegn: ${visit.associatedSigns}`);
 
     const statusLines = currentStatusLines(visit.currentStatus, lang);
     if (statusLines.length) {
@@ -143,7 +142,6 @@ function buildShareText(params: { visit: Visit; pet: Pet; note: VisitNote | null
     if (visit.howProgressing || !routineSkipsExtras)
       lines.push(`How is it progressing: ${visit.howProgressing || notAnswered}`);
     if (visit.patterns || !routineSkipsExtras) lines.push(`Patterns/triggers: ${visit.patterns || notAnswered}`);
-    if (visit.associatedSigns) lines.push(`Associated signs: ${visit.associatedSigns}`);
 
     const statusLines = currentStatusLines(visit.currentStatus, lang);
     if (statusLines.length) {
