@@ -41,6 +41,7 @@ export default function VisitsScreen({
   onGoToAnimals,
   onOpenVisitChange,
   backSignal,
+  isDemo,
 }: {
 
   lang: Lang;
@@ -56,6 +57,7 @@ export default function VisitsScreen({
 
     // NEW: Dashboard increments this to request "Back" (close open visit)
   backSignal?: number;
+  isDemo?: boolean;
 }) {
   
   const t = useTranslation(lang);
@@ -432,7 +434,7 @@ const handleDeleteVisit = async (visitId: string) => {
                 </div>
               </div>
 
-              <ViewDocument lang={lang} visit={openVisit} pet={openPet} note={openNote} />
+              <ViewDocument lang={lang} visit={openVisit} pet={openPet} note={openNote} isDemo={isDemo} />
             </div>
           )}
 
@@ -553,6 +555,7 @@ const handleDeleteVisit = async (visitId: string) => {
             petName={selectedPetForWizard.name || "(Unnamed)"}
             pet={selectedPetForWizard}
             visitId={editingVisitId ?? undefined}
+            isDemo={isDemo}
             onClose={async () => {
               setShowWizard(false);
               setEditingVisitId(null);
@@ -701,6 +704,7 @@ const handleDeleteVisit = async (visitId: string) => {
           petName={selectedPetForWizard.name || "(Unnamed)"}
           pet={selectedPetForWizard}
           visitId={editingVisitId ?? undefined}
+          isDemo={isDemo}
           onClose={async () => {
             setShowWizard(false);
             setEditingVisitId(null);

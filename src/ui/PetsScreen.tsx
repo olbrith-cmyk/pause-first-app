@@ -82,6 +82,7 @@ export default function PetsScreen({
   startInAddMode,
   onEnteredAddMode,
   onGoHome,
+  isDemo,
 }: {
   lang: Lang;
   userId: string;
@@ -89,6 +90,7 @@ export default function PetsScreen({
   startInAddMode?: boolean;
   onEnteredAddMode?: () => void;
   onGoHome?: () => void;
+  isDemo?: boolean;
 }) {
   
   const t = useTranslation(lang);
@@ -409,7 +411,7 @@ export default function PetsScreen({
                   </button>
                 </div>
 
-                <ViewDocument lang={lang} visit={viewingVisit} pet={selected} note={viewingVisitNote} />
+                <ViewDocument lang={lang} visit={viewingVisit} pet={selected} note={viewingVisitNote} isDemo={isDemo} />
               </>
             )}
 
@@ -1010,6 +1012,7 @@ export default function PetsScreen({
     petId={selected.id!}
     petName={selected.name || "Your pet"}
     pet={selected}
+    isDemo={isDemo}
     onClose={async () => {
       setShowWizard(false);
       await load();

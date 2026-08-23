@@ -215,6 +215,7 @@ export default function Dashboard({
             startInAddMode={animalsStartInAddMode}
             onEnteredAddMode={() => setAnimalsStartInAddMode(false)}
             onGoHome={() => setMode("home")}
+            isDemo={isDemo}
           />
         )}
 
@@ -229,8 +230,9 @@ export default function Dashboard({
             onModeChange={(m) => setMode(m)}   // IMPORTANT so VisitsScreen can switch mode
             onOpenVisitChange={setOpenVisitIdFromVisits}
             backSignal={backSignal}
+            isDemo={isDemo}
           />
-        )} 
+        )}
 
         {mode === "prepare" && (
           <VisitsScreen
@@ -243,6 +245,7 @@ export default function Dashboard({
             onModeChange={(m) => setMode(m)}
             onOpenVisitChange={setOpenVisitIdFromVisits}
             backSignal={backSignal}
+            isDemo={isDemo}
           />
         )}
         

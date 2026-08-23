@@ -140,13 +140,15 @@ export default function ViewDocument({
   visit,
   pet,
   note,
-  hideTitle
+  hideTitle,
+  isDemo
 }: {
   lang: Lang;
   visit: Visit | null;
   pet: Pet | null;
   note: VisitNote | null;
   hideTitle?: boolean;
+  isDemo?: boolean;
 }) {
   const t = useTranslation(lang);
   const tt = (en: string, da: string) => (lang === "da" ? da : en);
@@ -162,6 +164,7 @@ export default function ViewDocument({
   }
 
   const handleDownloadPDF = async () => {
+    if (isDemo) return;
     try {
       await exportToPDF({ visit, pet, note, lang });
     } catch (e: any) {
@@ -170,6 +173,7 @@ export default function ViewDocument({
   };
 
   const handleShareWithVet = async () => {
+    if (isDemo) return;
     try {
       await shareWithVet({ visit, pet, note, lang });
     } catch (e: any) {
@@ -180,7 +184,10 @@ export default function ViewDocument({
   const aiContext = { mainConcern: visit.mainConcern, question: visit.questionsVet };
 
   const handleAskAiAssistant = () => {
-    if (hasAiAssistantConsent()) {
+    // Demo users get the consent/warning popup on every use — never skip it
+    // via a remembered consent, since a demo session isn't really "them"
+    // having already agreed to it long-term.
+    if (!isDemo && hasAiAssistantConsent()) {
       openChatGpt(lang, aiContext);
     } else {
       setShowAiConsent(true);
@@ -188,7 +195,7 @@ export default function ViewDocument({
   };
 
   const confirmAiAssistant = () => {
-    setAiAssistantConsent();
+    if (!isDemo) setAiAssistantConsent();
     setShowAiConsent(false);
     openChatGpt(lang, aiContext);
   };
@@ -472,16 +479,25 @@ export default function ViewDocument({
 
       {/* Action Buttons */}
       <div className="row rowWrap" style={{ marginTop: "16px" }}>
-        <button className="btn btnPrimary" onClick={handleDownloadPDF}>
+        <button className="btn btnPrimary" onClick={handleDownloadPDF} disabled={isDemo}>
           📥 {tt("Download as PDF", "Download som PDF")}
         </button>
-        <button className="btn btnSecondary" onClick={handleShareWithVet}>
+        <button className="btn btnSecondary" onClick={handleShareWithVet} disabled={isDemo}>
           📤 {tt("Share with Vet", "Del med dyrlæge")}
         </button>
         <button className="btn btnSecondary" onClick={handleAskAiAssistant}>
           ✨ {t.aiAssistant}
         </button>
       </div>
+
+      {isDemo && (
+        <div className="muted" style={{ fontSize: 13, marginTop: 6 }}>
+          {tt(
+            "Downloading and sharing aren't available in the demo — sign up to use them.",
+            "Download og deling er ikke tilgængelige i demoen — opret en konto for at bruge dem."
+          )}
+        </div>
+      )}
 
       {showAiConsent && (
         <AiAssistantConsent lang={lang} onConfirm={confirmAiAssistant} onClose={() => setShowAiConsent(false)} />

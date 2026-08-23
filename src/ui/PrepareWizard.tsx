@@ -20,6 +20,7 @@ type Props = {
   visitId?: string;
   onClose: () => void;
   onToast?: (message: string) => void;
+  isDemo?: boolean;
 };
 
 function makeEmptyStatus(): CurrentStatus {
@@ -46,6 +47,7 @@ export default function PrepareWizard({
   visitId: visitIdProp,
   onClose,
   onToast,
+  isDemo,
 }: Props) {
   const t = useTranslation(lang);
 
@@ -346,6 +348,7 @@ export default function PrepareWizard({
   };
 
   const handleSave = async () => {
+    if (isDemo) return;
     if (!visitId) {
       alert(
         lang === "da"
@@ -380,7 +383,7 @@ export default function PrepareWizard({
   };
 
   const handleShareFromDone = async () => {
-    if (!pet) return;
+    if (isDemo || !pet) return;
     setSharingFromDone(true);
     try {
       await shareWithVet({ visit: { ...draft, status: "final" }, pet, note: null, lang });
@@ -1087,14 +1090,21 @@ export default function PrepareWizard({
               </div>
 
               <div style={{ marginBottom: 12 }}>
-                <ViewDocument lang={lang} visit={draft} pet={pet ?? null} note={null} hideTitle />
+                <ViewDocument lang={lang} visit={draft} pet={pet ?? null} note={null} hideTitle isDemo={isDemo} />
               </div>
 
               {/* Actions */}
               <div className="row" style={{ gap: 8, flexDirection: "column" as const }}>
-                <button className="btn btnPrimary" onClick={handleSave} disabled={saving}>
+                <button className="btn btnPrimary" onClick={handleSave} disabled={saving || isDemo}>
                   {saving ? (lang === "da" ? "Gemmer..." : "Saving...") : lang === "da" ? "Gem besøg" : "Save visit"}
                 </button>
+                {isDemo && (
+                  <div className="muted" style={{ fontSize: 13 }}>
+                    {lang === "da"
+                      ? "Ikke tilgængelig i demoen — opret en konto for at gemme."
+                      : "Not available in the demo — sign up to save."}
+                  </div>
+                )}
 
                 {isDraft && !!visitId && (
                   <button
@@ -1123,7 +1133,7 @@ export default function PrepareWizard({
                 style={{ position: "fixed", top: -99999, left: -99999, width: 720, pointerEvents: "none" }}
                 aria-hidden="true"
               >
-                <ViewDocument lang={lang} visit={draft} pet={pet ?? null} note={null} hideTitle />
+                <ViewDocument lang={lang} visit={draft} pet={pet ?? null} note={null} hideTitle isDemo={isDemo} />
               </div>
 
               <div
@@ -1146,7 +1156,7 @@ export default function PrepareWizard({
 
               <div className="row" style={{ gap: 8, flexDirection: "column" as const }}>
                 {pet && (
-                  <button className="btn btnPrimary" onClick={handleShareFromDone} disabled={sharingFromDone}>
+                  <button className="btn btnPrimary" onClick={handleShareFromDone} disabled={sharingFromDone || isDemo}>
                     {sharingFromDone
                       ? lang === "da"
                         ? "Deler…"
@@ -1155,6 +1165,13 @@ export default function PrepareWizard({
                         ? "Del med dyrlæge"
                         : "Share with Vet"}
                   </button>
+                )}
+                {isDemo && (
+                  <div className="muted" style={{ fontSize: 13 }}>
+                    {lang === "da"
+                      ? "Ikke tilgængelig i demoen — opret en konto for at dele."
+                      : "Not available in the demo — sign up to share."}
+                  </div>
                 )}
                 <button className="btn btnSecondary" onClick={closeToMyVisits}>
                   {lang === "da" ? "Færdig" : "Done"}
