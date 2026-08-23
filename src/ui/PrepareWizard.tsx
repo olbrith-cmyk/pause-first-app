@@ -360,7 +360,9 @@ export default function PrepareWizard({
   };
 
   const handleSave = async () => {
-    if (isDemo) return;
+    // Demo users can fully create/save a visit for the pre-seeded demo pet
+    // (Bella) — only a pet they created themselves stays locked.
+    if (isDemo && !pet?.isDemoSeed) return;
     if (!visitId) {
       alert(
         lang === "da"
@@ -1107,10 +1109,14 @@ export default function PrepareWizard({
 
               {/* Actions */}
               <div className="row" style={{ gap: 8, flexDirection: "column" as const }}>
-                <button className="btn btnPrimary" onClick={handleSave} disabled={saving || isDemo}>
+                <button
+                  className="btn btnPrimary"
+                  onClick={handleSave}
+                  disabled={saving || (isDemo && !pet?.isDemoSeed)}
+                >
                   {saving ? (lang === "da" ? "Gemmer..." : "Saving...") : lang === "da" ? "Gem besøg" : "Save visit"}
                 </button>
-                {isDemo && (
+                {isDemo && !pet?.isDemoSeed && (
                   <div className="muted" style={{ fontSize: 13 }}>
                     {lang === "da"
                       ? "Ikke tilgængelig i demoen — opret en konto for at gemme."
