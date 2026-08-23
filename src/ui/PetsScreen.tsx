@@ -346,7 +346,7 @@ export default function PetsScreen({
             {/* VIEW MODE */}
             {mode === "view" && selected && !viewingVisit && (
               <>
-                <ViewOnlyPet pet={selected} />
+                <ViewOnlyPet pet={selected} lang={lang} />
 
                 <div className="row" style={{ marginTop: 12 }}>
                   <button className="btn btnPrimary" onClick={() => setShowWizard(true)}>

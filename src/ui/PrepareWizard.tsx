@@ -682,25 +682,49 @@ export default function PrepareWizard({
 
       case 3:
         return (
-          <label className="label">
-            {lang === "da" ? "Mønstre & triggere" : "Patterns & triggers"}
-            <textarea
-              className="textarea"
-              value={draft.patterns}
-              onChange={(e) => setDraft({ ...draft, patterns: e.target.value })}
-              placeholder={
-                lang === "da"
-                  ? "F.eks. værre efter mad, kun på trapper, oftere om natten..."
-                  : "E.g., worse after meals, only on stairs, more frequent at night..."
-              }
-              rows={4}
-            />
-            <div className="muted" style={{ marginTop: 8 }}>
-              {lang === "da"
-                ? "Hvis der ikke er nogen mønstre, kan du lade feltet stå tomt."
-                : "If there are no patterns, you can leave this blank."}
-            </div>
-          </label>
+          <>
+            <label className="label">
+              {lang === "da" ? "Mønstre & triggere" : "Patterns & triggers"}
+              <textarea
+                className="textarea"
+                value={draft.patterns}
+                onChange={(e) => setDraft({ ...draft, patterns: e.target.value })}
+                placeholder={
+                  lang === "da"
+                    ? "F.eks. værre efter mad, kun på trapper, oftere om natten..."
+                    : "E.g., worse after meals, only on stairs, more frequent at night..."
+                }
+                rows={4}
+              />
+              <div className="muted" style={{ marginTop: 8 }}>
+                {lang === "da"
+                  ? "Hvis der ikke er nogen mønstre, kan du lade feltet stå tomt."
+                  : "If there are no patterns, you can leave this blank."}
+              </div>
+            </label>
+
+            <div style={{ height: 14 }} />
+
+            <label className="label">
+              {lang === "da" ? "Tilknyttede tegn" : "Associated signs"}
+              <textarea
+                className="textarea"
+                value={draft.associatedSigns}
+                onChange={(e) => setDraft({ ...draft, associatedSigns: e.target.value })}
+                placeholder={
+                  lang === "da"
+                    ? "Andet der sker samtidig? F.eks. drikker mere, halter lidt, er holdt op med at lege..."
+                    : "Anything else happening alongside it? E.g., drinking more, a slight limp, stopped playing..."
+                }
+                rows={3}
+              />
+              <div className="muted" style={{ marginTop: 8 }}>
+                {lang === "da"
+                  ? "Hvis der ikke er andre tegn, kan du lade feltet stå tomt."
+                  : "If there's nothing else, you can leave this blank."}
+              </div>
+            </label>
+          </>
         );
 
       case 4: {
