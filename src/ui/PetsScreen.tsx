@@ -350,11 +350,22 @@ export default function PetsScreen({
               <>
                 <ViewOnlyPet pet={selected} lang={lang} />
 
-                <div className="row" style={{ marginTop: 12 }}>
-                  <button className="btn btnPrimary" onClick={() => setShowWizard(true)}>
+                <div className="row" style={{ marginTop: 12, flexDirection: "column" as const, alignItems: "flex-start" }}>
+                  <button
+                    className="btn btnPrimary"
+                    onClick={() => setShowWizard(true)}
+                    disabled={isDemo && !selected.isDemoSeed}
+                  >
                     {lang === "da" ? "+ Tilføj besøg for " : "+ Add visit for "}
                     {selected.name || (lang === "da" ? "dette dyr" : "this pet")}
                   </button>
+                  {isDemo && !selected.isDemoSeed && (
+                    <div className="muted" style={{ fontSize: 13, marginTop: 6 }}>
+                      {lang === "da"
+                        ? "Ikke tilgængeligt i demoen — opret en konto for at tilføje besøg for dyr, du selv opretter."
+                        : "Not available in the demo — sign up to add visits for animals you create yourself."}
+                    </div>
+                  )}
                 </div>
 
                 <div style={{ marginTop: 12 }}>

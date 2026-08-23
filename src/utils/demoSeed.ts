@@ -44,7 +44,8 @@ export async function seedDemoData(userId: string, lang: Lang): Promise<void> {
     notes: "",
     surgeries: "",
     indoorOutdoor: "both",
-    lifestyle: isDa ? "Ingen andre dyr i hjemmet" : "No other pets at home"
+    lifestyle: isDa ? "Ingen andre dyr i hjemmet" : "No other pets at home",
+    isDemoSeed: true
   };
 
   const petRef = await addPet(pet);
@@ -85,7 +86,8 @@ export async function seedDemoData(userId: string, lang: Lang): Promise<void> {
     questionsVet: isDa
       ? "Jeg vil gerne vide, om vi skal have røntgen taget, eller om det er nok at fortsætte med ro"
       : "I want to know if we should get an X-ray, or if continued rest is enough",
-    status: "final"
+    status: "final",
+    isDemoSeed: true
   };
 
   const oldVisitRef = await addVisit(oldVisit);
@@ -115,7 +117,8 @@ export async function seedDemoData(userId: string, lang: Lang): Promise<void> {
     associatedSigns: "",
     previousTreatment: "",
     questionsVet: "",
-    status: "draft"
+    status: "draft",
+    isDemoSeed: true
   };
 
   await addVisit(newVisit);

@@ -97,6 +97,10 @@ export interface Pet {
   indoorOutdoor?: "indoor" | "outdoor" | "both"; // structured, feeds Patient Info
   lifestyle?: string; // other animals, travel, etc. (indoor/outdoor now its own field above)
 
+  // True only for the pet pre-populated by seedDemoData for a demo account.
+  // Used to allow creating new visits only for this pet in demo mode.
+  isDemoSeed?: boolean;
+
   updatedAt?: Timestamp;
   createdAt?: Timestamp;
 }
@@ -197,6 +201,11 @@ export interface Visit {
   // NEW — derived flags for fast UI
   hasNotes?: boolean;
   notesUpdatedAt?: Timestamp;
+
+  // True only for the visits pre-populated by seedDemoData for a demo
+  // account. Used to allow PDF download / vet sharing only for these
+  // visits in demo mode, not for anything created from scratch.
+  isDemoSeed?: boolean;
 
   createdAt?: Timestamp;
   updatedAt?: Timestamp;

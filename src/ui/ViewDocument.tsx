@@ -163,8 +163,12 @@ export default function ViewDocument({
     );
   }
 
+  // In demo mode, downloading/sharing is only allowed for the pre-seeded
+  // demo visit — anything created from scratch during the demo stays locked.
+  const demoExportLocked = isDemo && !visit.isDemoSeed;
+
   const handleDownloadPDF = async () => {
-    if (isDemo) return;
+    if (demoExportLocked) return;
     try {
       await exportToPDF({ visit, pet, note, lang });
     } catch (e: any) {
@@ -173,7 +177,7 @@ export default function ViewDocument({
   };
 
   const handleShareWithVet = async () => {
-    if (isDemo) return;
+    if (demoExportLocked) return;
     try {
       await shareWithVet({ visit, pet, note, lang });
     } catch (e: any) {
@@ -479,10 +483,10 @@ export default function ViewDocument({
 
       {/* Action Buttons */}
       <div className="row rowWrap" style={{ marginTop: "16px" }}>
-        <button className="btn btnPrimary" onClick={handleDownloadPDF} disabled={isDemo}>
+        <button className="btn btnPrimary" onClick={handleDownloadPDF} disabled={demoExportLocked}>
           📥 {tt("Download as PDF", "Download som PDF")}
         </button>
-        <button className="btn btnSecondary" onClick={handleShareWithVet} disabled={isDemo}>
+        <button className="btn btnSecondary" onClick={handleShareWithVet} disabled={demoExportLocked}>
           📤 {tt("Share with Vet", "Del med dyrlæge")}
         </button>
         <button className="btn btnSecondary" onClick={handleAskAiAssistant}>
@@ -490,11 +494,11 @@ export default function ViewDocument({
         </button>
       </div>
 
-      {isDemo && (
+      {demoExportLocked && (
         <div className="muted" style={{ fontSize: 13, marginTop: 6 }}>
           {tt(
-            "Downloading and sharing aren't available in the demo — sign up to use them.",
-            "Download og deling er ikke tilgængelige i demoen — opret en konto for at bruge dem."
+            "Downloading and sharing aren't available for visits created in the demo — sign up to use them.",
+            "Download og deling er ikke tilgængelige for besøg oprettet i demoen — opret en konto for at bruge dem."
           )}
         </div>
       )}

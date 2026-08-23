@@ -645,22 +645,39 @@ const handleDeleteVisit = async (visitId: string) => {
                   </h4>
 
                   <div className="stack" style={{ marginBottom: 20 }}>
-                    {pets.map((pet) => (
-                      <button
-                        key={pet.id}
-                        className="itemCard"
-                        onClick={() => handleSelectPetForWizard(pet)}
-                        style={{ cursor: "pointer", textAlign: "left", flexDirection: "row", alignItems: "center" }}
-                      >
-                        <PetAvatar photoUrl={pet.photoUrl} />
-                        <div>
-                          <div className="itemTitle">{pet.name || "(Unnamed)"}</div>
-                          <div className="muted">
-                            {pet.species || (lang === "da" ? "Ukendt art" : "Unknown species")}
+                    {pets.map((pet) => {
+                      const locked = isDemo && !pet.isDemoSeed;
+                      return (
+                        <button
+                          key={pet.id}
+                          className="itemCard"
+                          onClick={() => !locked && handleSelectPetForWizard(pet)}
+                          disabled={locked}
+                          style={{
+                            cursor: locked ? "not-allowed" : "pointer",
+                            textAlign: "left",
+                            flexDirection: "row",
+                            alignItems: "center",
+                            opacity: locked ? 0.5 : 1
+                          }}
+                        >
+                          <PetAvatar photoUrl={pet.photoUrl} />
+                          <div>
+                            <div className="itemTitle">{pet.name || "(Unnamed)"}</div>
+                            <div className="muted">
+                              {pet.species || (lang === "da" ? "Ukendt art" : "Unknown species")}
+                            </div>
+                            {locked && (
+                              <div className="muted" style={{ fontSize: 12 }}>
+                                {lang === "da"
+                                  ? "Ikke tilgængeligt i demoen"
+                                  : "Not available in the demo"}
+                              </div>
+                            )}
                           </div>
-                        </div>
-                      </button>
-                    ))}
+                        </button>
+                      );
+                    })}
                   </div>
                 </>
               )}
@@ -676,9 +693,11 @@ const handleDeleteVisit = async (visitId: string) => {
   {lang === "da" ? "Tilføj en dyreprofil" : "Add an animal profile"}
 </button>
 
-                <button className="btn btnSecondary" onClick={handleContinueWithoutProfile}>
-                  {lang === "da" ? "Fortsæt uden dyreprofil" : "Continue without animal profile"}
-                </button>
+                {!isDemo && (
+                  <button className="btn btnSecondary" onClick={handleContinueWithoutProfile}>
+                    {lang === "da" ? "Fortsæt uden dyreprofil" : "Continue without animal profile"}
+                  </button>
+                )}
 
                 <button
                   className="btn btnSecondary"

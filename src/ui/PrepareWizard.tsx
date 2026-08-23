@@ -132,6 +132,18 @@ export default function PrepareWizard({
           return;
         }
 
+        // In demo mode, new visits can only be created for the pre-seeded
+        // demo pet — never for a pet the demo user created themselves.
+        if (isDemo && !pet?.isDemoSeed) {
+          alert(
+            lang === "da"
+              ? "Ikke tilgængeligt i demoen — opret en konto for at tilføje besøg for dette dyr."
+              : "Not available in the demo — sign up to add visits for this pet."
+          );
+          closeToMyVisits();
+          return;
+        }
+
         const ref = await addVisit({ ...draft, status: "draft" });
         setVisitId(ref.id);
       } catch (e: any) {
