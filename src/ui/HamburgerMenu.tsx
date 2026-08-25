@@ -56,7 +56,9 @@ export default function HamburgerMenu({
   }, [isOpen, onClose]);
 
   const openAiAssistant = () => {
-    if (hasAiAssistantConsent()) {
+    // Demo users get the consent/warning popup on every use — never skip it
+    // via a remembered consent, matching the same rule in ViewDocument.tsx.
+    if (!isDemo && hasAiAssistantConsent()) {
       openChatGpt(lang);
     } else {
       setShowAiConsent(true);
@@ -64,7 +66,7 @@ export default function HamburgerMenu({
   };
 
   const confirmAiAssistant = () => {
-    setAiAssistantConsent();
+    if (!isDemo) setAiAssistantConsent();
     setShowAiConsent(false);
     openChatGpt(lang);
   };

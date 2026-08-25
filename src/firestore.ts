@@ -16,6 +16,7 @@ import {
 } from "firebase/firestore";
 import { deleteUser, getAuth } from "firebase/auth";
 import { firebaseApp } from "./firebase";
+import { deleteAttachment, deletePetPhoto } from "./utils/attachments";
 
 const db = getFirestore(firebaseApp);
 
@@ -450,7 +451,7 @@ async function deleteAllDocsForUser(params: { collectionName: string; userId: st
 // --------------------
 
 export type ActivationCodeCheckResult = { valid: boolean; reason?: "not_found" | "used" };
-export type ActivationCodeRedeemResult = { ok: boolean; reason?: "not_found" | "used" };
+export type ActivationCodeRedeemResult = { ok: boolean; reason?: "not_found" | "used" | "error" };
 
 // Read-only pre-check so a bad/used code fails fast, before we create an
 // account for it. The real enforcement is the transaction in
@@ -476,8 +477,32 @@ export async function redeemActivationCode(code: string, userId: string): Promis
     });
     return { ok: true };
   } catch (e: any) {
-    return { ok: false, reason: e?.message === "used" ? "used" : "not_found" };
+    // Only "not_found"/"used" mean the code is genuinely invalid — anything
+    // else (network blip, permission error, transaction retry exhaustion)
+    // is a transient failure, not proof the code was bad.
+    if (e?.message === "used") return { ok: false, reason: "used" };
+    if (e?.message === "not_found") return { ok: false, reason: "not_found" };
+    return { ok: false, reason: "error" };
   }
+}
+
+// Best-effort cleanup of Firebase Storage files (pet photos, visit/note
+// attachments) a user's docs reference, since deleting the Firestore docs
+// alone leaves those files orphaned in Storage forever. Each individual
+// delete already swallows its own errors (see deleteAttachment/
+// deletePetPhoto), so one missing/already-deleted file can't block the rest.
+async function deleteStorageFilesForUser(userId: string) {
+  const [pets, visits] = await Promise.all([getUserPets(userId), getUserVisits(userId)]);
+
+  const notesQuery = query(collection(db, "visitNotes"), where("userId", "==", userId));
+  const notesSnap = await getDocs(notesQuery);
+  const notes = notesSnap.docs.map((d) => d.data() as VisitNote);
+
+  await Promise.all([
+    ...pets.filter((p) => p.photoUrl).map((p) => deletePetPhoto(p.photoUrl!)),
+    ...visits.flatMap((v) => (v.attachments ?? []).map((a) => deleteAttachment(a))),
+    ...notes.flatMap((n) => (n.attachments ?? []).map((a) => deleteAttachment(a)))
+  ]);
 }
 
 export async function deleteUserAccount(userId: string) {
@@ -488,6 +513,11 @@ export async function deleteUserAccount(userId: string) {
   if (user.uid !== userId) throw new Error("User mismatch. Please log in again.");
 
   const results: Record<string, number> = {};
+
+  // Storage files (pet photos, visit/note attachments) live outside these
+  // Firestore docs, so read the docs first to know what to clean up there
+  // too — deleting only the docs would leave the files behind forever.
+  await deleteStorageFilesForUser(userId);
 
   // Delete in order: notes → visits → pets
   results["visitNotes"] = await deleteAllDocsForUser({ collectionName: "visitNotes", userId });

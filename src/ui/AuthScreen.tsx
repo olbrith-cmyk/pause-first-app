@@ -40,6 +40,11 @@ export default function AuthScreen({
         ? "Ugyldig aktiveringskode."
         : "Invalid activation code.";
 
+  const redeemErrorMessage = () =>
+    lang === "da"
+      ? "Der opstod en fejl under aktivering af koden. Prøv at logge ind, eller kontakt support hvis problemet fortsætter."
+      : "Something went wrong activating your code. Try logging in, or contact support if this keeps happening.";
+
   const run = async () => {
     setError(null);
     setStatus(null);
@@ -62,6 +67,12 @@ export default function AuthScreen({
 
         const redeemed = await redeemActivationCode(code, cred.user.uid);
         if (!redeemed.ok) {
+          if (redeemed.reason === "error") {
+            // Not proof the code is actually invalid (could be a transient
+            // failure) — leave the account intact rather than deleting it.
+            setError(redeemErrorMessage());
+            return;
+          }
           await cancelSignup(cred.user);
           setError(invalidCodeMessage(redeemed.reason));
           return;
