@@ -142,7 +142,6 @@ export default function App() {
           onLogout={isDemo ? handleExitDemo : logOut}
           onDeleteAccount={handleDeleteAccount}
           isDemo={isDemo}
-          onSignUpFromDemo={handleExitDemo}
         />
       )}
     </div>

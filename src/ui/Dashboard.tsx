@@ -32,7 +32,6 @@ type DashboardProps = {
   onLogout: () => void;
   onDeleteAccount: () => void;
   isDemo?: boolean;
-  onSignUpFromDemo?: () => void;
 };
 
 export default function Dashboard({
@@ -43,7 +42,6 @@ export default function Dashboard({
   onLogout,
   onDeleteAccount,
   isDemo,
-  onSignUpFromDemo,
 }: DashboardProps) {
   const t = useTranslation(lang);
 
@@ -118,11 +116,12 @@ export default function Dashboard({
               ? "Du udforsker en demo — data gemmes ikke permanent. Med en rigtig konto bygger du løbende en besøgshistorik op for hvert dyr."
               : "You're exploring a demo — nothing here is saved permanently. With a real account, you build up a visit history for each animal over time."}
           </span>
-          {onSignUpFromDemo && (
-            <button className="btn btnPrimary btnSmall" onClick={onSignUpFromDemo}>
-              {lang === "da" ? "Opret konto" : "Sign up"}
-            </button>
-          )}
+          <button
+            className="btn btnPrimary btnSmall"
+            onClick={() => window.open("https://olbrith.gumroad.com/l/vfdrdt", "_blank")}
+          >
+            {lang === "da" ? "Opret konto" : "Sign up"}
+          </button>
         </div>
       )}
 
