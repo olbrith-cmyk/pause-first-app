@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
-import type { CurrentStatus, Pet, TriState, Visit } from "../firestore";
+import type { Attachment, CurrentStatus, Pet, TriState, Visit } from "../firestore";
 import { addVisit, getVisitById, updateVisit, deleteVisitFully } from "../firestore";
 import TriToggle from "./TriToggle";
 import PetSnapshotCard from "./PetSnapshotCard";
 import AttachmentManager from "./AttachmentManager";
 import ViewDocument from "./ViewDocument";
 import { shareWithVet } from "../utils/pdfExport";
+import { deleteAttachment } from "../utils/attachments";
 import type { DurationUnit, Trend, Urgency } from "../utils/visitBrief";
 import { durationUnitLabel, trendLabel, urgencyLabel } from "../utils/visitBrief";
 
@@ -68,6 +69,11 @@ export default function PrepareWizard({
   const [visitId, setVisitId] = useState<string | null>(null);
   const didInit = useRef(false);
   const autosaveTimer = useRef<number | null>(null);
+  // Snapshot of the visit's attachments as last persisted, so a successful
+  // save can tell which attachments were just removed and are now safe to
+  // delete from Storage (see AttachmentManager — it only updates local
+  // state, never deletes).
+  const lastPersistedAttachmentsRef = useRef<Attachment[]>([]);
   const modalBodyRef = useRef<HTMLDivElement | null>(null);
   const stepContentRef = useRef<HTMLDivElement | null>(null);
   // How many times Next has scrolled (instead of advanced) on each step,
@@ -104,6 +110,17 @@ export default function PrepareWizard({
     onClose();
   };
 
+  // Deletes whatever attachments were dropped between the last persisted
+  // state and `persisted` (the list that was just written to Firestore),
+  // then updates the snapshot. Safe to call after every successful save.
+  const commitAttachmentDeletions = (persisted: Attachment[]) => {
+    const keptIds = new Set(persisted.map((a) => a.id));
+    for (const prev of lastPersistedAttachmentsRef.current) {
+      if (!keptIds.has(prev.id)) deleteAttachment(prev);
+    }
+    lastPersistedAttachmentsRef.current = persisted;
+  };
+
   useEffect(() => {
     if (didInit.current) return;
     didInit.current = true;
@@ -119,6 +136,7 @@ export default function PrepareWizard({
           }
 
           setVisitId(visitIdProp);
+          lastPersistedAttachmentsRef.current = existing.attachments ?? [];
           setDraft({
             ...existing,
             userId,
@@ -161,6 +179,7 @@ export default function PrepareWizard({
       try {
         const nextStatus = draft.status ?? "final";
         await updateVisit(visitId, { ...draft, status: nextStatus });
+        commitAttachmentDeletions(draft.attachments ?? []);
       } catch (e) {
         console.error("Autosave failed", e);
       }
@@ -374,6 +393,7 @@ export default function PrepareWizard({
     setSaving(true);
     try {
       await updateVisit(visitId, { ...draft, status: "final" });
+      commitAttachmentDeletions(draft.attachments ?? []);
       // Keep local state in sync with what was just written — the done
       // screen's ✕ button goes through handleSaveDraftAndClose, which
       // decides whether to preserve "final" based on draft.status. Without
@@ -425,6 +445,7 @@ export default function PrepareWizard({
       // has no status yet (a genuinely new, still-in-progress visit).
       const wasFinal = draft.status === "final";
       await updateVisit(visitId, { ...draft, status: draft.status ?? "draft" });
+      commitAttachmentDeletions(draft.attachments ?? []);
       // FIX: removed setToast (local state was unused/broken after unmount);
       // toast is correctly dispatched to parent via onToast prop only
       onToast?.(

@@ -10,6 +10,7 @@ import type {
   PetPreventativeItem
 } from "../firestore";
 import { addPet, deletePet, getUserPets, updatePet, getUserVisits, getVisitNote } from "../firestore";
+import { deletePetPhoto } from "../utils/attachments";
 import { indoorOutdoorLabel } from "../utils/petInfo";
 import { ViewOnlyPet } from "./ViewOnlyPet";
 import ViewDocument from "./ViewDocument";
@@ -167,6 +168,12 @@ export default function PetsScreen({
   };
 
   const cancel = () => {
+    // A photo picked during this edit but never saved is an orphaned
+    // Storage file now that deletion is deferred until Save — clean it up.
+    // The pet's original (still-persisted) photo, if any, is left alone.
+    if (editing.photoUrl && editing.photoUrl !== selected?.photoUrl) {
+      deletePetPhoto(editing.photoUrl);
+    }
     setSelected(null);
     setEditing(emptyPet(userId));
     setMode("view");
@@ -205,7 +212,13 @@ export default function PetsScreen({
 
       if (normalized.id) {
         const { id, ...rest } = normalized;
+        const previousPhotoUrl = selected?.photoUrl;
         await updatePet(id, rest);
+        // Now that the new photo (or its removal) is safely persisted, it's
+        // safe to delete whatever photo it replaced.
+        if (previousPhotoUrl && previousPhotoUrl !== normalized.photoUrl) {
+          deletePetPhoto(previousPhotoUrl);
+        }
       } else {
         await addPet(normalized);
       }

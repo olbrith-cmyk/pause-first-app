@@ -1,13 +1,7 @@
 import { useRef, useState } from "react";
 import type { Lang } from "../i18n";
 import type { Attachment } from "../firestore";
-import {
-  ATTACHMENT_MAX_MB,
-  deleteAttachment,
-  isAttachmentTooLarge,
-  isSupportedAttachment,
-  uploadAttachment
-} from "../utils/attachments";
+import { ATTACHMENT_MAX_MB, isAttachmentTooLarge, isSupportedAttachment, uploadAttachment } from "../utils/attachments";
 import AttachmentGallery from "./AttachmentGallery";
 
 export default function AttachmentManager({
@@ -68,9 +62,11 @@ export default function AttachmentManager({
     }
   };
 
-  const handleRemove = async (attachment: Attachment) => {
+  const handleRemove = (attachment: Attachment) => {
+    // Deleting from Storage happens once the enclosing form is actually
+    // saved (not here) — otherwise discarding the edit would leave the
+    // still-persisted record pointing at a file we already deleted.
     onChange(attachments.filter((a) => a.id !== attachment.id));
-    await deleteAttachment(attachment);
   };
 
   return (

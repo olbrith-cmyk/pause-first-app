@@ -1,12 +1,6 @@
 import { useRef, useState } from "react";
 import type { Lang } from "../i18n";
-import {
-  PET_PHOTO_MAX_MB,
-  deletePetPhoto,
-  isPetPhotoTooLarge,
-  isSupportedPetPhoto,
-  uploadPetPhoto
-} from "../utils/attachments";
+import { PET_PHOTO_MAX_MB, isPetPhotoTooLarge, isSupportedPetPhoto, uploadPetPhoto } from "../utils/attachments";
 import PetAvatar from "./PetAvatar";
 
 export default function PetPhotoUpload({
@@ -47,10 +41,11 @@ export default function PetPhotoUpload({
 
     setUploading(true);
     try {
-      const previousUrl = photoUrl;
+      // Deleting the previous photo happens once the parent form is actually
+      // saved (not here) — otherwise canceling the edit would leave the pet's
+      // still-persisted photoUrl pointing at a file we already deleted.
       const url = await uploadPetPhoto({ userId, scopeId, file });
       onChange(url);
-      if (previousUrl) await deletePetPhoto(previousUrl);
     } catch (e: any) {
       setError(e?.message ?? String(e));
     } finally {
@@ -59,10 +54,9 @@ export default function PetPhotoUpload({
     }
   };
 
-  const handleRemove = async () => {
+  const handleRemove = () => {
     if (!photoUrl) return;
     onChange(undefined);
-    await deletePetPhoto(photoUrl);
   };
 
   return (

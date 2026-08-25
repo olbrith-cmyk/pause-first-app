@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
 
-import type { Pet, Visit, VisitNote } from "../firestore";
+import type { Attachment, Pet, Visit, VisitNote } from "../firestore";
 import {
   addVisitNote,
   getUserPets,
@@ -12,6 +12,7 @@ import {
   addPet,
   deleteVisitFully
 } from "../firestore";
+import { deleteAttachment } from "../utils/attachments";
 
 import ViewDocument from "./ViewDocument";
 import PrepareWizard from "./PrepareWizard";
@@ -69,6 +70,10 @@ export default function VisitsScreen({
   const [editingNote, setEditingNote] = useState<VisitNote | null>(null);
   const [noteVisitId, setNoteVisitId] = useState<string | null>(null);
   const noteEditorRef = useRef<HTMLDivElement>(null);
+  // Snapshot of the note's attachments as last persisted, so save/cancel can
+  // tell which attachments are safe to actually delete from Storage (see
+  // AttachmentManager — it only updates local state, never deletes).
+  const savedNoteAttachmentsRef = useRef<Attachment[]>([]);
 
   useEffect(() => {
     if (editingNote && noteVisitId) {
@@ -159,9 +164,11 @@ useEffect(() => {
     setNoteVisitId(visitId);
     try {
       const note = await getVisitNote(userId, visitId);
+      savedNoteAttachmentsRef.current = note?.attachments ?? [];
       setEditingNote(note ?? emptyNote(userId, visitId));
     } catch (e) {
       console.error("Error loading note:", e);
+      savedNoteAttachmentsRef.current = [];
       setEditingNote(emptyNote(userId, visitId));
     }
   };
@@ -175,6 +182,13 @@ useEffect(() => {
       } else {
         await addVisitNote(editingNote);
       }
+      // Now that the note's new attachment list is safely persisted, it's
+      // safe to delete whatever attachments were removed from it.
+      const keptIds = new Set((editingNote.attachments ?? []).map((a) => a.id));
+      for (const removed of savedNoteAttachmentsRef.current) {
+        if (!keptIds.has(removed.id)) deleteAttachment(removed);
+      }
+
       alert(t.saved);
       await load();
       setEditingNote(null);
@@ -183,7 +197,7 @@ useEffect(() => {
       alert(t.error + ": " + (e?.message ?? String(e)));
     }
   };
-  
+
 const handleDeleteVisit = async (visitId: string) => {
   const ok = window.confirm(
     lang === "da"
@@ -534,6 +548,13 @@ const handleDeleteVisit = async (visitId: string) => {
                 <button
                   className="btn btnSecondary"
                   onClick={() => {
+                    // Any attachment added during this edit but never saved
+                    // is an orphaned Storage file now — clean it up. Ones
+                    // that were already persisted are left untouched.
+                    const savedIds = new Set(savedNoteAttachmentsRef.current.map((a) => a.id));
+                    for (const added of editingNote.attachments ?? []) {
+                      if (!savedIds.has(added.id)) deleteAttachment(added);
+                    }
                     setEditingNote(null);
                     setNoteVisitId(null);
                   }}
