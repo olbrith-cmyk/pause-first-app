@@ -11,7 +11,6 @@ import type {
 } from "../firestore";
 import { addPet, deletePet, getUserPets, updatePet, getUserVisits, getVisitNote } from "../firestore";
 import { deletePetPhoto } from "../utils/attachments";
-import { indoorOutdoorLabel } from "../utils/petInfo";
 import { ViewOnlyPet } from "./ViewOnlyPet";
 import ViewDocument from "./ViewDocument";
 import PrepareWizard from "./PrepareWizard";
@@ -540,19 +539,18 @@ export default function PetsScreen({
                     </label>
 
                     <label className="label">
-                      {lang === "da" ? "Indendørs/udendørs (valgfrit)" : "Indoor/outdoor (optional)"}
-                      <div className="row rowWrap" style={{ gap: 6, marginTop: 6 }}>
-                        {(["indoor", "outdoor", "both"] as const).map((v) => (
-                          <button
-                            key={v}
-                            type="button"
-                            className={`btn btnChip ${editing.indoorOutdoor === v ? "btnPrimary" : "btnSecondary"}`}
-                            onClick={() => setEditing({ ...editing, indoorOutdoor: v })}
-                          >
-                            {indoorOutdoorLabel(v, lang)}
-                          </button>
-                        ))}
-                      </div>
+                      {lang === "da" ? "Livsstil/miljø (valgfrit)" : "Lifestyle / environment (optional)"}
+                      <textarea
+                        className="textarea"
+                        value={editing.lifestyle ?? ""}
+                        onChange={(e) => setEditing({ ...editing, lifestyle: e.target.value })}
+                        placeholder={
+                          lang === "da"
+                            ? "F.eks. andre dyr i hjemmet, indendørs/udendørs, rejser..."
+                            : "E.g., other animals in the house, indoor/outdoor status, travel..."
+                        }
+                        rows={2}
+                      />
                     </label>
                   </div>
                 </Section>

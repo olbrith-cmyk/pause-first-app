@@ -43,8 +43,9 @@ export async function seedDemoData(userId: string, lang: Lang): Promise<void> {
     emergencyContact: "",
     notes: "",
     surgeries: "",
-    indoorOutdoor: "both",
-    lifestyle: isDa ? "Ingen andre dyr i hjemmet" : "No other pets at home",
+    lifestyle: isDa
+      ? "Ingen andre dyr i hjemmet. Både indendørs og udendørs."
+      : "No other pets at home. Both indoor and outdoor.",
     isDemoSeed: true
   };
 

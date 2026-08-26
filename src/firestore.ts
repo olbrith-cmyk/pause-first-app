@@ -95,8 +95,7 @@ export interface Pet {
   preventatives?: string;
 
   surgeries?: string;
-  indoorOutdoor?: "indoor" | "outdoor" | "both"; // structured, feeds Patient Info
-  lifestyle?: string; // other animals, travel, etc. (indoor/outdoor now its own field above)
+  lifestyle?: string; // other animals in the home, indoor/outdoor status, travel, etc.
 
   // True only for the pet pre-populated by seedDemoData for a demo account.
   // Used to allow creating new visits only for this pet in demo mode.

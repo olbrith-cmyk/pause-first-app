@@ -49,13 +49,6 @@ function vaccineStatusLabel(v: Pet["vaccinationStatus"] | undefined, lang: Lang)
   return "";
 }
 
-export function indoorOutdoorLabel(v: Pet["indoorOutdoor"] | undefined, lang: Lang): string {
-  if (v === "indoor") return lang === "da" ? "Indendørs" : "Indoor";
-  if (v === "outdoor") return lang === "da" ? "Udendørs" : "Outdoor";
-  if (v === "both") return lang === "da" ? "Begge dele" : "Both";
-  return "";
-}
-
 export function medicationsSummary(pet: Pet, lang: Lang): string {
   if (pet.medsSupplements && pet.medsSupplements.length > 0) {
     return pet.medsSupplements.map((m) => formatMed(m, lang)).filter(Boolean).join("; ");
@@ -159,7 +152,7 @@ export function patientInfoRows(pet: Pet, lang: Lang): { label: string; value: s
   push(lang === "da" ? "Fødselsdato / alder" : "Date of birth / age", ageOrBirthSummary(pet));
   push(lang === "da" ? "Køn" : "Sex", pet.sex);
   push(lang === "da" ? "Kastreret/steriliseret" : "Neutered status", pet.neuteredStatus);
-  push(lang === "da" ? "Indendørs/udendørs" : "Indoor/outdoor", indoorOutdoorLabel(pet.indoorOutdoor, lang));
+  push(lang === "da" ? "Livsstil/miljø" : "Lifestyle / environment", pet.lifestyle);
   push(lang === "da" ? "Vægt" : "Weight", pet.weight);
   push(lang === "da" ? "Mikrochip" : "Microchip", pet.microchip);
   push(lang === "da" ? "Vaccinationer" : "Vaccinations", vaccinationsSummary(pet, lang));
@@ -168,7 +161,6 @@ export function patientInfoRows(pet: Pet, lang: Lang): { label: string; value: s
   push(lang === "da" ? "Medicin" : "Medications", medicationsSummary(pet, lang));
   push(lang === "da" ? "Allergier/reaktioner" : "Allergies / reactions", pet.allergies);
   push(lang === "da" ? "Operationer/indgreb" : "Surgeries / procedures", pet.surgeries);
-  push(lang === "da" ? "Livsstil/miljø" : "Lifestyle / environment", pet.lifestyle);
   push(lang === "da" ? "Noter" : "Notes", pet.notes);
 
   return rows;
