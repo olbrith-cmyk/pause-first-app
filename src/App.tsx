@@ -75,15 +75,11 @@ export default function App() {
     return () => document.removeEventListener("focusin", handleFocusIn);
   }, []);
 
+  // Confirmation happens upstream in Dashboard's DeleteAccountConfirm modal
+  // (type-to-confirm), so by the time this runs the user has already
+  // deliberately confirmed — no second window.confirm() here.
   const handleDeleteAccount = async () => {
     if (!user) return;
-
-    const ok = window.confirm(
-      lang === "da"
-        ? "Slet din konto og alle data permanent? Dette kan ikke fortrydes."
-        : "Permanently delete your account and all data? This cannot be undone."
-    );
-    if (!ok) return;
 
     try {
       await deleteUserAccount(user.uid);

@@ -12,7 +12,7 @@ import PetsScreen from "./PetsScreen";
 import VisitsScreen from "./VisitsScreen";
 import HamburgerMenu from "./HamburgerMenu";
 
-import { EmergencyGuide, MedicalDisclaimer, PrivacyPolicy } from "../ui/Modals";
+import { DeleteAccountConfirm, EmergencyGuide, MedicalDisclaimer, PrivacyPolicy } from "../ui/Modals";
 
 type DashboardMode = "home" | "myVisits" | "prepare" | "pets";
 
@@ -51,6 +51,7 @@ export default function Dashboard({
   const [showEmergencyGuide, setShowEmergencyGuide] = useState(false);
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
   const [showMedicalDisclaimer, setShowMedicalDisclaimer] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Tracks PrepareWizard open state (even when launched from My Visits)
   const [wizardOpen, setWizardOpen] = useState(false);
@@ -256,7 +257,7 @@ export default function Dashboard({
         isOpen={menuOpen}
         onClose={() => setMenuOpen(false)}
         onLogout={onLogout}
-        onDeleteAccount={onDeleteAccount}
+        onDeleteAccount={() => setShowDeleteConfirm(true)}
         isDemo={isDemo}
         onEmergencyGuide={() => {
           setMenuOpen(false);
@@ -295,6 +296,17 @@ export default function Dashboard({
 
       {showPrivacyPolicy && (
         <PrivacyPolicy lang={lang} onClose={() => setShowPrivacyPolicy(false)} />
+      )}
+
+      {showDeleteConfirm && (
+        <DeleteAccountConfirm
+          lang={lang}
+          onConfirm={() => {
+            setShowDeleteConfirm(false);
+            onDeleteAccount();
+          }}
+          onClose={() => setShowDeleteConfirm(false)}
+        />
       )}
     </div>
   );

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
 
@@ -261,6 +262,69 @@ export function AiAssistantConsent({
         </button>
         <button className="btn btnPrimary" onClick={onConfirm}>
           Continue to ChatGPT
+        </button>
+      </div>
+    </ModalShell>
+  );
+}
+
+// A native window.confirm() is easy to click through on reflex (e.g. aiming
+// for "Log out" and hitting "Delete Account" instead, since they sit next to
+// each other in the menu) — this requires deliberately typing a confirmation
+// word, so an accidental click can't finish the deletion.
+export function DeleteAccountConfirm({
+  lang,
+  onConfirm,
+  onClose
+}: {
+  lang: Lang;
+  onConfirm: () => void;
+  onClose: () => void;
+}) {
+  const [typed, setTyped] = useState("");
+  const confirmWord = lang === "da" ? "SLET" : "DELETE";
+  const canConfirm = typed.trim().toUpperCase() === confirmWord;
+
+  const title = lang === "da" ? "Slet konto permanent?" : "Permanently delete your account?";
+
+  return (
+    <ModalShell title={title} onClose={onClose}>
+      {lang === "da" ? (
+        <>
+          <p>
+            <strong>Dette kan ikke fortrydes.</strong> Alle dine dyreprofiler, besøgsforberedelser,
+            noter og eventuelle fotos/vedhæftninger slettes permanent — ikke kun log ud.
+          </p>
+          <p>
+            Skriv <strong>{confirmWord}</strong> for at bekræfte:
+          </p>
+        </>
+      ) : (
+        <>
+          <p>
+            <strong>This cannot be undone.</strong> All your animal profiles, Visit Briefs, notes,
+            and any photos/attachments will be permanently deleted — not just signed out.
+          </p>
+          <p>
+            Type <strong>{confirmWord}</strong> to confirm:
+          </p>
+        </>
+      )}
+
+      <input
+        className="input"
+        value={typed}
+        onChange={(e) => setTyped(e.target.value)}
+        placeholder={confirmWord}
+        autoFocus
+      />
+
+      <div className="row" style={{ marginTop: 16 }}>
+        <button className="btn btnSecondary" onClick={onClose}>
+          {lang === "da" ? "Annuller" : "Cancel"}
+        </button>
+        <button className="btn btnDanger" onClick={onConfirm} disabled={!canConfirm}>
+          {lang === "da" ? "Slet alt permanent" : "Permanently delete everything"}
         </button>
       </div>
     </ModalShell>
