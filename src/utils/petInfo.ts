@@ -210,10 +210,10 @@ export function patientInfoBasicsRows(pet: Pet, lang: Lang): InfoRow[] {
 }
 
 // The pet's standing health background from its profile. Medications is
-// deliberately left out here: the PDF shows the fresher, per-visit "meds &
-// supplements" answer instead (falling back to this profile's medication
-// list only if that wasn't asked/answered) — see medicationsSummary above
-// and PdfVisitBriefDocument.
+// shown here as its own row (the pet's ongoing/standing list), separate
+// from the PDF's per-visit "Meds / Supplements" question — a new treatment
+// for the current issue may not be on the pet's saved profile yet, so
+// showing only one or the other could hide real information either way.
 export function healthBackgroundRows(pet: Pet, lang: Lang): InfoRow[] {
   const rows: InfoRow[] = [];
   const push = (label: string, value?: string) => {
@@ -221,6 +221,7 @@ export function healthBackgroundRows(pet: Pet, lang: Lang): InfoRow[] {
     if (v) rows.push({ label, value: v });
   };
 
+  push(lang === "da" ? "Faste medicin (dyreprofil)" : "Standing Medications (Pet Profile)", medicationsSummary(pet, lang));
   push(lang === "da" ? "Vaccinationer" : "Vaccinations", vaccinationsSummary(pet, lang));
   push(lang === "da" ? "Foder" : "Diet / feed", pet.diet);
   push(lang === "da" ? "Forebyggelse" : "Preventatives", preventativesSummary(pet, lang));

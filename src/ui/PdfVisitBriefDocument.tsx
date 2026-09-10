@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import type { Lang } from "../i18n";
 import type { CurrentStatus, Pet, TriState, Visit, VisitNote } from "../firestore";
-import { healthBackgroundRows, medicationsSummary, patientInfoBasicsRows, pdfSignalmentLine } from "../utils/petInfo";
+import { healthBackgroundRows, patientInfoBasicsRows, pdfSignalmentLine } from "../utils/petInfo";
 import { durationText, trendLabel, urgencyLabel } from "../utils/visitBrief";
 import AttachmentGallery from "./AttachmentGallery";
 
@@ -272,10 +272,11 @@ export default function PdfVisitBriefDocument({
   const signalmentAsOf = visitDateParsed && !Number.isNaN(visitDateParsed.getTime()) ? visitDateParsed : new Date();
   const signalment = pdfSignalmentLine(pet, lang, signalmentAsOf);
   const statusSummary = currentStatusSummary(visit.currentStatus, lang);
-  // The visit brief shows the fresher, per-visit "meds & supplements" answer
-  // — falling back to the pet's standing profile list only if that wasn't
-  // asked/answered, so real medication data is never hidden either way.
-  const medsSupplements = (visit.medicationsSupplements ?? "").trim() || medicationsSummary(pet, lang);
+  // Shown as its own row, separate from the pet profile's standing
+  // medication list (see "Standing Medications" in healthRows below) — a
+  // new treatment for the current issue may not be on the saved profile
+  // yet, so showing only one or the other could hide real information.
+  const medsSupplements = (visit.medicationsSupplements ?? "").trim();
   const knownConditions = ((visit as any).knownConditions as string) ?? "";
   const recentTests = ((visit as any).recentTests as string) ?? "";
   const notProvided = tt("Not provided by owner", "Ikke oplyst af ejeren");
@@ -463,7 +464,11 @@ export default function PdfVisitBriefDocument({
           {tt("Health Background Supplied by Owner", "Sundhedsbaggrund oplyst af ejeren")}
         </SectionLabel>
         <div>
-          <AskedInfoRow label={tt("Meds / Supplements", "Medicin / tilskud")} value={medsSupplements} placeholder={notProvided} />
+          <AskedInfoRow
+            label={tt("Meds / Supplements for This Visit", "Medicin / tilskud for dette besøg")}
+            value={medsSupplements}
+            placeholder={notProvided}
+          />
           <AskedInfoRow
             label={tt("Known Conditions (Vet-Diagnosed)", "Kendte tilstande (dyrlæge-diagnosticeret)")}
             value={knownConditions}
