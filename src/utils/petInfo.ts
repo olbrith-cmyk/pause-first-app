@@ -133,15 +133,23 @@ function computedAgeText(pet: Pet, lang: Lang, asOf: Date): string {
 // a vet expects right alongside the pet's name, since a name alone doesn't
 // say what they're walking in to see. Age is computed as of `asOf` (pass
 // the visit date so it reflects the pet's age at that visit, not today).
+// Species | breed | sex, neutered status | age | weight — the one-line
+// "signalment" summary a vet expects right under the pet's name.
 export function signalmentLine(pet: Pet, lang: Lang, asOf: Date = new Date()): string {
-  return [pet.species, pet.breedType, computedAgeText(pet, lang, asOf)]
+  const sexAndNeutered = [pet.sex, pet.neuteredStatus].map((p) => (p ?? "").trim()).filter(Boolean).join(", ");
+  return [pet.species, pet.breedType, sexAndNeutered, computedAgeText(pet, lang, asOf), pet.weight]
     .map((p) => (p ?? "").trim())
     .filter(Boolean)
-    .join(" · ");
+    .join(" | ");
 }
 
-export function patientInfoRows(pet: Pet, lang: Lang): { label: string; value: string }[] {
-  const rows: { label: string; value: string }[] = [];
+export type InfoRow = { label: string; value: string };
+
+// The pet's stable identity/background facts — species, breed, age, etc.
+// Blank fields are omitted rather than shown as "not provided", since these
+// come from the pet's saved profile rather than being asked fresh each visit.
+export function patientInfoBasicsRows(pet: Pet, lang: Lang): InfoRow[] {
+  const rows: InfoRow[] = [];
   const push = (label: string, value?: string) => {
     const v = (value ?? "").trim();
     if (v) rows.push({ label, value: v });
@@ -155,10 +163,25 @@ export function patientInfoRows(pet: Pet, lang: Lang): { label: string; value: s
   push(lang === "da" ? "Livsstil/miljø" : "Lifestyle / environment", pet.lifestyle);
   push(lang === "da" ? "Vægt" : "Weight", pet.weight);
   push(lang === "da" ? "Mikrochip" : "Microchip", pet.microchip);
+
+  return rows;
+}
+
+// The pet's standing health background from its profile — vaccinations,
+// diet, preventatives, allergies, surgeries, notes. Medications is
+// deliberately left out here: the visit brief shows the fresher, per-visit
+// "meds & supplements" answer instead (falling back to this profile summary
+// only if that wasn't asked/answered) — see medicationsSummary + ViewDocument.
+export function healthBackgroundRows(pet: Pet, lang: Lang): InfoRow[] {
+  const rows: InfoRow[] = [];
+  const push = (label: string, value?: string) => {
+    const v = (value ?? "").trim();
+    if (v) rows.push({ label, value: v });
+  };
+
   push(lang === "da" ? "Vaccinationer" : "Vaccinations", vaccinationsSummary(pet, lang));
   push(lang === "da" ? "Foder" : "Diet / feed", pet.diet);
   push(lang === "da" ? "Forebyggelse" : "Preventatives", preventativesSummary(pet, lang));
-  push(lang === "da" ? "Medicin" : "Medications", medicationsSummary(pet, lang));
   push(lang === "da" ? "Allergier/reaktioner" : "Allergies / reactions", pet.allergies);
   push(lang === "da" ? "Operationer/indgreb" : "Surgeries / procedures", pet.surgeries);
   push(lang === "da" ? "Noter" : "Notes", pet.notes);
@@ -166,6 +189,26 @@ export function patientInfoRows(pet: Pet, lang: Lang): { label: string; value: s
   return rows;
 }
 
+// Full pet-profile reference view (no visit involved) — basics + health
+// background + the profile's own standing medication list. Used by the
+// plain-text share and by screens that show a pet's profile on its own
+// (ViewOnlyPet, PetSnapshotCard), where there's no fresher per-visit answer
+// to prefer instead, unlike ViewDocument's visit-aware Meds/Supplements row.
+export function fullProfileRows(pet: Pet, lang: Lang): InfoRow[] {
+  const basics = patientInfoBasicsRows(pet, lang);
+  const health = healthBackgroundRows(pet, lang);
+  const medications = medicationsSummary(pet, lang).trim();
+  if (!medications) return [...basics, ...health];
+
+  // Insert Medications right after Preventatives, matching the order this
+  // document used before Meds/Supplements and profile Medications were
+  // split apart.
+  const preventativesIndex = health.findIndex((r) => r.label === (lang === "da" ? "Forebyggelse" : "Preventatives"));
+  const medicationsRow: InfoRow = { label: lang === "da" ? "Medicin" : "Medications", value: medications };
+  const insertAt = preventativesIndex === -1 ? health.length : preventativesIndex + 1;
+  return [...basics, ...health.slice(0, insertAt), medicationsRow, ...health.slice(insertAt)];
+}
+
 export function patientInfoLines(pet: Pet, lang: Lang): string[] {
-  return patientInfoRows(pet, lang).map((r) => `${r.label}: ${r.value}`);
+  return fullProfileRows(pet, lang).map((r) => `${r.label}: ${r.value}`);
 }

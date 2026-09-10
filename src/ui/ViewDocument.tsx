@@ -3,11 +3,13 @@ import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
 import type { CurrentStatus, Pet, TriState, Visit, VisitNote } from "../firestore";
 import { exportToPDF, shareWithVet } from "../utils/pdfExport";
-import { patientInfoRows, signalmentLine } from "../utils/petInfo";
-import { formatDuration, trendLabel, urgencyIcon, urgencyLabel, urgencyTone } from "../utils/visitBrief";
+import { healthBackgroundRows, medicationsSummary, patientInfoBasicsRows, signalmentLine } from "../utils/petInfo";
+import { durationText, trendLabel, urgencyLabel } from "../utils/visitBrief";
 import { hasAiAssistantConsent, openChatGpt, setAiAssistantConsent } from "../utils/chatGptHandoff";
 import AttachmentGallery from "./AttachmentGallery";
 import { AiAssistantConsent } from "./Modals";
+
+type StatusFinding = { label: string; notes: string };
 
 function currentStatusSummary(cs: CurrentStatus | undefined, lang: Lang) {
   if (!cs) return null;
@@ -23,18 +25,17 @@ function currentStatusSummary(cs: CurrentStatus | undefined, lang: Lang) {
     { key: "skinEars", labelEn: "Skin/ears", labelDa: "Hud/ører", notesKey: "skinEarsNotes" }
   ];
 
-  const different: string[] = [];
-  const notSure: string[] = [];
+  const different: StatusFinding[] = [];
+  const notSure: StatusFinding[] = [];
   const asUsual: string[] = [];
 
   for (const it of items) {
     const v = (cs[it.key] as TriState) ?? "normal";
     const notes = ((cs[it.notesKey] as string) ?? "").trim();
     const label = lang === "da" ? it.labelDa : it.labelEn;
-    const line = notes ? `${label}: ${notes}` : label;
-    if (v === "changed") different.push(line);
-    else if (v === "na") notSure.push(line);
-    else asUsual.push(line);
+    if (v === "changed") different.push({ label, notes });
+    else if (v === "na") notSure.push({ label, notes });
+    else asUsual.push(label);
   }
 
   const otherNotes = (cs.otherNotes ?? "").trim();
@@ -43,94 +44,212 @@ function currentStatusSummary(cs: CurrentStatus | undefined, lang: Lang) {
   return { different, notSure, asUsual, otherNotes };
 }
 
-// --- Visual building blocks for a scannable, easy-on-the-eyes document ---
+// --- Visual building blocks for a document that reads well on screen and
+// prints/exports as clean, clearly separated pages ---
 
-function Section({
-  title,
-  icon,
-  accent = "var(--blue)",
-  children
-}: {
-  title: string;
-  icon?: string;
-  accent?: string;
-  children: ReactNode;
-}) {
+const AMBER = "#9c6b2e";
+
+function PauseMark() {
+  return (
+    <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true" style={{ flexShrink: 0 }}>
+      <circle cx="14" cy="14" r="13" fill="none" stroke="var(--blue)" strokeWidth="2" />
+      <rect x="10" y="8" width="2.6" height="12" rx="1" fill="var(--blue)" />
+      <rect x="15.4" y="8" width="2.6" height="12" rx="1" fill="var(--blue)" />
+    </svg>
+  );
+}
+
+function DocHeader({ lang, subtitle }: { lang: Lang; subtitle: string }) {
   return (
     <div
       style={{
-        marginBottom: 14,
-        padding: "12px 16px",
-        background: "var(--card)",
-        border: "1px solid var(--border)",
-        borderLeft: `4px solid ${accent}`,
-        borderRadius: 10
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "flex-start",
+        gap: 12,
+        paddingBottom: 10,
+        marginBottom: 16,
+        borderBottom: "2px solid var(--blue)"
       }}
     >
-      <h4
-        style={{
-          margin: "0 0 8px 0",
-          color: accent,
-          fontSize: 12,
-          fontWeight: 800,
-          textTransform: "uppercase",
-          letterSpacing: "0.4px"
-        }}
-      >
-        {icon ? `${icon}  ` : ""}
-        {title}
-      </h4>
-      <div style={{ lineHeight: "1.6", fontSize: 15, color: "var(--text)" }}>{children}</div>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <PauseMark />
+        <div>
+          <div style={{ fontWeight: 800, fontSize: 15, color: "var(--text)" }}>Pause First</div>
+          <div style={{ fontSize: 11, color: "var(--muted)", fontStyle: "italic" }}>
+            {lang === "da" ? "Gå forberedt ind." : "Walk in prepared."}
+          </div>
+        </div>
+      </div>
+      <div style={{ textAlign: "right" }}>
+        <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text)", letterSpacing: "0.3px" }}>
+          {lang === "da" ? "KOMPLET EJER-FORBEREDT BESØGSBRIEF" : "COMPLETE OWNER-PREPARED VISIT BRIEF"}
+        </div>
+        <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 2 }}>{subtitle}</div>
+      </div>
     </div>
   );
 }
 
-function StatusChip({ label, tone }: { label: string; tone: "changed" | "asUsual" | "notSure" }) {
-  const palette = {
-    changed: { bg: "var(--lightRed)", fg: "var(--red)" },
-    notSure: { bg: "var(--lightBlue)", fg: "var(--blue)" },
-    asUsual: { bg: "var(--lightGreen)", fg: "var(--green)" }
-  }[tone];
-
+function DocFooter({ petName, lang, page, totalPages }: { petName: string; lang: Lang; page: number; totalPages: number }) {
   return (
-    <span
+    <div
       style={{
-        display: "inline-block",
-        padding: "4px 10px",
-        margin: "0 6px 6px 0",
-        borderRadius: 999,
-        fontSize: 13,
-        fontWeight: 600,
-        background: palette.bg,
-        color: palette.fg
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "flex-end",
+        gap: 12,
+        marginTop: 20,
+        paddingTop: 10,
+        borderTop: "1px solid var(--border)"
       }}
     >
-      {label}
-    </span>
+      <div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text)" }}>
+          {lang === "da" ? `Forberedt af ${petName}s ejer med Pause First.` : `Prepared by ${petName}'s owner using Pause First.`}
+        </div>
+        <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 2 }}>
+          {lang === "da"
+            ? "Kun ejer-rapporterede oplysninger. Ikke en diagnose, triagevurdering eller journal."
+            : "Owner-reported information only. Not a diagnosis, triage assessment, or medical record."}
+        </div>
+      </div>
+      <div style={{ fontSize: 11, color: "var(--muted)", whiteSpace: "nowrap" }}>
+        {page} / {totalPages}
+      </div>
+    </div>
   );
 }
 
-function StatusGroup({ label, items, tone }: { label: string; items: string[]; tone: "changed" | "asUsual" | "notSure" }) {
-  if (!items.length) return null;
+// A page is its own bordered sheet, screenshotted independently for the PDF
+// export so pagination happens at these deliberate boundaries instead of an
+// arbitrary pixel cut partway through a section.
+function DocPage({ className, children }: { className?: string; children: ReactNode }) {
   return (
-    <div style={{ marginBottom: 8 }}>
-      <div
-        style={{
-          fontSize: 11,
-          fontWeight: 700,
-          color: "var(--muted)",
-          textTransform: "uppercase",
-          letterSpacing: "0.3px",
-          marginBottom: 4
-        }}
-      >
+    <div
+      className={className}
+      style={{
+        background: "var(--card)",
+        border: "1px solid var(--border)",
+        borderRadius: 10,
+        padding: "20px",
+        marginBottom: 16
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function SectionLabel({ children, color = "var(--blue)" }: { children: ReactNode; color?: string }) {
+  return (
+    <div
+      style={{
+        fontSize: 12,
+        fontWeight: 800,
+        color,
+        textTransform: "uppercase",
+        letterSpacing: "0.4px",
+        margin: "18px 0 8px 0"
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+// A single labeled field, boxed and lightly shaded so a scanning eye can
+// separate one answer from the next — alternating tint mirrors the printed
+// mockup this layout is based on.
+function FieldBox({ label, children, shaded, empty }: { label: string; children: ReactNode; shaded?: boolean; empty?: boolean }) {
+  return (
+    <div
+      style={{
+        padding: "10px 14px",
+        marginBottom: 8,
+        background: shaded ? "var(--bg)" : "var(--card)",
+        border: "1px solid var(--border)",
+        borderRadius: 8
+      }}
+    >
+      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.3px", marginBottom: 4 }}>
         {label}
       </div>
-      <div>
-        {items.map((it) => (
-          <StatusChip key={it} label={it} tone={tone} />
-        ))}
-      </div>
+      <div style={{ fontSize: 14, lineHeight: "1.5", color: empty ? AMBER : "var(--text)" }}>{children}</div>
+    </div>
+  );
+}
+
+// Two FieldBoxes side by side, collapsing to a single column on narrow
+// screens (no media query needed — auto-fit handles both the phone-width
+// on-screen view and whatever width the PDF is captured at).
+function FieldPair({ children }: { children: ReactNode }) {
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 8, marginBottom: 8 }}>
+      {children}
+    </div>
+  );
+}
+
+function InfoTable({ rows }: { rows: { label: string; value: string }[] }) {
+  if (!rows.length) return null;
+  return (
+    <div>
+      {rows.map((r, i) => (
+        <div
+          key={r.label}
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 4,
+            padding: "8px 10px",
+            background: i % 2 === 1 ? "var(--bg)" : "var(--card)",
+            borderRadius: 6
+          }}
+        >
+          <div style={{ width: 190, flexShrink: 0, color: "var(--muted)", fontSize: 13, fontWeight: 700 }}>{r.label}</div>
+          <div style={{ fontSize: 14, color: "var(--text)" }}>{r.value}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Same visual language as InfoTable, but for fields that are always asked
+// (so a blank one is shown with the amber "not provided" placeholder,
+// instead of being silently omitted like a blank profile field is).
+function AskedInfoRow({ label, value, placeholder, shaded }: { label: string; value: string; placeholder: string; shaded?: boolean }) {
+  const empty = !value.trim();
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        gap: 4,
+        padding: "8px 10px",
+        background: shaded ? "var(--bg)" : "var(--card)",
+        borderRadius: 6
+      }}
+    >
+      <div style={{ width: 190, flexShrink: 0, color: "var(--muted)", fontSize: 13, fontWeight: 700 }}>{label}</div>
+      <div style={{ fontSize: 14, color: empty ? AMBER : "var(--text)" }}>{empty ? placeholder : value}</div>
+    </div>
+  );
+}
+
+function ThreeUp({ items }: { items: { label: string; value: string }[] }) {
+  const present = items.filter((i) => i.value.trim());
+  if (!present.length) return null;
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10, marginBottom: 14 }}>
+      {present.map((i) => (
+        <div key={i.label} style={{ padding: "8px 12px", background: "var(--bg)", borderRadius: 8, border: "1px solid var(--border)" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.3px" }}>
+            {i.label}
+          </div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", marginTop: 2 }}>{i.value}</div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -204,273 +323,279 @@ export default function ViewDocument({
     openChatGpt(lang, aiContext);
   };
 
-  const patientRows = patientInfoRows(pet, lang);
+  const basicsRows = patientInfoBasicsRows(pet, lang);
+  const healthRows = healthBackgroundRows(pet, lang);
   const visitDateParsed = visit.visitDate ? new Date(visit.visitDate) : null;
   const signalmentAsOf = visitDateParsed && !Number.isNaN(visitDateParsed.getTime()) ? visitDateParsed : new Date();
   const signalment = signalmentLine(pet, lang, signalmentAsOf);
   const statusSummary = currentStatusSummary(visit.currentStatus, lang);
-  const medicationsSupplements = visit.medicationsSupplements ?? "";
+  // The visit brief shows the fresher, per-visit "meds & supplements" answer
+  // — falling back to the pet's standing profile list only if that wasn't
+  // asked/answered, so real medication data is never hidden either way.
+  const medsSupplements = (visit.medicationsSupplements ?? "").trim() || medicationsSummary(pet, lang);
   const knownConditions = ((visit as any).knownConditions as string) ?? "";
   const recentTests = ((visit as any).recentTests as string) ?? "";
-  const notAnswered = tt("Not answered", "Ikke besvaret");
+  const notProvided = tt("Not provided by owner", "Ikke oplyst af ejeren");
   // Routine visits skip the Timeline/Patterns/Other details steps in the
   // wizard entirely (see PrepareWizard), so those questions were never
   // actually asked — show them only if there's real content, same as
   // before. Every other wizard question always renders, with a "Not
-  // answered" fallback, so the vet can tell "asked, left blank" apart from
+  // provided" fallback, so the vet can tell "asked, left blank" apart from
   // "never asked."
   const routineSkipsExtras = visit.urgency === "routine";
 
-  // The meds/conditions/tests/tried-at-home step is collapsed behind a
-  // "anything to mention?" gate for every visit (see PrepareWizard). If
-  // every one of those fields is blank, that's virtually always because the
-  // owner explicitly answered "No, nothing to mention" — not because the
-  // question went unasked or was left blank — so show one clear "Nothing to
-  // mention" line instead of "Not answered" four times over, which would
-  // misrepresent an explicit "no" as unanswered. A partially-filled group
-  // still gets the normal per-field fallback for whichever ones are blank.
-  const medsGroupAllBlank = !medicationsSupplements && !knownConditions && !recentTests && !visit.previousTreatment;
+  const totalPages = note ? 3 : 2;
+  const petName = pet.name || tt("the pet", "dyret");
+  const subtitle = tt("Owner information organised without clinical interpretation", "Ejerinformation organiseret uden klinisk fortolkning");
+
+  const durationVal = durationText(visit.durationValue, visit.durationUnit, lang);
 
   return (
     <div className="stack">
       {!hideTitle && <h3>{t.viewDocument}</h3>}
 
-      <div id="document-content" className="panel" style={{ padding: "24px" }}>
-        {/* Top accent bar for a bit of brand color at a glance */}
-        <div style={{ height: 4, background: "var(--blue)", borderRadius: 4, marginBottom: "18px" }} />
+      <div id="document-content">
+        {/* ---------- PAGE 1: Visit Brief ---------- */}
+        <DocPage className="docPage">
+          <DocHeader lang={lang} subtitle={subtitle} />
 
-        {/* Header — name + signalment (species/breed/age), so the vet knows what
-            they're walking in to see before reading a single word further. */}
-        <div style={{ marginBottom: "20px", paddingBottom: "12px", borderBottom: "2px solid var(--border)" }}>
-          <h2 style={{ margin: "0 0 4px 0", fontSize: "26px", fontWeight: 800, color: "var(--text)" }}>{pet.name}</h2>
-          {signalment && (
-            <p style={{ margin: "0 0 4px 0", color: "var(--text)", fontSize: "15px", fontWeight: 600 }}>{signalment}</p>
-          )}
-          <p style={{ margin: "0", color: "var(--muted)", fontSize: "14px" }}>
-            {tt("Visit Date", "Besøgsdato")}: {visit.visitDate || tt("Not specified", "Ikke angivet")}
-          </p>
-        </div>
-
-        {/* Main Concern — the single most important line, so it comes first and stands out.
-            Duration/trend pills and an urgency badge sit right with it, so the vet gets the
-            whole "what, how long, which direction, how worried" picture in one glance. */}
-        <div
-          style={{
-            marginBottom: "18px",
-            padding: "16px 18px",
-            background: "var(--lightBlue)",
-            border: "1px solid var(--blue)",
-            borderRadius: 12
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-            <span style={{ fontSize: 18 }}>🩺</span>
-            <h3
-              style={{
-                margin: 0,
-                color: "var(--blue)",
-                fontSize: 13,
-                fontWeight: 800,
-                textTransform: "uppercase",
-                letterSpacing: "0.4px"
-              }}
-            >
-              {tt("Main Concern", "Hovedbekymring")}
-            </h3>
-          </div>
-          <p style={{ margin: 0, fontSize: 19, fontWeight: 700, lineHeight: "1.5", color: "var(--text)" }}>
-            {visit.mainConcern || notAnswered}
-          </p>
-          {(visit.urgency || visit.durationValue || visit.trend) && (
-            <div style={{ marginTop: 10 }}>
-              {visit.urgency && (
-                <StatusChip
-                  label={`${urgencyIcon(visit.urgency)} ${urgencyLabel(visit.urgency, lang)}`}
-                  tone={urgencyTone(visit.urgency)!}
-                />
-              )}
-              {formatDuration(visit.durationValue, visit.durationUnit, lang) && (
-                <StatusChip label={formatDuration(visit.durationValue, visit.durationUnit, lang)} tone="notSure" />
-              )}
-              {visit.trend && (
-                <StatusChip
-                  label={trendLabel(visit.trend, lang)}
-                  tone={visit.trend === "worse" ? "changed" : visit.trend === "better" ? "asUsual" : "notSure"}
-                />
-              )}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 6 }}>
+            <h2 style={{ margin: 0, fontSize: 30, fontWeight: 800, color: "var(--text)" }}>{pet.name}</h2>
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" }}>
+                {tt("Visit Date", "Besøgsdato")}
+              </div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)" }}>
+                {visit.visitDate || tt("Not specified", "Ikke angivet")}
+              </div>
             </div>
+          </div>
+          {signalment && <div style={{ fontSize: 14, color: "var(--muted)", marginBottom: 16 }}>{signalment}</div>}
+
+          <div
+            style={{
+              padding: "16px 18px",
+              marginBottom: 14,
+              background: "var(--lightBlue)",
+              border: "1px solid var(--blue)",
+              borderRadius: 12
+            }}
+          >
+            <div style={{ fontSize: 11, fontWeight: 800, color: "var(--blue)", textTransform: "uppercase", letterSpacing: "0.4px", marginBottom: 6 }}>
+              {tt("Main Concern", "Hovedbekymring")}
+            </div>
+            <div style={{ fontSize: 19, fontWeight: 700, lineHeight: "1.5", color: "var(--text)" }}>
+              {visit.mainConcern || notProvided}
+            </div>
+          </div>
+
+          <ThreeUp
+            items={[
+              { label: tt("Owner Concern", "Ejerens bekymring"), value: urgencyLabel(visit.urgency, lang) },
+              { label: tt("Duration", "Varighed"), value: durationVal },
+              { label: tt("Owner-Described Course", "Ejerens beskrivelse af forløb"), value: trendLabel(visit.trend, lang) }
+            ]}
+          />
+
+          <SectionLabel>{tt("History Provided by Owner", "Historik oplyst af ejeren")}</SectionLabel>
+
+          {(visit.functionalImpact || !routineSkipsExtras) && (
+            <FieldBox label={tt("Impact on Daily Life", "Indvirkning på hverdagen")} empty={!visit.functionalImpact}>
+              {visit.functionalImpact || notProvided}
+            </FieldBox>
           )}
-        </div>
+          {(visit.whenStart || !routineSkipsExtras) && (
+            <FieldBox label={tt("When Did This Start?", "Hvornår startede det?")} shaded empty={!visit.whenStart}>
+              {visit.whenStart || notProvided}
+            </FieldBox>
+          )}
+          {(visit.howProgressing || !routineSkipsExtras) && (
+            <FieldBox label={tt("How Is It Progressing?", "Hvordan udvikler det sig?")} empty={!visit.howProgressing}>
+              {visit.howProgressing || notProvided}
+            </FieldBox>
+          )}
+          {(visit.patterns || visit.otherDetails || !routineSkipsExtras) && (
+            <FieldPair>
+              <FieldBox label={tt("Patterns or Triggers", "Mønstre eller udløsende faktorer")} shaded empty={!visit.patterns}>
+                {visit.patterns || notProvided}
+              </FieldBox>
+              <FieldBox label={tt("Other Details", "Andre detaljer")} shaded empty={!visit.otherDetails}>
+                {visit.otherDetails || notProvided}
+              </FieldBox>
+            </FieldPair>
+          )}
 
-        {/* Functional Impact — severity framed as observable impact on daily
-            life, rather than a false-precision 1-10 scale. Not asked for
-            routine visits (e.g. a vaccination), so stays hidden unless
-            there's content to show. */}
-        {(visit.functionalImpact || !routineSkipsExtras) && (
-          <Section title={tt("Impact on Daily Life", "Indvirkning på hverdagen")} icon="⚖️">
-            {visit.functionalImpact || notAnswered}
-          </Section>
-        )}
+          {statusSummary && (
+            <>
+              <SectionLabel color="var(--green)">
+                {tt("Current Status Compared with Normal", "Nuværende status ift. normalt")}
+              </SectionLabel>
+              <div style={{ padding: "12px 14px", border: "1px solid var(--border)", borderRadius: 8, marginBottom: 8 }}>
+                {!!statusSummary.different.length && (
+                  <div style={{ marginBottom: statusSummary.notSure.length || statusSummary.asUsual.length ? 10 : 0 }}>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: "var(--red)", textTransform: "uppercase", letterSpacing: "0.3px", marginBottom: 4 }}>
+                      {tt("Different", "Anderledes")}
+                    </div>
+                    {statusSummary.different.map((f) => (
+                      <div key={f.label} style={{ display: "flex", flexWrap: "wrap", gap: 6, fontSize: 14, marginBottom: 2 }}>
+                        <span style={{ fontWeight: 700, color: "var(--text)" }}>{f.label}</span>
+                        {f.notes && <span style={{ color: "var(--text)" }}>{f.notes}</span>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {!!statusSummary.notSure.length && (
+                  <div style={{ marginBottom: statusSummary.asUsual.length ? 10 : 0 }}>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: "var(--blue)", textTransform: "uppercase", letterSpacing: "0.3px", marginBottom: 4 }}>
+                      {tt("N/A / Not Sure", "Ikke relevant / ved ikke")}
+                    </div>
+                    {statusSummary.notSure.map((f) => (
+                      <div key={f.label} style={{ display: "flex", flexWrap: "wrap", gap: 6, fontSize: 14, marginBottom: 2 }}>
+                        <span style={{ fontWeight: 700, color: "var(--text)" }}>{f.label}</span>
+                        {f.notes && <span style={{ color: "var(--text)" }}>{f.notes}</span>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {!!statusSummary.asUsual.length && (
+                  <div style={{ fontSize: 13 }}>
+                    <span style={{ fontWeight: 800, color: "var(--green)", textTransform: "uppercase", letterSpacing: "0.3px", marginRight: 6 }}>
+                      {tt("As Usual", "Som normalt")}
+                    </span>
+                    <span style={{ color: "var(--muted)" }}>{statusSummary.asUsual.join(" | ")}</span>
+                  </div>
+                )}
+                {statusSummary.otherNotes && (
+                  <p style={{ margin: "8px 0 0 0", fontSize: 14, lineHeight: "1.6" }}>{statusSummary.otherNotes}</p>
+                )}
+              </div>
+            </>
+          )}
 
-        {/* When Did It Start */}
-        {(visit.whenStart || !routineSkipsExtras) && (
-          <Section title={tt("When Did This Start?", "Hvornår startede det?")} icon="📅">
-            {visit.whenStart || notAnswered}
-          </Section>
-        )}
+          <FieldPair>
+            <FieldBox label={tt("Previous Treatment", "Tidligere behandling")} empty={!visit.previousTreatment}>
+              {visit.previousTreatment || notProvided}
+            </FieldBox>
+            <FieldBox label={tt("Question for the Veterinarian", "Spørgsmål til dyrlægen")} empty={!visit.questionsVet}>
+              {visit.questionsVet || notProvided}
+            </FieldBox>
+          </FieldPair>
 
-        {/* How Is It Progressing */}
-        {(visit.howProgressing || !routineSkipsExtras) && (
-          <Section title={tt("How Is It Progressing?", "Hvordan udvikler det sig?")} icon="📈">
-            {visit.howProgressing || notAnswered}
-          </Section>
-        )}
+          {!!visit.attachments?.length && (
+            <>
+              <SectionLabel>{tt("Photos, Video & Audio", "Fotos, video & lyd")}</SectionLabel>
+              <AttachmentGallery attachments={visit.attachments} />
+            </>
+          )}
 
-        {/* Patterns */}
-        {(visit.patterns || !routineSkipsExtras) && (
-          <Section title={tt("Patterns or Triggers", "Mønstre eller udløsende faktorer")} icon="🔁">
-            {visit.patterns || notAnswered}
-          </Section>
-        )}
+          <DocFooter petName={petName} lang={lang} page={1} totalPages={totalPages} />
+        </DocPage>
 
-        {/* Current Status */}
-        {statusSummary && (
-          <Section title={tt("Current Status (vs. Normal)", "Nuværende status (ift. normalt)")} icon="❤️">
-            <StatusGroup label={tt("Different", "Anderledes")} items={statusSummary.different} tone="changed" />
-            <StatusGroup
-              label={tt("N/A / not sure", "Ikke relevant / ved ikke")}
-              items={statusSummary.notSure}
-              tone="notSure"
-            />
-            <StatusGroup label={tt("As usual", "Som normalt")} items={statusSummary.asUsual} tone="asUsual" />
-            {statusSummary.otherNotes && (
-              <p style={{ margin: "4px 0 0 0", lineHeight: "1.6" }}>{statusSummary.otherNotes}</p>
+        {/* ---------- PAGE 2: Patient & Health Information ---------- */}
+        <DocPage className="docPage">
+          <DocHeader lang={lang} subtitle={subtitle} />
+
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 2 }}>
+            <h2 style={{ margin: 0, fontSize: 26, fontWeight: 800, color: "var(--text)" }}>{pet.name}</h2>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--muted)", whiteSpace: "nowrap" }}>
+              {tt("Visit date", "Besøgsdato")}: {visit.visitDate || tt("Not specified", "Ikke angivet")}
+            </div>
+          </div>
+          <h3 style={{ margin: "2px 0 2px 0", fontSize: 16, color: "var(--text)" }}>
+            {tt("Patient and Health Information", "Patient- og sundhedsoplysninger")}
+          </h3>
+          <p style={{ margin: "0 0 14px 0", fontSize: 12, color: "var(--muted)", fontStyle: "italic" }}>
+            {tt(
+              "Every field is retained. 'Not provided' is not interpreted as 'none'.",
+              "Alle felter bevares. 'Ikke oplyst' fortolkes ikke som 'ingen'."
             )}
-          </Section>
-        )}
+          </p>
 
-        {/* Other Details */}
-        {(visit.otherDetails || !routineSkipsExtras) && (
-          <Section title={tt("Other Details", "Andre detaljer")} icon="📝">
-            {visit.otherDetails || notAnswered}
-          </Section>
-        )}
+          {!!basicsRows.length && (
+            <>
+              <SectionLabel color="var(--green)">{tt("Patient Information", "Patientinformation")}</SectionLabel>
+              <InfoTable rows={basicsRows} />
+            </>
+          )}
 
-        {medsGroupAllBlank ? (
-          <Section title={tt("Meds, Conditions, Tests & Tried", "Medicin, tilstande, tests & prøvet")} icon="💊">
-            {tt("Nothing to mention", "Intet at nævne")}
-          </Section>
-        ) : (
-          <>
-            {/* Medications / Supplements */}
-            <Section title={tt("Meds / Supplements", "Medicin / Tilskud")} icon="💊">
-              {medicationsSupplements || notAnswered}
-            </Section>
-
-            {/* Known Conditions */}
-            <Section title={tt("Known Conditions (Vet-Diagnosed)", "Kendte tilstande (dyrlæge-diagnosticeret)")} icon="🏥">
-              {knownConditions || notAnswered}
-            </Section>
-
-            {/* Recent Tests */}
-            <Section title={tt("Recent Tests / Results", "Nylige tests / resultater")} icon="🧪">
-              {recentTests || notAnswered}
-            </Section>
-
-            {/* Previous Treatment */}
-            <Section title={tt("Previous Treatment", "Tidligere behandling")} icon="📋">
-              {visit.previousTreatment || notAnswered}
-            </Section>
-          </>
-        )}
-
-        {/* Questions for Vet */}
-        <Section title={tt("Questions for Your Veterinarian", "Spørgsmål til din dyrlæge")} icon="❓">
-          {visit.questionsVet || notAnswered}
-        </Section>
-
-        {/* Patient Info (from the pet's profile) — reference material, placed after the
-            clinical story so it doesn't push today's history below the fold. */}
-        {!!patientRows.length && (
-          <Section title={tt("Patient Info", "Patientinfo")} icon="🐾">
-            {patientRows.map((r, i) => (
-              <div
-                key={r.label}
-                style={{
-                  display: "flex",
-                  gap: 8,
-                  padding: "6px 8px",
-                  background: i % 2 === 1 ? "var(--bg)" : "transparent",
-                  borderRadius: 6
-                }}
-              >
-                <div style={{ width: 160, flexShrink: 0, color: "var(--muted)", fontSize: 13, fontWeight: 600 }}>
-                  {r.label}
-                </div>
-                <div>{r.value}</div>
+          <SectionLabel color="var(--green)">
+            {tt("Health Background Supplied by Owner", "Sundhedsbaggrund oplyst af ejeren")}
+          </SectionLabel>
+          <div>
+            <AskedInfoRow label={tt("Meds / Supplements", "Medicin / tilskud")} value={medsSupplements} placeholder={notProvided} />
+            <AskedInfoRow
+              label={tt("Known Conditions (Vet-Diagnosed)", "Kendte tilstande (dyrlæge-diagnosticeret)")}
+              value={knownConditions}
+              placeholder={notProvided}
+              shaded
+            />
+            <AskedInfoRow
+              label={tt("Recent Tests / Results", "Nylige tests / resultater")}
+              value={recentTests}
+              placeholder={notProvided}
+            />
+            {healthRows.map((r, i) => (
+              <div key={r.label} style={{ padding: "8px 10px", background: (i + 3) % 2 === 1 ? "var(--bg)" : "var(--card)", borderRadius: 6, display: "flex", flexWrap: "wrap", gap: 4 }}>
+                <div style={{ width: 190, flexShrink: 0, color: "var(--muted)", fontSize: 13, fontWeight: 700 }}>{r.label}</div>
+                <div style={{ fontSize: 14, color: "var(--text)" }}>{r.value}</div>
               </div>
             ))}
-          </Section>
-        )}
+          </div>
 
-        {/* Attachments */}
-        {!!visit.attachments?.length && (
-          <Section title={tt("Photos, Video & Audio", "Fotos, video & lyd")} icon="📎">
-            <AttachmentGallery attachments={visit.attachments} />
-          </Section>
-        )}
+          <div style={{ marginTop: 14, padding: "10px 12px", background: "var(--bg)", borderRadius: 8, fontSize: 12, color: "var(--muted)" }}>
+            <strong style={{ color: "var(--text)" }}>{tt("Reading key:", "Sådan læses det:")}</strong>{" "}
+            {tt(
+              "'None known' is an owner answer. 'Not provided' means no answer was entered.",
+              "'Ingen kendte' er et ejer-svar. 'Ikke oplyst' betyder, at der ikke blev indtastet et svar."
+            )}
+          </div>
 
-        {/* Visit Notes Section */}
+          <DocFooter petName={petName} lang={lang} page={2} totalPages={totalPages} />
+        </DocPage>
+
+        {/* ---------- PAGE 3: Visit Notes (only once the vet visit has happened) ---------- */}
         {note && (
-          <>
-            <div style={{ height: 4, background: "var(--green)", borderRadius: 4, margin: "22px 0 16px 0" }} />
+          <DocPage className="docPage">
+            <DocHeader lang={lang} subtitle={subtitle} />
 
-            <h3 style={{ margin: "0 0 14px 0", fontSize: "18px", color: "var(--green)", fontWeight: 800 }}>
-              {tt("Visit Notes", "Besøgsnoter")}
-            </h3>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 2 }}>
+              <h2 style={{ margin: 0, fontSize: 26, fontWeight: 800, color: "var(--text)" }}>{pet.name}</h2>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "var(--muted)", whiteSpace: "nowrap" }}>
+                {tt("Visit date", "Besøgsdato")}: {visit.visitDate || tt("Not specified", "Ikke angivet")}
+              </div>
+            </div>
+            <h3 style={{ margin: "2px 0 14px 0", fontSize: 16, color: "var(--green)" }}>{tt("Visit Notes", "Besøgsnoter")}</h3>
 
-            {note.vetName && (
-              <Section title={tt("Veterinarian", "Dyrlæge")} icon="👩‍⚕️" accent="var(--green)">
-                {note.vetName}
-              </Section>
-            )}
-
+            {note.vetName && <FieldBox label={tt("Veterinarian", "Dyrlæge")}>{note.vetName}</FieldBox>}
             {note.diagnosis && (
-              <Section title={tt("Diagnosis / Findings", "Diagnose / Fund")} icon="🔍" accent="var(--green)">
+              <FieldBox label={tt("Diagnosis / Findings", "Diagnose / Fund")} shaded>
                 {note.diagnosis}
-              </Section>
+              </FieldBox>
             )}
-
-            {note.testsPerformed && (
-              <Section title={tt("Tests Performed", "Udførte tests")} icon="🧪" accent="var(--green)">
-                {note.testsPerformed}
-              </Section>
-            )}
-
+            {note.testsPerformed && <FieldBox label={tt("Tests Performed", "Udførte tests")}>{note.testsPerformed}</FieldBox>}
             {note.treatmentMeds && (
-              <Section title={tt("Medications / Treatment", "Medicin / Behandling")} icon="💊" accent="var(--green)">
+              <FieldBox label={tt("Medications / Treatment", "Medicin / Behandling")} shaded>
                 {note.treatmentMeds}
-              </Section>
+              </FieldBox>
             )}
-
             {note.homeInstructions && (
-              <Section title={tt("Instructions at Home", "Instruktioner derhjemme")} icon="🏠" accent="var(--green)">
-                {note.homeInstructions}
-              </Section>
+              <FieldBox label={tt("Instructions at Home", "Instruktioner derhjemme")}>{note.homeInstructions}</FieldBox>
             )}
-
             {note.followUp && (
-              <Section title={tt("Follow-up Plan", "Opfølgningsplan")} icon="🔔" accent="var(--green)">
+              <FieldBox label={tt("Follow-up Plan", "Opfølgningsplan")} shaded>
                 {note.followUp}
-              </Section>
+              </FieldBox>
             )}
 
             {!!note.attachments?.length && (
-              <Section title={tt("Photos, Video & Audio", "Fotos, video & lyd")} icon="📎" accent="var(--green)">
+              <>
+                <SectionLabel color="var(--green)">{tt("Photos, Video & Audio", "Fotos, video & lyd")}</SectionLabel>
                 <AttachmentGallery attachments={note.attachments} />
-              </Section>
+              </>
             )}
-          </>
+
+            <DocFooter petName={petName} lang={lang} page={3} totalPages={totalPages} />
+          </DocPage>
         )}
       </div>
 
