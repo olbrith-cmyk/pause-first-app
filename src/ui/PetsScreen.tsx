@@ -10,10 +10,14 @@ import type {
   PetPreventativeItem
 } from "../firestore";
 import { addPet, deletePet, getUserPets, updatePet, getUserVisits, getVisitNote } from "../firestore";
+import { deletePetPhoto } from "../utils/attachments";
 import { ViewOnlyPet } from "./ViewOnlyPet";
-import { ViewOnlyPrepare } from "./ViewOnlyPrepare";
-import { ViewOnlyNotes } from "./ViewOnlyNotes";
+import ViewDocument from "./ViewDocument";
 import PrepareWizard from "./PrepareWizard";
+import PetAvatar from "./PetAvatar";
+import PetPhotoUpload from "./PetPhotoUpload";
+
+const newPhotoScopeId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
 const emptyPet = (userId: string): Pet => ({
   userId,
@@ -78,6 +82,7 @@ export default function PetsScreen({
   startInAddMode,
   onEnteredAddMode,
   onGoHome,
+  isDemo,
 }: {
   lang: Lang;
   userId: string;
@@ -85,6 +90,7 @@ export default function PetsScreen({
   startInAddMode?: boolean;
   onEnteredAddMode?: () => void;
   onGoHome?: () => void;
+  isDemo?: boolean;
 }) {
   
   const t = useTranslation(lang);
@@ -95,6 +101,7 @@ export default function PetsScreen({
 
   const [mode, setMode] = useState<"view" | "edit">("view");
   const [editing, setEditing] = useState<Pet>(emptyPet(userId));
+  const [photoScopeId, setPhotoScopeId] = useState(newPhotoScopeId);
 
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -150,6 +157,7 @@ export default function PetsScreen({
   const startNew = () => {
     setSelected(null);
     setEditing(emptyPet(userId));
+    setPhotoScopeId(newPhotoScopeId());
     setMode("edit");
     setStatus(null);
     setError(null);
@@ -159,6 +167,12 @@ export default function PetsScreen({
   };
 
   const cancel = () => {
+    // A photo picked during this edit but never saved is an orphaned
+    // Storage file now that deletion is deferred until Save — clean it up.
+    // The pet's original (still-persisted) photo, if any, is left alone.
+    if (editing.photoUrl && editing.photoUrl !== selected?.photoUrl) {
+      deletePetPhoto(editing.photoUrl);
+    }
     setSelected(null);
     setEditing(emptyPet(userId));
     setMode("view");
@@ -197,7 +211,13 @@ export default function PetsScreen({
 
       if (normalized.id) {
         const { id, ...rest } = normalized;
+        const previousPhotoUrl = selected?.photoUrl;
         await updatePet(id, rest);
+        // Now that the new photo (or its removal) is safely persisted, it's
+        // safe to delete whatever photo it replaced.
+        if (previousPhotoUrl && previousPhotoUrl !== normalized.photoUrl) {
+          deletePetPhoto(previousPhotoUrl);
+        }
       } else {
         await addPet(normalized);
       }
@@ -234,7 +254,7 @@ export default function PetsScreen({
   };
 
   const remove = async (petId: string) => {
-    if (!confirm(lang === "da" ? "Slet kæledyr?" : "Delete pet?")) return;
+    if (!confirm(lang === "da" ? "Slet dyr?" : "Delete pet?")) return;
     await deletePet(petId);
     await load();
     cancel();
@@ -257,8 +277,8 @@ export default function PetsScreen({
         <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
   <h3 style={{ margin: 0 }}>{lang === "da" ? "Mine dyr" : "My animals"}</h3>
 
-  {mode === "edit" ? (
-    <button className="btn btnSecondary" 
+  {mode === "edit" && (
+    <button className="btn btnSecondary"
       onClick={() => {
   cancel();
   onGoHome?.();
@@ -266,7 +286,11 @@ export default function PetsScreen({
       >
       {lang === "da" ? "Annuller" : "Cancel"}
     </button>
-  ) : (
+  )}
+</div>
+
+{mode !== "edit" && (
+  <div className="splitActionRow">
     <button className="btn btnPrimary" onClick={startNew}>
       {pets.length === 0
         ? lang === "da"
@@ -276,8 +300,17 @@ export default function PetsScreen({
           ? "+ Tilføj endnu et dyr"
           : "+ Add another animal"}
     </button>
-  )}
-</div>
+    <button className="btn btnSecondary" onClick={() => onGoHome?.()}>
+      {lang === "da" ? "Hjem" : "Home"}
+    </button>
+  </div>
+)}
+
+        {mode === "view" && selected && !viewingVisit && (
+          <button className="btn btnSecondary btnSmall" onClick={cancel}>
+            ← {lang === "da" ? "Tilbage til Mine dyr" : "Back to My animals"}
+          </button>
+        )}
 
         {/* List of pets (when nothing selected and not editing) */}
         {!selected && mode !== "edit" && (
@@ -285,8 +318,8 @@ export default function PetsScreen({
             {pets.length === 0 ? (
               <div className="muted">
                 {lang === "da"
-                  ? "Ingen kæledyr endnu. Klik “+ Tilføj dit første kæledyr” for at komme i gang."
-                  : 'No pets yet. Click "+ Add Your First Pet" to get started.'}
+                  ? "Ingen dyr endnu. Klik “+ Tilføj dit første dyr” for at komme i gang."
+                  : 'No animals yet. Click "+ Add your first animal" to get started.'}
               </div>
             ) : (
               pets.map((pet) => (
@@ -294,10 +327,13 @@ export default function PetsScreen({
                   key={pet.id}
                   className="itemCard"
                   onClick={() => openView(pet)}
-                  style={{ cursor: "pointer", textAlign: "left" }}
+                  style={{ cursor: "pointer", textAlign: "left", flexDirection: "row", alignItems: "center" }}
                 >
-                  <div className="itemTitle">{pet.name || "(Unnamed)"}</div>
-                  <div className="muted">{pet.species || (lang === "da" ? "Ukendt art" : "Unknown species")}</div>
+                  <PetAvatar photoUrl={pet.photoUrl} />
+                  <div>
+                    <div className="itemTitle">{pet.name || "(Unnamed)"}</div>
+                    <div className="muted">{pet.species || (lang === "da" ? "Ukendt art" : "Unknown species")}</div>
+                  </div>
                 </button>
               ))
             )}
@@ -311,12 +347,12 @@ export default function PetsScreen({
               <h4 style={{ margin: 0 }}>
                 {isFirstPet && !selected
                   ? lang === "da"
-                    ? "Tilføj dit første kæledyr"
+                    ? "Tilføj dit første dyr"
                     : "Add Your First Pet"
                   : selected
                     ? selected.name || "(Unnamed)"
                     : lang === "da"
-                      ? "Nyt kæledyr"
+                      ? "Nyt dyr"
                       : "New Pet"}
               </h4>
             </div>
@@ -324,20 +360,31 @@ export default function PetsScreen({
             {/* VIEW MODE */}
             {mode === "view" && selected && !viewingVisit && (
               <>
-                <ViewOnlyPet pet={selected} />
+                <ViewOnlyPet pet={selected} lang={lang} />
 
-                <div className="row" style={{ marginTop: 12 }}>
-                  <button className="btn btnPrimary" onClick={() => setShowWizard(true)}>
+                <div className="row" style={{ marginTop: 12, flexDirection: "column" as const, alignItems: "flex-start" }}>
+                  <button
+                    className="btn btnPrimary"
+                    onClick={() => setShowWizard(true)}
+                    disabled={isDemo && !selected.isDemoSeed}
+                  >
                     {lang === "da" ? "+ Tilføj besøg for " : "+ Add visit for "}
-                    {selected.name || (lang === "da" ? "dette kæledyr" : "this pet")}
+                    {selected.name || (lang === "da" ? "dette dyr" : "this pet")}
                   </button>
+                  {isDemo && !selected.isDemoSeed && (
+                    <div className="muted" style={{ fontSize: 13, marginTop: 6 }}>
+                      {lang === "da"
+                        ? "Ikke tilgængeligt i demoen — opret en konto for at tilføje besøg for dyr, du selv opretter."
+                        : "Not available in the demo — sign up to add visits for animals you create yourself."}
+                    </div>
+                  )}
                 </div>
 
                 <div style={{ marginTop: 12 }}>
                   <h4 style={{ margin: "8px 0" }}>{lang === "da" ? "Besøg" : "Visits"}</h4>
                   {selectedPetVisits.length === 0 ? (
                     <div className="muted">
-                      {lang === "da" ? "Ingen besøg endnu for dette kæledyr." : "No visits yet for this pet."}
+                      {lang === "da" ? "Ingen besøg endnu for dette dyr." : "No visits yet for this pet."}
                     </div>
                   ) : (
                     <div className="stack">
@@ -387,12 +434,7 @@ export default function PetsScreen({
                   </button>
                 </div>
 
-                <ViewOnlyPrepare visit={viewingVisit} />
-                {viewingVisitNote ? (
-                  <ViewOnlyNotes note={viewingVisitNote} />
-                ) : (
-                  <div className="muted">{lang === "da" ? "Ingen besøgsnoter endnu." : "No visit notes yet."}</div>
-                )}
+                <ViewDocument lang={lang} visit={viewingVisit} pet={selected} note={viewingVisitNote} isDemo={isDemo} />
               </>
             )}
 
@@ -412,12 +454,20 @@ export default function PetsScreen({
                   }}
                 >
                   {lang === "da"
-                    ? "Udfyld dette én gang — vi genbruger det til at udfylde dit Notat til dyrlægen automatisk."
-                    : "Fill this in once — we’ll reuse it to auto‑fill your Visit Briefs."}
+                    ? "Udfyld dette én gang — det genbruges til automatisk at udfylde din besøgsforberedelse."
+                    : "Fill this in once — it'll be reused to auto‑fill your Visit Briefs."}
                 </div>
 
-                <Section title={lang === "da" ? "Om dit kæledyr" : "About your pet"}>
+                <Section title={lang === "da" ? "Om dit dyr" : "About your pet"}>
                   <div className="stack">
+                    <PetPhotoUpload
+                      lang={lang}
+                      userId={userId}
+                      scopeId={editing.id ?? photoScopeId}
+                      photoUrl={editing.photoUrl}
+                      onChange={(next) => setEditing({ ...editing, photoUrl: next })}
+                    />
+
                     <label className="label">
                       {t.petName}
                       <input
@@ -485,6 +535,21 @@ export default function PetsScreen({
                             ? "Kastreret / Steriliseret / Ikke kastreret / Ved ikke"
                             : "Neutered / Spayed / Not neutered / Not sure"
                         }
+                      />
+                    </label>
+
+                    <label className="label">
+                      {lang === "da" ? "Livsstil/miljø (valgfrit)" : "Lifestyle / environment (optional)"}
+                      <textarea
+                        className="textarea"
+                        value={editing.lifestyle ?? ""}
+                        onChange={(e) => setEditing({ ...editing, lifestyle: e.target.value })}
+                        placeholder={
+                          lang === "da"
+                            ? "F.eks. andre dyr i hjemmet, indendørs/udendørs, rejser..."
+                            : "E.g., other animals in the house, indoor/outdoor status, travel..."
+                        }
+                        rows={2}
                       />
                     </label>
                   </div>
@@ -968,8 +1033,11 @@ export default function PetsScreen({
     userId={userId}
     petId={selected.id!}
     petName={selected.name || "Your pet"}
-    onClose={() => {
+    pet={selected}
+    isDemo={isDemo}
+    onClose={async () => {
       setShowWizard(false);
+      await load();
     }}
   />
 )}

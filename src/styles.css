@@ -15,9 +15,6 @@
   --lightBlue: #eef3f6;   /* subtle cool for info states */
   --lightGreen: #eef6f1;  /* subtle sage */
   --lightRed: #fbefef;    /* subtle blush */
-
-  /* Bottom dock height buffer so content can scroll above it */
-  --bottomDockSpace: 220px; /* adjust if needed */
 }
 
 * {
@@ -65,7 +62,15 @@ body {
   max-width: 920px;
   margin: 0 auto;
   width: 100%;
-  padding-bottom: var(--bottomDockSpace);
+  padding-bottom: 20px;
+}
+
+/* Two buttons side by side (e.g. "Add another..." + "Home"), staying
+   side-by-side even on the narrow mobile layout where .row stacks. */
+.splitActionRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
 }
 
 .header {
@@ -169,6 +174,92 @@ body {
   gap: 16px;
 }
 
+/* Tighter field spacing on the Activate-with-code form specifically,
+   since it has an extra field (activation code) the login form doesn't. */
+.form.formCompact {
+  gap: 10px;
+}
+
+.authScreen {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.authScreen h2 {
+  font-size: clamp(1rem, calc(6.5vw - 7px), 1.5rem);
+  line-height: 1.25;
+}
+
+.row.authLinksRow {
+  flex-direction: row;
+}
+
+.row.authLinksRow .btn {
+  width: auto;
+}
+
+.demoCallout {
+  background: var(--lightBlue);
+  border-radius: 12px;
+  padding: 10px 16px;
+  margin: 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: center;
+}
+
+.demoCallout .btn {
+  padding: 10px 16px;
+}
+
+.demoCallout strong {
+  color: var(--blue);
+  font-size: 15px;
+}
+
+.authDivider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  margin: 4px 0 10px;
+}
+
+.authDivider::before,
+.authDivider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.authAnimalRow {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 10px;
+  margin: 12px auto 0;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.authAnimalImg {
+  display: block;
+  height: auto;
+}
+
+.authAnimalHorse { width: 80px; }
+.authAnimalDog { width: 55px; }
+.authAnimalCat { width: 29px; margin-left: -11px; }
+.authAnimalSheep { width: 43px; margin-left: 5px; }
+.authAnimalBird { width: 23px; }
+.authAnimalTurtle { width: 30px; }
+
 .label {
   display: flex;
   flex-direction: column;
@@ -236,6 +327,29 @@ button {
   box-shadow:
     0 0 0 5px rgba(47, 74, 99, 0.10),
     0 10px 24px rgba(0, 0, 0, 0.06);
+}
+
+.pwFieldWrap {
+  position: relative;
+}
+
+.pwFieldWrap .input {
+  padding-right: 56px;
+  width: 100%;
+}
+
+.pwToggleBtn {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--blue);
+  cursor: pointer;
 }
 
 /* Buttons (Pause First style) */
@@ -373,7 +487,7 @@ button {
 
 /* Items */
 .itemCard {
-  background: var(--bg);
+  background: var(--card);
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 12px;
@@ -382,10 +496,25 @@ button {
   gap: 10px;
 }
 
+/* Draft vs. saved visit cards get a distinct tint (left border + light
+   background) so the two are easy to tell apart at a glance, not just by
+   reading the section heading above them. */
+.itemCardDraft {
+  background: #faf3e2;
+  border-color: #e6d7ae;
+  border-left: 4px solid #c9a227;
+}
+
+.itemCardFinal {
+  background: var(--lightGreen);
+  border-color: #bfe0cc;
+  border-left: 4px solid var(--green);
+}
+
 .itemTitle {
   font-weight: 700;
   color: var(--blue);
-  font-size: 16px;
+  font-size: 18px;
 }
 
 .muted {
@@ -449,10 +578,6 @@ button {
   .textarea {
     font-size: 16px; /* prevents iOS zoom */
   }
-
-  :root {
-    --bottomDockSpace: 240px;
-  }
 }
 
 /* Modal */
@@ -508,17 +633,6 @@ button {
 
 .modalClose:hover {
   background: var(--bg);
-}
-
-.leaveModalOverlay{
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.45);
-  z-index: 20000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 14px;
 }
 
 .modalBody {
@@ -577,6 +691,22 @@ button {
   margin: 0;
   color: var(--text);
   line-height: 1.55;
+}
+
+/* Compact variant, for a quick-pick box that shouldn't tower over the
+   text fields around it (e.g. the urgency/trend pickers). */
+.calloutBoxCompact {
+  padding: 10px 12px;
+}
+
+/* Small pill-style buttons for quick-pick choices, sized to their content
+   instead of the full-size CTA .btn proportions. */
+.btnChip {
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  flex: 0 0 auto;
 }
 
 /* Give breathing room above the Close button inside modals */
@@ -703,7 +833,7 @@ button {
 .appShell {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: var(--app-vh, 100vh);
   background: var(--bg);
 }
 
@@ -785,6 +915,24 @@ button {
   background: var(--lightBlue);
 }
 
+/* Demo mode banner */
+.demoBanner {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  padding: 10px 16px;
+  background: var(--lightBlue);
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--text);
+}
+
+.demoBanner .btnSmall {
+  align-self: flex-start;
+  white-space: nowrap;
+}
+
 /* Home hero */
 .homeHero {
   max-width: 520px;
@@ -858,29 +1006,38 @@ button {
   margin-right: auto;
 }
 
-/* One layer, multiple silhouettes */
+/* Dog + bird, placed above the pause icon */
 .homeSilhouettes{
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 160px;
   z-index: 0;
   pointer-events: none;
-
-  opacity: 0.26;
-  background-repeat: no-repeat;
-
-  background-position:
-    18% 36%,
-    82% 18%,
-    50% 98%;
-
-  background-size:
-    150px auto,
-    170px auto,
-    560px auto;
-
-  filter: grayscale(1) brightness(0.55) contrast(0.95);
-  mix-blend-mode: multiply; /* NEW: better blending into beige */
+  opacity: 0.85;
 }
+
+.homeSilhouette{
+  position: absolute;
+  display: block;
+  height: auto;
+}
+
+.homeSilhouetteDog{ top: 22%; left: 4%; width: 92px; }
+.homeSilhouetteBird{ top: 4%; right: 14%; width: 54px; }
+
+/* Cow + cat, placed below the nav buttons */
+.homeBottomSilhouettes{
+  position: relative;
+  height: 130px;
+  margin-top: 34px;
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+.homeBottomSilhouetteCow{ bottom: 0%; left: 0%; width: 140px; }
+.homeBottomSilhouetteCat{ bottom: 0%; right: 8%; width: 74px; }
 
 .homeHeroV2 > *{
   position: relative;
@@ -1020,44 +1177,8 @@ button {
   color: rgba(47, 74, 99, 0.55);
 }
 
-/* Bottom dock */
-.bottomDock {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 50;
-  background: rgba(232, 240, 247, 0.92);
-  backdrop-filter: blur(8px);
-  border-top: 1px solid #d0e0f0;
-  padding: 10px 12px;
-}
-
-.bottomDockInner {
-  width: 100%;
-  max-width: 420px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.bottomDockGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
-.bottomDockHome {
-  grid-column: 1 / span 2;
-}
-
-/* When keyboard is open, don't let the fixed bottom dock cover inputs/buttons */
-.keyboardOpen .bottomDock {
-  display: none;
-}
-
-/* Also reduce bottom padding when dock is hidden */
+/* When keyboard is open (wizard active), reduce the scroll container's
+   bottom padding since there's no fixed bottom dock to clear anymore. */
 .keyboardOpen .appMain {
   padding-bottom: 16px;
 }
@@ -1222,4 +1343,61 @@ button {
     backdrop-filter: none;
     background: transparent;
   }
+}
+
+/* Attachments (photos / video / audio) */
+.attachmentManager {
+  margin-top: 8px;
+}
+
+.attachmentGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.attachmentItem {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 6px;
+  background: var(--card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.attachmentThumb {
+  width: 100%;
+  max-height: 140px;
+  border-radius: 8px;
+  display: block;
+  object-fit: cover;
+}
+
+.attachmentAudio {
+  width: 100%;
+}
+
+.attachmentRemoveBtn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(20, 20, 20, 0.65);
+  color: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.attachmentRemoveBtn:hover {
+  background: rgba(20, 20, 20, 0.85);
 }

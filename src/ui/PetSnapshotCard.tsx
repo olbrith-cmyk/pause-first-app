@@ -1,17 +1,6 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type { Pet } from "../firestore";
-
-function vaccineLabel(lang: "da" | "en", v?: Pet["vaccinationStatus"]) {
-  if (!v) return "";
-  if (lang === "da") {
-    if (v === "up_to_date") return "Opdateret";
-    if (v === "not_up_to_date") return "Ikke opdateret";
-    return "Ikke sikker";
-  }
-  if (v === "up_to_date") return "Up to date";
-  if (v === "not_up_to_date") return "Not up to date";
-  return "Not sure";
-}
+import { patientInfoRows, preventativesSummary, vaccinationsSummary } from "../utils/petInfo";
 
 export default function PetSnapshotCard(props: {
   pet: Pet | null;
@@ -25,40 +14,7 @@ export default function PetSnapshotCard(props: {
 
   const rows = useMemo(() => {
     if (!pet) return [];
-
-    const vLabel = vaccineLabel(lang, pet.vaccinationStatus);
-    const vDate = pet.vaccinationLastDate?.trim();
-
-    const out: { label: string; value: string }[] = [];
-
-    const push = (label: string, value?: string) => {
-      const v = (value ?? "").trim();
-      if (v) out.push({ label, value: v });
-    };
-
-    push(lang === "da" ? "Art" : "Species", pet.species);
-    push(lang === "da" ? "Alder" : "Age", pet.age);
-    push(lang === "da" ? "Køn" : "Sex", pet.sex);
-    push(lang === "da" ? "Vægt" : "Weight", pet.weight);
-    push(lang === "da" ? "Mikrochip" : "Microchip", pet.microchip);
-
-    if (vLabel || vDate) {
-      push(
-        lang === "da" ? "Vaccinationer" : "Vaccinations",
-        [vLabel, vDate ? (lang === "da" ? `Sidst: ${vDate}` : `Last: ${vDate}`) : ""]
-          .filter(Boolean)
-          .join(" • ")
-      );
-    }
-
-    push(lang === "da" ? "Foder" : "Diet / feed", pet.diet);
-    push(lang === "da" ? "Forebyggelse" : "Preventatives", pet.preventatives);
-    push(lang === "da" ? "Medicin" : "Medications", pet.medications);
-    push(lang === "da" ? "Allergier/reaktioner" : "Allergies / reactions", pet.allergies);
-    push(lang === "da" ? "Operationer/indgreb" : "Surgeries / procedures", pet.surgeries);
-    push(lang === "da" ? "Livsstil/miljø" : "Lifestyle / environment", pet.lifestyle);
-
-    return out;
+    return patientInfoRows(pet, lang);
   }, [pet, lang]);
 
   if (!pet) return null;
@@ -66,11 +22,11 @@ export default function PetSnapshotCard(props: {
   // Collapsed one-liner (keep it short)
   const collapsedLine = useMemo(() => {
     const bits: string[] = [];
-    const vLabel = vaccineLabel(lang, pet.vaccinationStatus);
-    if (vLabel) bits.push(`${lang === "da" ? "Vacciner" : "Vaccines"}: ${vLabel}`);
+    const vSummary = vaccinationsSummary(pet, lang);
+    if (vSummary) bits.push(`${lang === "da" ? "Vacciner" : "Vaccines"}: ${vSummary}`);
     if (pet.diet?.trim()) bits.push(`${lang === "da" ? "Foder" : "Diet"}: ${pet.diet.trim()}`);
-    if (pet.preventatives?.trim())
-      bits.push(`${lang === "da" ? "Forebyggelse" : "Preventatives"}: ${pet.preventatives.trim()}`);
+    const pSummary = preventativesSummary(pet, lang);
+    if (pSummary) bits.push(`${lang === "da" ? "Forebyggelse" : "Preventatives"}: ${pSummary}`);
     return bits.join(" • ");
   }, [pet, lang]);
 

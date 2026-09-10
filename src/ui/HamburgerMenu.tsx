@@ -1,6 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
+import { AiAssistantConsent } from "./Modals";
+import { hasAiAssistantConsent, openChatGpt, setAiAssistantConsent } from "../utils/chatGptHandoff";
 
 function Icon({ name }: { name: string }) {
   return (
@@ -20,7 +22,9 @@ export default function HamburgerMenu({
   onMedicalDisclaimer,
   onPrivacyPolicy,
   onMyPets,
-  onMyVisits
+  onMyVisits,
+  onGoHome,
+  isDemo
 }: {
   lang: Lang;
   isOpen: boolean;
@@ -32,9 +36,12 @@ export default function HamburgerMenu({
   onPrivacyPolicy: () => void;
   onMyPets: () => void;
   onMyVisits: () => void;
+  onGoHome: () => void;
+  isDemo?: boolean;
 }) {
   const t = useTranslation(lang);
   const menuRef = useRef<HTMLDivElement>(null);
+  const [showAiConsent, setShowAiConsent] = useState(false);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -49,13 +56,28 @@ export default function HamburgerMenu({
   }, [isOpen, onClose]);
 
   const openAiAssistant = () => {
-    window.open(
-      "https://chatgpt.com/g/g-695a7a9e17d08191bd88b76d39f9e54f-pause-firsttm",
-      "_blank"
-    );
+    // Demo users get the consent/warning popup on every use — never skip it
+    // via a remembered consent, matching the same rule in ViewDocument.tsx.
+    if (!isDemo && hasAiAssistantConsent()) {
+      openChatGpt(lang);
+    } else {
+      setShowAiConsent(true);
+    }
+  };
+
+  const confirmAiAssistant = () => {
+    if (!isDemo) setAiAssistantConsent();
+    setShowAiConsent(false);
+    openChatGpt(lang);
   };
 
   const items = [
+    {
+      icon: "home",
+      title: lang === "da" ? "Hjem" : "Home",
+      hint: lang === "da" ? "Gå til forsiden" : "Go to the home screen",
+      onClick: onGoHome
+    },
     {
       icon: "pets",
       title: t.myPets,
@@ -65,13 +87,13 @@ export default function HamburgerMenu({
     {
       icon: "event_note",
       title: lang === "da" ? "Mine besøg" : "My visits",
-      hint: lang === "da" ? "Kladder, besøgsnotater og noter" : "Drafts, Visit Briefs, and notes",
+      hint: lang === "da" ? "Kladder, besøgsforberedelser og noter" : "Drafts, Visit Briefs, and notes",
       onClick: onMyVisits
     },
     {
       icon: "auto_awesome",
       title: t.aiAssistant,
-      hint: lang === "da" ? "Åbner i en ny fane" : "Opens in a new tab",
+      hint: lang === "da" ? "Åbner ChatGPT i en ny fane" : "Opens ChatGPT in a new tab",
       onClick: openAiAssistant
     },
     {
@@ -153,30 +175,42 @@ export default function HamburgerMenu({
           >
             <Icon name="logout" />
             <span className="menuText">
-              <span className="menuTitle">{t.logout}</span>
+              <span className="menuTitle">{isDemo ? (lang === "da" ? "Afslut demo" : "Exit demo") : t.logout}</span>
               <span className="menuHint">
-                {lang === "da" ? "Log ud af appen" : "Sign out of the app"}
+                {isDemo
+                  ? lang === "da"
+                    ? "Sletter demo-data og logger ud"
+                    : "Deletes demo data and signs out"
+                  : lang === "da"
+                    ? "Log ud af appen"
+                    : "Sign out of the app"}
               </span>
             </span>
           </button>
 
-          <button
-            className="menuItem menuItemDanger"
-            onClick={() => {
-              onDeleteAccount();
-              onClose();
-            }}
-          >
-            <Icon name="delete_forever" />
-            <span className="menuText">
-              <span className="menuTitle">{t.deleteAccount}</span>
-              <span className="menuHint">
-                {lang === "da" ? "Sletter data permanent" : "Deletes data permanently"}
+          {!isDemo && (
+            <button
+              className="menuItem menuItemDanger"
+              onClick={() => {
+                onDeleteAccount();
+                onClose();
+              }}
+            >
+              <Icon name="delete_forever" />
+              <span className="menuText">
+                <span className="menuTitle">{t.deleteAccount}</span>
+                <span className="menuHint">
+                  {lang === "da" ? "Sletter data permanent" : "Deletes data permanently"}
+                </span>
               </span>
-            </span>
-          </button>
+            </button>
+          )}
         </div>
       </aside>
+
+      {showAiConsent && (
+        <AiAssistantConsent lang={lang} onConfirm={confirmAiAssistant} onClose={() => setShowAiConsent(false)} />
+      )}
     </>
   );
 }

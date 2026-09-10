@@ -1,21 +1,27 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
-import type { CurrentStatus, TriState, Visit } from "../firestore";
+import type { Attachment, CurrentStatus, Pet, TriState, Visit } from "../firestore";
 import { addVisit, getVisitById, updateVisit, deleteVisitFully } from "../firestore";
 import TriToggle from "./TriToggle";
+import PetSnapshotCard from "./PetSnapshotCard";
+import AttachmentManager from "./AttachmentManager";
+import ViewDocument from "./ViewDocument";
+import { shareWithVet } from "../utils/pdfExport";
+import { deleteAttachment } from "../utils/attachments";
+import type { DurationUnit, Trend, Urgency } from "../utils/visitBrief";
+import { durationUnitLabel, trendLabel, urgencyLabel } from "../utils/visitBrief";
 
 type Props = {
   lang: Lang;
   userId: string;
   petId: string;
   petName: string;
+  pet?: Pet | null;
   visitId?: string;
-  mode?: "prepare";
   onClose: () => void;
-  onComplete?: () => void | Promise<void>;
-  onNavigateAfterClose?: (target: "home" | "myVisits") => void;
   onToast?: (message: string) => void;
+  isDemo?: boolean;
 };
 
 function makeEmptyStatus(): CurrentStatus {
@@ -38,23 +44,42 @@ export default function PrepareWizard({
   userId,
   petId,
   petName,
+  pet,
   visitId: visitIdProp,
   onClose,
-  onComplete,
-  onNavigateAfterClose,
   onToast,
+  isDemo,
 }: Props) {
   const t = useTranslation(lang);
 
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [savingDraft, setSavingDraft] = useState(false);
+  const [sharingFromDone, setSharingFromDone] = useState(false);
   const [mode, setMode] = useState<"wizard" | "preview" | "done">("wizard");
-  const [showCurrentStatus, setShowCurrentStatus] = useState(false);
+  // For routine visits, the 8-card Current Status checklist starts collapsed
+  // behind a single "is everything normal?" question — set true once the
+  // owner says something's different, so the full checklist stays open.
+  const [statusExpanded, setStatusExpanded] = useState(false);
+  // Meds/known conditions/recent tests/tried-at-home start collapsed behind
+  // a single "anything to mention?" question, for every visit (not just
+  // routine) — most visits have nothing to report here.
+  const [medsExpanded, setMedsExpanded] = useState(false);
 
   const [visitId, setVisitId] = useState<string | null>(null);
   const didInit = useRef(false);
   const autosaveTimer = useRef<number | null>(null);
+  // Snapshot of the visit's attachments as last persisted, so a successful
+  // save can tell which attachments were just removed and are now safe to
+  // delete from Storage (see AttachmentManager — it only updates local
+  // state, never deletes).
+  const lastPersistedAttachmentsRef = useRef<Attachment[]>([]);
+  const modalBodyRef = useRef<HTMLDivElement | null>(null);
+  const stepContentRef = useRef<HTMLDivElement | null>(null);
+  // How many times Next has scrolled (instead of advanced) on each step,
+  // keyed by step index — capped so a flaky visibility measurement can
+  // never block Next from working entirely.
+  const scrollGateCount = useRef<Record<number, number>>({});
 
   // FIX: removed redundant local `toast` state — toasts are dispatched via onToast prop only
   const [draft, setDraft] = useState<Visit>({
@@ -63,9 +88,10 @@ export default function PrepareWizard({
     visitDate: "",
     mainConcern: "",
     whenStart: "",
+    durationValue: "",
+    durationUnit: "days",
     howProgressing: "",
     patterns: "",
-    associatedSigns: "",
     otherDetails: "",
     previousTreatment: "",
     questionsVet: "",
@@ -82,7 +108,17 @@ export default function PrepareWizard({
 
   const closeToMyVisits = () => {
     onClose();
-    onNavigateAfterClose?.("myVisits");
+  };
+
+  // Deletes whatever attachments were dropped between the last persisted
+  // state and `persisted` (the list that was just written to Firestore),
+  // then updates the snapshot. Safe to call after every successful save.
+  const commitAttachmentDeletions = (persisted: Attachment[]) => {
+    const keptIds = new Set(persisted.map((a) => a.id));
+    for (const prev of lastPersistedAttachmentsRef.current) {
+      if (!keptIds.has(prev.id)) deleteAttachment(prev);
+    }
+    lastPersistedAttachmentsRef.current = persisted;
   };
 
   useEffect(() => {
@@ -100,14 +136,28 @@ export default function PrepareWizard({
           }
 
           setVisitId(visitIdProp);
+          lastPersistedAttachmentsRef.current = existing.attachments ?? [];
           setDraft({
             ...existing,
             userId,
             petId,
             currentStatus: existing.currentStatus ?? makeEmptyStatus(),
             otherDetails: existing.otherDetails ?? "",
+            durationUnit: existing.durationUnit ?? "days",
             status: existing.status ?? "final"
           });
+          return;
+        }
+
+        // In demo mode, new visits can only be created for the pre-seeded
+        // demo pet — never for a pet the demo user created themselves.
+        if (isDemo && !pet?.isDemoSeed) {
+          alert(
+            lang === "da"
+              ? "Ikke tilgængeligt i demoen — opret en konto for at tilføje besøg for dette dyr."
+              : "Not available in the demo — sign up to add visits for this pet."
+          );
+          closeToMyVisits();
           return;
         }
 
@@ -129,6 +179,7 @@ export default function PrepareWizard({
       try {
         const nextStatus = draft.status ?? "final";
         await updateVisit(visitId, { ...draft, status: nextStatus });
+        commitAttachmentDeletions(draft.attachments ?? []);
       } catch (e) {
         console.error("Autosave failed", e);
       }
@@ -139,7 +190,28 @@ export default function PrepareWizard({
     };
   }, [draft, visitId]);
 
-  const stepData = useMemo(
+  // Each step (and each mode: wizard/preview/done) is its own "page" inside
+  // the modal — start it scrolled to the top instead of carrying over
+  // wherever the previous step happened to leave the scroll position.
+  useEffect(() => {
+    modalBodyRef.current?.scrollTo({ top: 0, behavior: "auto" });
+  }, [step, mode]);
+
+  // Routine visits skip Timeline (case 2), Patterns & triggers (case 3), and
+  // Other details (case 5) — those are the ones most likely to be empty for
+  // a quick checkup rather than a developing problem. `step` (position)
+  // always indexes into this filtered sequence; `caseIndices[step]` maps
+  // back to the fixed content identity that `renderStep()` switches on.
+  // Urgency can only be changed while viewing position 1 (Main concern),
+  // and position 1 is index 1 in both sequences, so switching urgency
+  // mid-wizard never leaves `step` pointing past the end of the (possibly
+  // shorter) sequence.
+  const caseIndices = useMemo(() => {
+    const all = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+    return draft.urgency === "routine" ? all.filter((i) => ![2, 3, 5].includes(i)) : all;
+  }, [draft.urgency]);
+
+  const allStepData = useMemo(
     () => [
       {
         title: lang === "da" ? "Besøgsdato" : "Visit date",
@@ -201,24 +273,99 @@ export default function PrepareWizard({
         ok: true
       },
       {
-        title: lang === "da" ? "Topspørgsmål til dyrlægen" : "Top questions for the vet",
-        desc: lang === "da" ? "Hvad vil du gerne have svar på?" : "What do you want answered?",
+        title: lang === "da" ? "Det ene, du har mest brug for svar på" : "The one thing you need answered",
+        desc:
+          lang === "da"
+            ? "Hvilken beslutning skal dyrlægen hjælpe dig med?"
+            : "What decision do you need the vet's help making?",
+        ok: true
+      },
+      {
+        title: lang === "da" ? "Foto, video & lyd" : "Photos, video & audio",
+        desc:
+          lang === "da"
+            ? "Valgfrit: vedhæft et billede af det, der bekymrer dig, en kort video eller en lydoptagelse."
+            : "Optional: attach a photo of what's concerning you, a short video, or an audio recording.",
         ok: true
       }
     ],
     [draft.visitDate, draft.mainConcern, lang]
   );
 
+  const stepData = useMemo(() => caseIndices.map((i) => allStepData[i]), [caseIndices, allStepData]);
+
   const isLastWizardStep = step === stepData.length - 1;
 
   const handleNext = () => {
     if (!stepData[step].ok) return;
-    if (isLastWizardStep) {
-      setShowCurrentStatus(false);
-      setMode("preview");
-    } else {
-      setStep((s) => s + 1);
-    }
+
+    // If a notes field is focused, the on-screen keyboard is covering part
+    // of the screen and may have scrolled things into a transient position
+    // (mobile browsers auto-scroll a focused field into view). Blur it and
+    // wait a frame for that to settle before measuring what's actually
+    // visible below — otherwise the scroll-gate math below can be based on
+    // stale geometry and overshoot by several cards instead of one.
+    const active = document.activeElement as HTMLElement | null;
+    if (active && active !== document.body) active.blur();
+
+    requestAnimationFrame(() => {
+      // Current Status (case 4) stacks 8 status cards + a final notes field —
+      // too tall to fit on one screen. Reveal it one card at a time instead
+      // of jumping straight to the next wizard step, so tapping Next walks
+      // Appetite → Drinking → Energy → ... one at a time, the same as if
+      // notes had been typed in each, rather than scrolling straight past
+      // everything to the last card and out of the step entirely. Other
+      // steps keep the simpler "scroll remainder into view" behavior below.
+      const body = modalBodyRef.current;
+      const content = stepContentRef.current;
+      if (body && content && caseIndices[step] === 4) {
+        const bodyRect = body.getBoundingClientRect();
+        const children = Array.from(content.children) as HTMLElement[];
+        const nextHidden = children.find(
+          (el) => el.getBoundingClientRect().bottom - bodyRect.bottom > 4
+        );
+        const gateCount = scrollGateCount.current[step] ?? 0;
+
+        if (nextHidden && gateCount < children.length) {
+          scrollGateCount.current[step] = gateCount + 1;
+          // Native scrollIntoView (not a hand-computed offset) so it's
+          // always correct against the current, settled layout.
+          nextHidden.scrollIntoView({ behavior: "auto", block: "end" });
+          return;
+        }
+      }
+
+      // All other steps: if there's more below the fold, scroll it into
+      // view once instead of jumping straight to the next step, so nothing
+      // gets skipped just because it wasn't visible yet. Only gate once per
+      // step so a flaky visibility measurement can never block Next from
+      // working entirely — worst case is one extra tap, not a stuck wizard.
+      if (
+        body &&
+        content &&
+        content.lastElementChild &&
+        caseIndices[step] !== 4 &&
+        scrollGateCount.current[step] === undefined
+      ) {
+        const bodyRect = body.getBoundingClientRect();
+        const lastRect = (content.lastElementChild as HTMLElement).getBoundingClientRect();
+        const hiddenBelow = lastRect.bottom - bodyRect.bottom;
+        if (hiddenBelow > 4) {
+          scrollGateCount.current[step] = 1;
+          (content.lastElementChild as HTMLElement).scrollIntoView({
+            behavior: "auto",
+            block: "end"
+          });
+          return;
+        }
+      }
+
+      if (isLastWizardStep) {
+        setMode("preview");
+      } else {
+        setStep((s) => s + 1);
+      }
+    });
   };
 
   const handleBack = () => {
@@ -231,6 +378,9 @@ export default function PrepareWizard({
   };
 
   const handleSave = async () => {
+    // Demo users can fully create/save a visit for the pre-seeded demo pet
+    // (Bella) — only a pet they created themselves stays locked.
+    if (isDemo && !pet?.isDemoSeed) return;
     if (!visitId) {
       alert(
         lang === "da"
@@ -243,13 +393,37 @@ export default function PrepareWizard({
     setSaving(true);
     try {
       await updateVisit(visitId, { ...draft, status: "final" });
-      if (onComplete) await onComplete();
+      commitAttachmentDeletions(draft.attachments ?? []);
+      // Keep local state in sync with what was just written — the done
+      // screen's ✕ button goes through handleSaveDraftAndClose, which
+      // decides whether to preserve "final" based on draft.status. Without
+      // this, a freshly-finalized visit would still read "draft" locally
+      // (status here was never final until the write above) and tapping ✕
+      // instead of "Done" would silently revert it.
+      setDraft((d) => ({ ...d, status: "final" }));
+      // Don't call onComplete()/onNavigateAfterClose() here — in VisitsScreen
+      // that closes (unmounts) this wizard, which would happen before the
+      // "done" screen below ever gets a chance to render. The done screen's
+      // own "Done" button (closeToMyVisits) is what actually closes the
+      // wizard and navigates away, once the person has seen it and had a
+      // chance to tap "Share with Vet".
       setMode("done");
-      setSaving(false);
-      onNavigateAfterClose?.("myVisits");
     } catch (e: any) {
       alert(t.error + ": " + (e?.message ?? String(e)));
+    } finally {
       setSaving(false);
+    }
+  };
+
+  const handleShareFromDone = async () => {
+    if (isDemo || !pet) return;
+    setSharingFromDone(true);
+    try {
+      await shareWithVet({ visit: { ...draft, status: "final" }, pet, note: null, lang });
+    } catch (e: any) {
+      alert((lang === "da" ? "Fejl ved deling: " : "Error sharing: ") + (e?.message ?? String(e)));
+    } finally {
+      setSharingFromDone(false);
     }
   };
 
@@ -265,13 +439,23 @@ export default function PrepareWizard({
 
     setSavingDraft(true);
     try {
-      await updateVisit(visitId, { ...draft, status: "draft" });
+      // Reopening an already-finished visit just to look at it, then tapping
+      // ✕ or "Save & close" instead of "Save visit", must not silently
+      // demote it back to draft — only fall back to "draft" if it somehow
+      // has no status yet (a genuinely new, still-in-progress visit).
+      const wasFinal = draft.status === "final";
+      await updateVisit(visitId, { ...draft, status: draft.status ?? "draft" });
+      commitAttachmentDeletions(draft.attachments ?? []);
       // FIX: removed setToast (local state was unused/broken after unmount);
       // toast is correctly dispatched to parent via onToast prop only
       onToast?.(
-        lang === "da"
-          ? "Kladde gemt. Du kan fortsætte under Mine besøg."
-          : "Draft saved. You can continue from My visits."
+        wasFinal
+          ? lang === "da"
+            ? "Gemt."
+            : "Saved."
+          : lang === "da"
+            ? "Kladde gemt. Du kan fortsætte under Mine besøg."
+            : "Draft saved. You can continue from My visits."
       );
       closeToMyVisits();
     } catch (e: any) {
@@ -296,191 +480,6 @@ export default function PrepareWizard({
       closeToMyVisits();
     } catch (e: any) {
       alert(t.error + ": " + (e?.message ?? String(e)));
-    }
-  };
-
-  const triLabel = (v: TriState) => {
-    if (lang === "da") {
-      if (v === "normal") return "Som normalt";
-      if (v === "changed") return "Anderledes";
-      return "Ikke relevant / ved ikke";
-    }
-    if (v === "normal") return "As usual";
-    if (v === "changed") return "Different";
-    return "N/A / not sure";
-  };
-
-  const getStatusCounts = () => {
-    const cs = draft.currentStatus ?? makeEmptyStatus();
-
-    const keys: Array<keyof CurrentStatus> = [
-      "appetite",
-      "drinking",
-      "energy",
-      "toileting",
-      "gi",
-      "breathing",
-      "mobilityPain",
-      "skinEars"
-    ];
-
-    let different = 0;
-    let notSure = 0;
-    let asUsual = 0;
-
-    for (const k of keys) {
-      const v = (cs[k] as TriState) ?? "normal";
-      if (v === "changed") different++;
-      else if (v === "na") notSure++;
-      else asUsual++;
-    }
-
-    return { different, notSure, asUsual };
-  };
-
-  const counts = getStatusCounts();
-
-  const buildVisitBriefText = () => {
-    const cs = draft.currentStatus ?? makeEmptyStatus();
-    const lines: string[] = [];
-
-    lines.push(lang === "da" ? "VISIT BRIEF (Ejer-observationer)" : "VISIT BRIEF (Owner observations)");
-    lines.push(`${lang === "da" ? "Kæledyr" : "Pet"}: ${petName}`);
-    if (draft.visitDate) lines.push(`${lang === "da" ? "Besøgsdato" : "Visit date"}: ${draft.visitDate}`);
-    lines.push("");
-
-    if (draft.mainConcern?.trim()) {
-      lines.push(lang === "da" ? "## Hovedbekymring" : "## Chief concern");
-      lines.push(draft.mainConcern.trim());
-      lines.push("");
-    }
-
-    const started = (draft.whenStart ?? "").trim();
-    const change = (draft.howProgressing ?? "").trim();
-    if (started || change) {
-      lines.push(lang === "da" ? "## Tidslinje / ændring" : "## Timeline / change");
-      if (started) lines.push(`**${lang === "da" ? "Start" : "Started"}:** ${started}`);
-      if (change) lines.push(`**${lang === "da" ? "Udvikling" : "Change"}:** ${change}`);
-      lines.push("");
-    }
-
-    const statusItems: Array<{
-      key: keyof CurrentStatus;
-      labelDa: string;
-      labelEn: string;
-      notesKey: keyof CurrentStatus;
-    }> = [
-      { key: "appetite", labelDa: "Appetit", labelEn: "Appetite", notesKey: "appetiteNotes" },
-      { key: "drinking", labelDa: "Drikker", labelEn: "Drinking", notesKey: "drinkingNotes" },
-      { key: "energy", labelDa: "Energi", labelEn: "Energy", notesKey: "energyNotes" },
-      { key: "toileting", labelDa: "Toiletvaner", labelEn: "Toileting", notesKey: "toiletingNotes" },
-      { key: "gi", labelDa: "Mave/tarm", labelEn: "GI", notesKey: "giNotes" },
-      { key: "breathing", labelDa: "Vejrtrækning", labelEn: "Breathing", notesKey: "breathingNotes" },
-      { key: "mobilityPain", labelDa: "Bevægelse/smerte", labelEn: "Mobility/pain", notesKey: "mobilityPainNotes" },
-      { key: "skinEars", labelDa: "Hud/ører", labelEn: "Skin/ears", notesKey: "skinEarsNotes" }
-    ];
-
-    const differentLines: string[] = [];
-    const notSureLines: string[] = [];
-    const asUsualLabels: string[] = [];
-
-    for (const it of statusItems) {
-      const v = (cs[it.key] as TriState) ?? "normal";
-      const notes = ((cs[it.notesKey] as string) ?? "").trim();
-      const label = lang === "da" ? it.labelDa : it.labelEn;
-      const line = notes ? `- **${label}:** ${notes}` : `- **${label}**`;
-
-      if (v === "changed") differentLines.push(line);
-      else if (v === "na") notSureLines.push(line);
-      else asUsualLabels.push(label);
-    }
-
-    if (differentLines.length || notSureLines.length || asUsualLabels.length) {
-      lines.push(lang === "da" ? "## 3) Status lige nu (hurtigt tjek)" : "## 3) Current status (quick check)");
-
-      if (differentLines.length) {
-        lines.push(lang === "da" ? "**Anderledes:**" : "**Different:**");
-        lines.push(...differentLines);
-        lines.push("");
-      }
-
-      if (notSureLines.length) {
-        lines.push(lang === "da" ? "**Ikke relevant / ved ikke:**" : "**N/A / not sure:**");
-        lines.push(...notSureLines);
-        lines.push("");
-      }
-
-      if (asUsualLabels.length) {
-        lines.push(`${lang === "da" ? "**Som normalt:**" : "**As usual:**"} ${asUsualLabels.join(", ")}`);
-        lines.push("");
-      }
-    }
-
-    // FIX: deduplicated otherNotes — was emitted twice (once inside status loop,
-    // once as a separate "additionalNotes" block). Now only emitted here, once.
-    const otherNotes = ((cs.otherNotes as string) ?? "").trim();
-    if (otherNotes) {
-      lines.push(lang === "da" ? "## Yderligere noter (ejer-observationer)" : "## Additional notes (owner observations)");
-      lines.push(otherNotes);
-      lines.push("");
-    }
-
-    if (draft.patterns?.trim()) {
-      lines.push(lang === "da" ? "## Mønstre / triggere" : "## Patterns / triggers");
-      lines.push(draft.patterns.trim());
-      lines.push("");
-    }
-
-    const meds = (((draft as any).medicationsSupplements as string) ?? "").trim();
-    if (meds) {
-      lines.push(lang === "da" ? "## Medicin / tilskud" : "## Meds / supplements");
-      lines.push(meds);
-      lines.push("");
-    }
-
-    const cond = (((draft as any).knownConditions as string) ?? "").trim();
-    if (cond) {
-      lines.push(lang === "da" ? "## Kendte tilstande (diagnosticeret)" : "## Known conditions (vet-diagnosed)");
-      lines.push(cond);
-      lines.push("");
-    }
-
-    const tests = (((draft as any).recentTests as string) ?? "").trim();
-    if (tests) {
-      lines.push(lang === "da" ? "## Nylige tests/resultater" : "## Recent tests/results");
-      lines.push(tests);
-      lines.push("");
-    }
-
-    const od = (draft.otherDetails ?? "").trim();
-    if (od) {
-      lines.push(lang === "da" ? "## Andre detaljer (fakta)" : "## Other details (facts)");
-      lines.push(od);
-      lines.push("");
-    }
-
-    if (draft.questionsVet?.trim()) {
-      lines.push(lang === "da" ? "## Topspørgsmål til dyrlægen" : "## Top questions for the vet");
-      lines.push(draft.questionsVet.trim());
-      lines.push("");
-    }
-
-    lines.push(
-      lang === "da"
-        ? "Ikke medicinsk rådgivning. Denne brief afspejler dine observationer. Dit dyrlægeteam guider diagnose og behandling."
-        : "Not medical advice. This brief reflects your observations. Your veterinary team will guide diagnosis and treatment."
-    );
-
-    return lines.join("\n");
-  };
-
-  const handleCopy = async () => {
-    try {
-      const text = buildVisitBriefText();
-      await navigator.clipboard.writeText(text);
-      alert(lang === "da" ? "Kopieret!" : "Copied!");
-    } catch {
-      alert(lang === "da" ? "Kunne ikke kopiere på denne enhed." : "Could not copy on this device.");
     }
   };
 
@@ -532,8 +531,8 @@ export default function PrepareWizard({
             rows={2}
             placeholder={
               lang === "da"
-                ? "Skriv kort hvis noget er anderledes..."
-                : "Add a short note if something is different..."
+                ? "Hvad er normalt, og hvad er anderledes lige nu?"
+                : "What's normal, and what's different right now?"
             }
           />
         </label>
@@ -541,204 +540,20 @@ export default function PrepareWizard({
     );
   };
 
-  const ReviewLine = ({
-    label,
-    value,
-    hideLabel
-  }: {
-    label: string;
-    value: string;
-    hideLabel?: boolean;
-  }) => {
-    if (!value || value.trim() === "") return null;
-
-    return (
-      <div style={{ marginBottom: 14 }}>
-        {!hideLabel && (
-          <div
-            style={{
-              fontSize: 12,
-              letterSpacing: 0.3,
-              textTransform: "uppercase",
-              color: "rgba(20,40,60,0.65)",
-              fontWeight: 700,
-              marginBottom: 6
-            }}
-          >
-            {label}
-          </div>
-        )}
-
-        <div
-          style={{
-            fontSize: 15,
-            lineHeight: 1.6,
-            whiteSpace: "pre-wrap",
-            color: "rgba(15,25,35,0.92)"
-          }}
-        >
-          {value}
-        </div>
-      </div>
-    );
-  };
-
-  // FIX: SectionLabel is now a component that only renders when `value` is non-empty,
-  // preventing orphaned headers above blank ReviewLine fields
-  const SectionLabel = ({ label, value }: { label: string; value: string }) => {
-    if (!value || value.trim() === "") return null;
-    return (
-      <div
-        style={{
-          fontSize: 12,
-          letterSpacing: 0.6,
-          textTransform: "uppercase",
-          color: "rgba(20,40,60,0.72)",
-          fontWeight: 900,
-          margin: "18px 0 8px 0"
-        }}
-      >
-        {label}
-      </div>
-    );
-  };
-
-  // Used for the current-status section label which is always shown (has its own expand/collapse)
-  const sectionLabelStyle: any = {
-    fontSize: 12,
-    letterSpacing: 0.6,
-    textTransform: "uppercase",
-    color: "rgba(20,40,60,0.72)",
-    fontWeight: 900,
-    margin: "18px 0 8px 0"
-  };
-
-  const notebookPageStyle: any = {
-    backgroundColor: "#fffdf7",
-    border: "1px solid rgba(20, 40, 60, 0.12)",
-    borderRadius: 14,
-    padding: 14,
-    boxShadow: "0 10px 24px rgba(20, 40, 60, 0.08)",
-    position: "relative",
-    overflow: "hidden"
-  };
-
-  const notebookLinesStyle: any = {
-    position: "absolute",
-    inset: 0,
-    pointerEvents: "none",
-    opacity: 0.18,
-    backgroundImage:
-      "repeating-linear-gradient(to bottom, rgba(40,70,110,0.18) 0px, rgba(40,70,110,0.18) 1px, transparent 1px, transparent 28px)"
-  };
-
-  const notebookMarginStyle: any = {
-    position: "absolute",
-    top: 0,
-    bottom: 0,
-    left: 18,
-    width: 2,
-    background: "rgba(220, 80, 90, 0.22)",
-    pointerEvents: "none"
-  };
-
-  const renderStatusReview = () => {
-    const cs = draft.currentStatus ?? makeEmptyStatus();
-
-    const items: Array<{
-      key: keyof CurrentStatus;
-      labelDa: string;
-      labelEn: string;
-      notesKey: keyof CurrentStatus;
-    }> = [
-      { key: "appetite", labelDa: "Appetit", labelEn: "Appetite", notesKey: "appetiteNotes" },
-      { key: "drinking", labelDa: "Drikker", labelEn: "Drinking", notesKey: "drinkingNotes" },
-      { key: "energy", labelDa: "Energi", labelEn: "Energy", notesKey: "energyNotes" },
-      { key: "toileting", labelDa: "Toiletvaner", labelEn: "Toileting", notesKey: "toiletingNotes" },
-      { key: "gi", labelDa: "Mave/tarm", labelEn: "GI", notesKey: "giNotes" },
-      { key: "breathing", labelDa: "Vejrtrækning", labelEn: "Breathing", notesKey: "breathingNotes" },
-      { key: "mobilityPain", labelDa: "Bevægelse/smerte", labelEn: "Mobility/pain", notesKey: "mobilityPainNotes" },
-      { key: "skinEars", labelDa: "Hud/ører", labelEn: "Skin/ears", notesKey: "skinEarsNotes" }
-    ];
-
-    const different: Array<{ label: string; notes: string }> = [];
-    const notSure: Array<{ label: string; notes: string }> = [];
-    const asUsual: string[] = [];
-
-    for (const it of items) {
-      const v = (cs[it.key] as TriState) ?? "normal";
-      const notes = ((cs[it.notesKey] as string) ?? "").trim();
-      const label = lang === "da" ? it.labelDa : it.labelEn;
-
-      if (v === "changed") different.push({ label, notes });
-      else if (v === "na") notSure.push({ label, notes });
-      else asUsual.push(label);
-    }
-
-    const Section = ({ title, children }: { title: string; children: any }) => (
-      <div style={{ marginBottom: 12 }}>
-        <div style={{ fontWeight: 800, marginBottom: 6 }}>{title}</div>
-        {children}
-      </div>
-    );
-
-    const Bullet = ({ label, notes }: { label: string; notes?: string }) => (
-      <div style={{ marginBottom: 8 }}>
-        <div style={{ fontSize: 14 }}>
-          <strong>{label}</strong>
-          {notes ? <span style={{ color: "rgba(15,25,35,0.92)" }}>: {notes}</span> : null}
-        </div>
-      </div>
-    );
-
-    return (
-      <div
-        style={{
-          backgroundColor: "rgba(20,40,60,0.04)",
-          border: "1px solid rgba(20,40,60,0.10)",
-          padding: 12,
-          borderRadius: 12
-        }}
-      >
-        {different.length > 0 && (
-          <Section title={lang === "da" ? "Anderledes" : "Different"}>
-            {different.map((x, idx) => (
-              <Bullet key={`diff-${idx}`} label={x.label} notes={x.notes} />
-            ))}
-          </Section>
-        )}
-
-        {notSure.length > 0 && (
-          <Section title={lang === "da" ? "Ikke relevant / ved ikke" : "N/A / not sure"}>
-            {notSure.map((x, idx) => (
-              <Bullet key={`na-${idx}`} label={x.label} notes={x.notes} />
-            ))}
-          </Section>
-        )}
-
-        {asUsual.length > 0 && (
-          <div style={{ marginBottom: 12 }}>
-            <div style={{ fontWeight: 800, marginBottom: 6 }}>{lang === "da" ? "Som normalt" : "As usual"}</div>
-            <div style={{ fontSize: 14, color: "rgba(15,25,35,0.92)" }}>{asUsual.join(", ")}</div>
-          </div>
-        )}
-      </div>
-    );
-  };
-
   const renderStep = () => {
-    switch (step) {
+    switch (caseIndices[step]) {
       case 0:
         return (
           <>
             <div className="muted" style={{ marginBottom: 8 }}>
-              {lang === "da" ? "Kæledyr:" : "Pet:"} <strong>{petName}</strong>
+              {lang === "da" ? "Dyr:" : "Pet:"} <strong>{petName}</strong>
             </div>
 
             <label className="label">
               {lang === "da" ? "Besøgsdato" : "Visit date"}
               <input
                 className="input"
+                enterKeyHint="next"
                 type="date"
                 value={draft.visitDate}
                 onChange={(e) => setDraft({ ...draft, visitDate: e.target.value })}
@@ -749,25 +564,125 @@ export default function PrepareWizard({
 
       case 1:
         return (
-          <label className="label">
-            {lang === "da" ? "Hovedbekymring" : "Main concern"}
-            <textarea
-              className="textarea"
-              value={draft.mainConcern}
-              onChange={(e) => setDraft({ ...draft, mainConcern: e.target.value })}
-              placeholder={
-                lang === "da"
-                  ? "f.eks. halter, spiser ikke, opkast, adfærdsændring"
-                  : "e.g., limping, not eating, vomiting, behavior change"
-              }
-              rows={4}
-            />
-          </label>
+          <>
+            <div className="calloutBox calloutBoxCompact" style={{ marginTop: 0 }}>
+              <div style={{ fontWeight: 700, fontSize: 13, color: "var(--blue)", marginBottom: 8 }}>
+                {lang === "da" ? "Hvor bekymret er du?" : "How urgent does this feel to you?"}
+              </div>
+              <div className="row rowWrap" style={{ gap: 6 }}>
+                {(["routine", "concerned", "very_worried"] as Urgency[]).map((u) => (
+                  <button
+                    key={u}
+                    type="button"
+                    className={`btn btnChip ${draft.urgency === u ? "btnPrimary" : "btnSecondary"}`}
+                    onClick={() => setDraft({ ...draft, urgency: u })}
+                  >
+                    {urgencyLabel(u, lang)}
+                  </button>
+                ))}
+              </div>
+              {draft.urgency === "routine" && (
+                <div className="muted" style={{ marginTop: 8, fontSize: 12 }}>
+                  {lang === "da"
+                    ? "Rutinebesøg bruger en kortere version af denne formular."
+                    : "Routine visits use a shorter version of this form."}
+                </div>
+              )}
+            </div>
+
+            <div style={{ height: 14 }} />
+
+            <label className="label">
+              {lang === "da" ? "Hovedbekymring" : "Main concern"}
+              <textarea
+                className="textarea"
+                value={draft.mainConcern}
+                onChange={(e) => setDraft({ ...draft, mainConcern: e.target.value })}
+                placeholder={
+                  lang === "da"
+                    ? "f.eks. halter, spiser ikke, opkast, adfærdsændring"
+                    : "e.g., limping, not eating, vomiting, behavior change"
+                }
+                rows={4}
+              />
+            </label>
+
+            {draft.urgency !== "routine" && (
+              <>
+                <div style={{ height: 14 }} />
+
+                <label className="label">
+                  {lang === "da" ? "Hvordan påvirker det hverdagen?" : "How is this affecting normal life?"}
+                  <textarea
+                    className="textarea"
+                    value={draft.functionalImpact ?? ""}
+                    onChange={(e) => setDraft({ ...draft, functionalImpact: e.target.value })}
+                    placeholder={
+                      lang === "da"
+                        ? "F.eks. spiser ikke, vil ikke gå tur, sover mere end normalt, leger ikke"
+                        : "E.g., not eating, reluctant to walk, sleeping more than usual, not playing"
+                    }
+                    rows={3}
+                  />
+                </label>
+              </>
+            )}
+          </>
         );
 
       case 2:
         return (
           <>
+            <div className="calloutBox calloutBoxCompact" style={{ marginTop: 0 }}>
+              <div style={{ fontWeight: 700, fontSize: 13, color: "var(--blue)", marginBottom: 8 }}>
+                {lang === "da" ? "Hvor længe har det stået på?" : "How long has this been going on?"}
+              </div>
+              <div className="row" style={{ gap: 8 }}>
+                <input
+                  className="input"
+                  enterKeyHint="next"
+                  type="number"
+                  min="0"
+                  inputMode="numeric"
+                  value={draft.durationValue ?? ""}
+                  onChange={(e) => setDraft({ ...draft, durationValue: e.target.value })}
+                  placeholder={lang === "da" ? "f.eks. 2" : "e.g., 2"}
+                  style={{ maxWidth: 100 }}
+                />
+                <select
+                  className="input"
+                  value={draft.durationUnit ?? "days"}
+                  onChange={(e) => setDraft({ ...draft, durationUnit: e.target.value as DurationUnit })}
+                >
+                  {(["hours", "days", "weeks", "months"] as DurationUnit[]).map((u) => (
+                    <option key={u} value={u}>
+                      {durationUnitLabel(u, lang, 2)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ height: 10 }} />
+
+              <div style={{ fontWeight: 700, fontSize: 13, color: "var(--blue)", marginBottom: 8 }}>
+                {lang === "da" ? "Bliver det bedre eller værre?" : "Is it getting better or worse?"}
+              </div>
+              <div className="row rowWrap" style={{ gap: 6 }}>
+                {(["worse", "same", "better"] as Trend[]).map((tr) => (
+                  <button
+                    key={tr}
+                    type="button"
+                    className={`btn btnChip ${draft.trend === tr ? "btnPrimary" : "btnSecondary"}`}
+                    onClick={() => setDraft({ ...draft, trend: tr })}
+                  >
+                    {trendLabel(tr, lang)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ height: 14 }} />
+
             <label className="label">
               {lang === "da" ? "Hvornår lagde du først mærke til det?" : "When did you first notice this?"}
               <textarea
@@ -804,34 +719,86 @@ export default function PrepareWizard({
 
       case 3:
         return (
-          <label className="label">
-            {lang === "da" ? "Mønstre & triggere" : "Patterns & triggers"}
-            <textarea
-              className="textarea"
-              value={draft.patterns}
-              onChange={(e) => setDraft({ ...draft, patterns: e.target.value })}
-              placeholder={
-                lang === "da"
-                  ? "F.eks. værre efter mad, kun på trapper, oftere om natten..."
-                  : "E.g., worse after meals, only on stairs, more frequent at night..."
-              }
-              rows={4}
-            />
-            <div className="muted" style={{ marginTop: 8 }}>
-              {lang === "da"
-                ? "Hvis der ikke er nogen mønstre, kan du lade feltet stå tomt."
-                : "If there are no patterns, you can leave this blank."}
-            </div>
-          </label>
+          <>
+            <label className="label">
+              {lang === "da" ? "Mønstre & triggere" : "Patterns & triggers"}
+              <textarea
+                className="textarea"
+                value={draft.patterns}
+                onChange={(e) => setDraft({ ...draft, patterns: e.target.value })}
+                placeholder={
+                  lang === "da"
+                    ? "F.eks. værre efter mad, kun på trapper, oftere om natten..."
+                    : "E.g., worse after meals, only on stairs, more frequent at night..."
+                }
+                rows={4}
+              />
+              <div className="muted" style={{ marginTop: 8 }}>
+                {lang === "da"
+                  ? "Hvis der ikke er nogen mønstre, kan du lade feltet stå tomt."
+                  : "If there are no patterns, you can leave this blank."}
+              </div>
+            </label>
+          </>
         );
 
-      case 4:
+      case 4: {
+        const cs = draft.currentStatus ?? makeEmptyStatus();
+        const hasDeviation =
+          cs.appetite !== "normal" ||
+          !!cs.appetiteNotes?.trim() ||
+          cs.drinking !== "normal" ||
+          !!cs.drinkingNotes?.trim() ||
+          cs.energy !== "normal" ||
+          !!cs.energyNotes?.trim() ||
+          cs.toileting !== "normal" ||
+          !!cs.toiletingNotes?.trim() ||
+          cs.gi !== "normal" ||
+          !!cs.giNotes?.trim() ||
+          cs.breathing !== "normal" ||
+          !!cs.breathingNotes?.trim() ||
+          cs.mobilityPain !== "normal" ||
+          !!cs.mobilityPainNotes?.trim() ||
+          cs.skinEars !== "normal" ||
+          !!cs.skinEarsNotes?.trim() ||
+          !!cs.otherNotes?.trim();
+
+        // For routine visits, assume everything's normal (the checklist's
+        // default) and skip straight past it unless the owner says
+        // otherwise or there's already deviation data to review.
+        if (draft.urgency === "routine" && !statusExpanded && !hasDeviation) {
+          return (
+            <div className="calloutBox calloutBoxCompact" style={{ marginTop: 0 }}>
+              <div style={{ fontWeight: 700, fontSize: 13, color: "var(--blue)", marginBottom: 8 }}>
+                {lang === "da" ? "Er alt normalt lige nu?" : "Is everything normal right now?"}
+              </div>
+              <div className="muted" style={{ marginBottom: 10 }}>
+                {lang === "da"
+                  ? `Antaget: appetit, energi, vejrtrækning m.m. er som normalt for ${petName || "dit dyr"}.`
+                  : `Assumed: appetite, energy, breathing, etc. are all as usual for ${petName || "your pet"}.`}
+              </div>
+              <div className="row rowWrap" style={{ gap: 6 }}>
+                <button type="button" className="btn btnChip btnPrimary" onClick={handleNext}>
+                  {lang === "da" ? "Ja, fortsæt" : "Yes, continue"}
+                </button>
+                <button
+                  type="button"
+                  className="btn btnChip btnSecondary"
+                  onClick={() => setStatusExpanded(true)}
+                >
+                  {lang === "da" ? "Nej, noget er anderledes" : "No, something's different"}
+                </button>
+              </div>
+            </div>
+          );
+        }
+
         return (
           <>
             <div className="muted" style={{ marginBottom: 10 }}>
               {lang === "da"
-                ? "Vælg det, der passer bedst. Tilføj en kort note hvis du vil."
-                : "Choose what fits best. Add a short note if you want."}
+                ? `Dyrlæger læser dette ved at sammenligne med, hvad der er normalt for ${petName || "dit dyr"}. Vælg 'Anderledes', hvis det ikke er typisk lige nu.`
+                : `Vets read this by comparing to what's normal for ${petName || "your pet"}. Choose 'Different' if today isn't typical.`}
             </div>
 
             {renderCurrentStatusRow(lang === "da" ? "Appetit" : "Appetite", "appetite", "appetiteNotes")}
@@ -868,6 +835,7 @@ export default function PrepareWizard({
             </label>
           </>
         );
+      }
 
       case 5:
         return (
@@ -880,26 +848,60 @@ export default function PrepareWizard({
                 onChange={(e) => setDraft({ ...draft, otherDetails: e.target.value })}
                 placeholder={
                   lang === "da"
-                    ? "F.eks. foderændringer, rejse, nye godbidder, løbetid, mulig eksponering, timing, videoer du har... (ikke spørgsmål)"
-                    : "E.g., new food/treats, travel, boarding, heat cycle, possible exposure, timing, videos you have... (not questions)"
+                    ? "F.eks. foderændringer, rejse, nylig skade/fald, flåter/lopper, mulig forgiftning, løbetid, timing, videoer du har... (ikke spørgsmål)"
+                    : "E.g., new food/treats, travel, recent injury or fall, ticks/fleas, possible toxin exposure, heat cycle, timing, videos you have... (not questions)"
                 }
                 rows={4}
               />
             </label>
 
             <div className="muted" style={{ marginTop: 8 }}>
-              {lang === "da" ? "Tip: Du kan tilføje fotos/videoer i Preview." : "Tip: You can attach photos/videos in Preview."}
+              {lang === "da" ? "Tip: Du kan tilføje fotos/videoer under Gennemse." : "Tip: You can attach photos/videos in Preview."}
             </div>
           </>
         );
 
-      case 6:
+      case 6: {
+        const medicationsSupplementsVal = ((draft as any).medicationsSupplements as string) ?? "";
+        const knownConditionsVal = ((draft as any).knownConditions as string) ?? "";
+        const recentTestsVal = ((draft as any).recentTests as string) ?? "";
+        const hasMedsData =
+          !!medicationsSupplementsVal.trim() ||
+          !!knownConditionsVal.trim() ||
+          !!recentTestsVal.trim() ||
+          !!draft.previousTreatment?.trim();
+
+        if (!medsExpanded && !hasMedsData) {
+          return (
+            <div className="calloutBox calloutBoxCompact" style={{ marginTop: 0 }}>
+              <div style={{ fontWeight: 700, fontSize: 13, color: "var(--blue)", marginBottom: 6 }}>
+                {lang === "da"
+                  ? "Noget at nævne om medicin, tilstande, tests eller hjemmebehandling?"
+                  : "Anything to mention on meds, conditions, tests, or home care?"}
+              </div>
+              <div className="muted" style={{ marginBottom: 10 }}>
+                {lang === "da"
+                  ? "Inkluderer recept-/håndkøbsmedicin, kosttilskud, kendte tilstande, testresultater og hjemmemidler du har prøvet (fx ro, diætændring, varme/kulde)."
+                  : "Includes prescription/OTC medication, supplements, known conditions, test results, and home remedies you've tried (e.g. rest, diet change, heat/cold)."}
+              </div>
+              <div className="row rowWrap" style={{ gap: 6 }}>
+                <button type="button" className="btn btnChip btnPrimary" onClick={handleNext}>
+                  {lang === "da" ? "Nej, intet at nævne" : "No, nothing to mention"}
+                </button>
+                <button type="button" className="btn btnChip btnSecondary" onClick={() => setMedsExpanded(true)}>
+                  {lang === "da" ? "Ja, tilføj detaljer" : "Yes, add details"}
+                </button>
+              </div>
+            </div>
+          );
+        }
+
         return (
           <>
             <div className="muted" style={{ marginBottom: 8 }}>
               {lang === "da"
-                ? "Husk: Inkludér al medicin/tilskud — også selvom det er for noget helt andet."
-                : "Remember: Include all meds/supplements — even if it's for something else."}
+                ? "Husk: Inkludér alt — recept, håndkøb, kosttilskud eller naturmedicin — også selvom det er for noget helt andet."
+                : "Remember: Include everything — prescription, over-the-counter, supplements, or homeopathic remedies — even if it's for something else."}
             </div>
 
             <label className="label">
@@ -928,6 +930,7 @@ export default function PrepareWizard({
               </div>
               <input
                 className="input"
+                enterKeyHint="next"
                 value={((draft as any).knownConditions as string) ?? ""}
                 onChange={(e) => setDraft({ ...draft, knownConditions: e.target.value } as any)}
                 placeholder={lang === "da" ? "F.eks. Gigt (2019), allergi, CKD stadie 2" : "E.g., Arthritis (2019), allergies, CKD stage 2"}
@@ -974,44 +977,48 @@ export default function PrepareWizard({
             </label>
           </>
         );
+      }
 
       case 7:
         return (
           <label className="label">
-            {lang === "da" ? "Vigtigste spørgsmål til dyrlægen" : "Top questions for the vet"}
+            {lang === "da" ? "Det ene, du har mest brug for svar på" : "The one thing you need answered"}
+            <div className="muted" style={{ marginTop: 6, marginBottom: 6, fontWeight: 400 }}>
+              {lang === "da"
+                ? "Ikke bare 'jeg er bekymret' — hvad skal dyrlægen hjælpe dig med at beslutte?"
+                : "Not just \"I'm worried\" — what decision do you need the vet's help making?"}
+            </div>
             <textarea
               className="textarea"
               value={draft.questionsVet}
               onChange={(e) => setDraft({ ...draft, questionsVet: e.target.value })}
               placeholder={
                 lang === "da"
-                  ? "F.eks. Hvad er den mest sandsynlige årsag? Hvad er næste skridt? Hvornår skal jeg kontakte jer igen?"
-                  : "E.g., What's the most likely cause? What's the next step? When should I contact you again?"
+                  ? "F.eks. \"Jeg har brug for at vide, om dette er akut\" eller \"Jeg vil gerne vide, om vi skal teste for X\""
+                  : "E.g., \"I need to know if this is urgent\" or \"I want to know if we should test for X\""
               }
               rows={4}
             />
           </label>
         );
 
+      case 8:
+        return visitId ? (
+          <AttachmentManager
+            lang={lang}
+            userId={userId}
+            scopeId={visitId}
+            attachments={draft.attachments ?? []}
+            onChange={(next) => setDraft({ ...draft, attachments: next })}
+          />
+        ) : (
+          <div className="muted">{lang === "da" ? "Forbereder…" : "Getting ready…"}</div>
+        );
+
       default:
         return null;
     }
   };
-
-  // Derived values used in the preview section
-  const mainConcernValue = (draft.mainConcern ?? "").trim();
-  const timelineValue = [
-    (draft.whenStart ?? "").trim() ? `${lang === "da" ? "Start" : "Started"}: ${draft.whenStart}` : "",
-    (draft.howProgressing ?? "").trim() ? `${lang === "da" ? "Udvikling" : "Change"}: ${draft.howProgressing}` : ""
-  ].filter(Boolean).join("\n");
-  const patternsValue = (draft.patterns ?? "").trim();
-  const otherDetailsValue = (draft.otherDetails ?? "").trim();
-  const otherNotesValue = ((draft.currentStatus?.otherNotes as string) ?? "").trim();
-  const medsValue = (((draft as any).medicationsSupplements as string) ?? "").trim();
-  const conditionsValue = (((draft as any).knownConditions as string) ?? "").trim();
-  const testsValue = (((draft as any).recentTests as string) ?? "").trim();
-  const previousTreatmentValue = (draft.previousTreatment ?? "").trim();
-  const questionsVetValue = (draft.questionsVet ?? "").trim();
 
   return (
     <div className="modalOverlay">
@@ -1036,15 +1043,49 @@ export default function PrepareWizard({
           </button>
         </div>
 
-        <div className="modalBody">
+        <div className="modalBody" ref={modalBodyRef}>
           {/* MODE 1: WIZARD */}
           {mode === "wizard" && (
             <>
+              {pet && <PetSnapshotCard pet={pet} lang={lang} />}
+
               <div style={{ marginBottom: 16 }}>
                 <h4 style={{ margin: "0 0 6px 0" }}>{stepData[step].title}</h4>
                 <p style={{ color: "var(--muted)", fontSize: 14, margin: 0 }}>{stepData[step].desc}</p>
               </div>
-              {renderStep()}
+              <div
+                ref={stepContentRef}
+                onKeyDown={(e) => {
+                  if (e.key !== "Enter" || e.shiftKey) return;
+
+                  // Only single-line <input> fields auto-advance on Enter.
+                  // <textarea> fields (notes, free text) must let Enter insert
+                  // a normal newline — otherwise typing a multi-line note (e.g.
+                  // hitting Enter between points) silently bumps focus into the
+                  // next field on every keystroke, which on the Current Status
+                  // step (8 stacked textareas) can walk focus several fields
+                  // forward without the person noticing.
+                  const target = e.target as HTMLElement;
+                  if (target.tagName !== "INPUT") return;
+
+                  e.preventDefault();
+
+                  const focusables = Array.from(e.currentTarget.querySelectorAll<HTMLElement>("input, textarea"));
+                  const index = focusables.indexOf(target);
+
+                  if (index >= 0 && index < focusables.length - 1) {
+                    const next = focusables[index + 1];
+                    next.focus();
+                    // "auto" — smooth scrollIntoView is unreliable inside a
+                    // -webkit-overflow-scrolling: touch container on iOS Safari.
+                    next.scrollIntoView({ behavior: "auto", block: "center" });
+                  } else {
+                    handleNext();
+                  }
+                }}
+              >
+                {renderStep()}
+              </div>
             </>
           )}
 
@@ -1052,7 +1093,7 @@ export default function PrepareWizard({
           {mode === "preview" && (
             <>
               <div style={{ marginBottom: 12 }}>
-                <h3 style={{ margin: "0 0 4px 0" }}>{lang === "da" ? "Visit Brief" : "Visit Brief"}</h3>
+                <h3 style={{ margin: "0 0 4px 0" }}>{lang === "da" ? "Besøgsforberedelse" : "Visit Brief"}</h3>
                 <div className="muted" style={{ fontSize: 14 }}>
                   {lang === "da"
                     ? "Klar til at dele med dit dyrlægeteam."
@@ -1060,202 +1101,26 @@ export default function PrepareWizard({
                 </div>
               </div>
 
-              {/* Header strip */}
-              <div
-                style={{
-                  backgroundColor: "white",
-                  border: "1px solid var(--border)",
-                  padding: 12,
-                  borderRadius: 12,
-                  marginBottom: 12
-                }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
-                  <div>
-                    <div className="muted" style={{ fontSize: 12 }}>
-                      {lang === "da" ? "Kæledyr" : "Pet"}
-                    </div>
-                    <div style={{ fontWeight: 800, fontSize: 18, lineHeight: 1.2 }}>{petName}</div>
-                  </div>
-
-                  <div style={{ textAlign: "right" as const }}>
-                    <div className="muted" style={{ fontSize: 12 }}>
-                      {lang === "da" ? "Besøgsdato" : "Visit date"}
-                    </div>
-                    <div style={{ fontWeight: 700 }}>{draft.visitDate || "—"}</div>
-                  </div>
-                </div>
-              </div>
-
-              <button className="btn btnSecondary" onClick={handleCopy} style={{ width: "100%", marginBottom: 12 }}>
-                {lang === "da" ? "Kopiér Visit Brief" : "Copy Visit Brief"}
-              </button>
-
-              {/* Notebook brief */}
-              <div style={{ ...notebookPageStyle, marginBottom: 12 }}>
-                <div style={notebookLinesStyle} />
-                <div style={notebookMarginStyle} />
-
-                <div style={{ position: "relative", paddingLeft: 14 }}>
-                  {/* MAIN CONCERN */}
-                  <SectionLabel
-                    label={lang === "da" ? "Hovedbekymring" : "Main concern"}
-                    value={mainConcernValue}
-                  />
-                  <ReviewLine
-                    label={lang === "da" ? "Hovedbekymring" : "Main concern"}
-                    value={mainConcernValue}
-                    hideLabel
-                  />
-
-                  {/* TIMELINE */}
-                  <SectionLabel
-                    label={lang === "da" ? "Tidslinje" : "Timeline"}
-                    value={timelineValue}
-                  />
-                  <ReviewLine
-                    label={lang === "da" ? "Tidslinje" : "Timeline"}
-                    value={timelineValue}
-                    hideLabel
-                  />
-
-                  <div style={{ height: 1, background: "rgba(20,40,60,0.10)", margin: "14px 0" }} />
-
-                  {/* CURRENT STATUS (collapsible) — always shown with its own expand toggle */}
-                  <div style={sectionLabelStyle}>{lang === "da" ? "Nuværende status" : "Current status"}</div>
-
-                  <div style={{ marginBottom: 6 }}>
-                    {/* FIX: single label that toggles with showCurrentStatus */}
-                    <button
-                      type="button"
-                      className="btn btnSecondary"
-                      onClick={() => setShowCurrentStatus((v) => !v)}
-                      style={{
-                        width: "100%",
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        padding: "10px 12px"
-                      }}
-                    >
-                      <span style={{ fontWeight: 700 }}>
-                        {showCurrentStatus
-                          ? lang === "da" ? "Skjul status" : "Hide status"
-                          : lang === "da" ? "Vis status" : "Show status"}
-                      </span>
-                      <span style={{ fontWeight: 700 }}>
-                        {showCurrentStatus ? "▲" : "▼"}
-                      </span>
-                    </button>
-
-                    {!showCurrentStatus && (
-                      <div className="muted" style={{ fontSize: 13, marginTop: 8 }}>
-                        {lang === "da"
-                          ? `Anderledes: ${counts.different} • Ved ikke: ${counts.notSure} • Som normalt: ${counts.asUsual}`
-                          : `Different: ${counts.different} • Not sure: ${counts.notSure} • As usual: ${counts.asUsual}`}
-                      </div>
-                    )}
-
-                    {showCurrentStatus && <div style={{ marginTop: 10 }}>{renderStatusReview()}</div>}
-                  </div>
-
-                  <div style={{ height: 1, background: "rgba(20,40,60,0.10)", margin: "14px 0" }} />
-
-                  {/* PATTERNS / TRIGGERS */}
-                  <SectionLabel
-                    label={lang === "da" ? "Mønstre / triggere" : "Patterns / triggers"}
-                    value={patternsValue}
-                  />
-                  <ReviewLine
-                    label={lang === "da" ? "Mønstre / triggere" : "Patterns / triggers"}
-                    value={patternsValue}
-                    hideLabel
-                  />
-
-                  {/* OTHER OBSERVATIONS (FACTS) */}
-                  <SectionLabel
-                    label={lang === "da" ? "Andre observationer (fakta)" : "Other observations (facts)"}
-                    value={otherDetailsValue}
-                  />
-                  <ReviewLine
-                    label={lang === "da" ? "Andre observationer (fakta)" : "Other observations (facts)"}
-                    value={otherDetailsValue}
-                    hideLabel
-                  />
-
-                  {/* ADDITIONAL NOTES (OWNER) */}
-                  <SectionLabel
-                    label={lang === "da" ? "Yderligere noter (ejer-observationer)" : "Additional notes (owner observations)"}
-                    value={otherNotesValue}
-                  />
-                  <ReviewLine
-                    label={lang === "da" ? "Yderligere noter (ejer-observationer)" : "Additional notes (owner observations)"}
-                    value={otherNotesValue}
-                    hideLabel
-                  />
-
-                  {/* MEDS & SUPPLEMENTS */}
-                  <SectionLabel
-                    label={lang === "da" ? "Medicin & tilskud (aktuelt)" : "Meds & supplements (current)"}
-                    value={medsValue}
-                  />
-                  <ReviewLine
-                    label={lang === "da" ? "Medicin & tilskud (aktuelt)" : "Meds & supplements (current)"}
-                    value={medsValue}
-                    hideLabel
-                  />
-
-                  {/* KNOWN CONDITIONS */}
-                  <SectionLabel
-                    label={lang === "da" ? "Kendte tilstande (diagnosticeret)" : "Known conditions (vet-diagnosed)"}
-                    value={conditionsValue}
-                  />
-                  <ReviewLine
-                    label={lang === "da" ? "Kendte tilstande (diagnosticeret)" : "Known conditions (vet-diagnosed)"}
-                    value={conditionsValue}
-                    hideLabel
-                  />
-
-                  {/* RECENT TESTS */}
-                  <SectionLabel
-                    label={lang === "da" ? "Nylige tests / resultater" : "Recent tests / results"}
-                    value={testsValue}
-                  />
-                  <ReviewLine
-                    label={lang === "da" ? "Nylige tests / resultater" : "Recent tests / results"}
-                    value={testsValue}
-                    hideLabel
-                  />
-
-                  {/* WHAT YOU'VE TRIED AT HOME */}
-                  <SectionLabel
-                    label={lang === "da" ? "Hvad du har prøvet hjemme" : "What you've tried at home"}
-                    value={previousTreatmentValue}
-                  />
-                  <ReviewLine
-                    label={lang === "da" ? "Hvad du har prøvet hjemme" : "What you've tried at home"}
-                    value={previousTreatmentValue}
-                    hideLabel
-                  />
-
-                  {/* QUESTIONS FOR THE VET */}
-                  <SectionLabel
-                    label={lang === "da" ? "Spørgsmål til dyrlægen" : "Questions for the vet"}
-                    value={questionsVetValue}
-                  />
-                  <ReviewLine
-                    label={lang === "da" ? "Spørgsmål til dyrlægen" : "Questions for the vet"}
-                    value={questionsVetValue}
-                    hideLabel
-                  />
-                </div>
+              <div style={{ marginBottom: 12 }}>
+                <ViewDocument lang={lang} visit={draft} pet={pet ?? null} note={null} hideTitle isDemo={isDemo} />
               </div>
 
               {/* Actions */}
               <div className="row" style={{ gap: 8, flexDirection: "column" as const }}>
-                <button className="btn btnPrimary" onClick={handleSave} disabled={saving}>
+                <button
+                  className="btn btnPrimary"
+                  onClick={handleSave}
+                  disabled={saving || (isDemo && !pet?.isDemoSeed)}
+                >
                   {saving ? (lang === "da" ? "Gemmer..." : "Saving...") : lang === "da" ? "Gem besøg" : "Save visit"}
                 </button>
+                {isDemo && !pet?.isDemoSeed && (
+                  <div className="muted" style={{ fontSize: 13 }}>
+                    {lang === "da"
+                      ? "Ikke tilgængelig i demoen — opret en konto for at gemme."
+                      : "Not available in the demo — sign up to save."}
+                  </div>
+                )}
 
                 {isDraft && !!visitId && (
                   <button
@@ -1266,10 +1131,6 @@ export default function PrepareWizard({
                     {lang === "da" ? "Slet kladde" : "Delete draft"}
                   </button>
                 )}
-
-                <div className="muted" style={{ textAlign: "center", fontSize: 13 }}>
-                  {lang === "da" ? "PDF + email eksport kommer snart." : "PDF + email export coming soon."}
-                </div>
               </div>
             </>
           )}
@@ -1277,6 +1138,20 @@ export default function PrepareWizard({
           {/* MODE 3: DONE */}
           {mode === "done" && (
             <>
+              {/* generatePdfFile() finds the document to render by looking
+                  for #document-content, which only exists inside the visible
+                  ViewDocument rendered during MODE 2 above — by the time this
+                  screen shows, that's already unmounted. Keep an off-screen
+                  copy mounted here so "Share with Vet" below can still
+                  produce a PDF instead of silently falling back to text-only
+                  sharing. */}
+              <div
+                style={{ position: "fixed", top: -99999, left: -99999, width: 720, pointerEvents: "none" }}
+                aria-hidden="true"
+              >
+                <ViewDocument lang={lang} visit={draft} pet={pet ?? null} note={null} hideTitle isDemo={isDemo} />
+              </div>
+
               <div
                 style={{
                   backgroundColor: "var(--lightGreen)",
@@ -1286,18 +1161,35 @@ export default function PrepareWizard({
                 }}
               >
                 <p style={{ margin: "0 0 6px 0" }}>
-                  <strong>{lang === "da" ? "Gemt!" : "Saved!"}</strong>{" "}
-                  {lang === "da" ? "Din forberedelse er gemt i appen." : "Your visit prep has been saved in the app."}
+                  <strong>✔ {lang === "da" ? "Besøgsforberedelse gemt" : "Visit brief saved"}</strong>
                 </p>
                 <p style={{ margin: 0, color: "var(--muted)", fontSize: 14 }}>
                   {lang === "da"
-                    ? "Gå forberedt ind. Vær en partner i dit dyrs behandling."
-                    : "Walk in prepared. Partner in your pet's care."}
+                    ? "Klar til at dele med din dyrlægeklinik."
+                    : "Ready to share with your veterinary clinic."}
                 </p>
               </div>
 
               <div className="row" style={{ gap: 8, flexDirection: "column" as const }}>
-                <button className="btn btnPrimary" onClick={closeToMyVisits}>
+                {pet && (
+                  <button className="btn btnPrimary" onClick={handleShareFromDone} disabled={sharingFromDone || isDemo}>
+                    {sharingFromDone
+                      ? lang === "da"
+                        ? "Deler…"
+                        : "Sharing…"
+                      : lang === "da"
+                        ? "Del med dyrlæge"
+                        : "Share with Vet"}
+                  </button>
+                )}
+                {isDemo && (
+                  <div className="muted" style={{ fontSize: 13 }}>
+                    {lang === "da"
+                      ? "Ikke tilgængelig i demoen — opret en konto for at dele."
+                      : "Not available in the demo — sign up to share."}
+                  </div>
+                )}
+                <button className="btn btnSecondary" onClick={closeToMyVisits}>
                   {lang === "da" ? "Færdig" : "Done"}
                 </button>
               </div>
@@ -1315,7 +1207,7 @@ export default function PrepareWizard({
             gap: 8
           }}
         >
-          {/* Top row: Back + Save & close */}
+          {/* Top row: Back + Next */}
           {/* FIX: placeholder width matches button minWidth (90px) so Next button
               doesn't shift when Back appears/disappears */}
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -1329,33 +1221,39 @@ export default function PrepareWizard({
 
             {mode === "wizard" ? (
               <button
-                className="btn btnSecondary"
-                onClick={handleSaveDraftAndClose}
-                disabled={savingDraft}
+                className="btn btnPrimary"
+                onClick={handleNext}
+                disabled={!stepData[step].ok}
                 style={{ flex: 1 }}
               >
-                {savingDraft
+                {step === stepData.length - 1
                   ? lang === "da"
-                    ? "Gemmer..."
-                    : "Saving..."
+                    ? "Gennemse"
+                    : "Preview"
                   : lang === "da"
-                    ? "Gem & luk"
-                    : "Save & close"}
+                    ? "Næste"
+                    : "Next"}
               </button>
             ) : (
               <div style={{ flex: 1 }} />
             )}
           </div>
 
-          {/* Bottom row: Next (full width) */}
+          {/* Bottom row: Save & close (full width) */}
           {mode === "wizard" && (
             <button
-              className="btn btnPrimary"
-              onClick={handleNext}
-              disabled={!stepData[step].ok}
+              className="btn btnSecondary"
+              onClick={handleSaveDraftAndClose}
+              disabled={savingDraft}
               style={{ width: "100%" }}
             >
-              {step === stepData.length - 1 ? "Preview" : lang === "da" ? "Næste" : "Next"}
+              {savingDraft
+                ? lang === "da"
+                  ? "Gemmer..."
+                  : "Saving..."
+                : lang === "da"
+                  ? "Gem & luk"
+                  : "Save & close"}
             </button>
           )}
         </div>

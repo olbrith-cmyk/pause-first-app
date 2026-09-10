@@ -1,0 +1,117 @@
+import { useRef, useState } from "react";
+import type { Lang } from "../i18n";
+import type { Attachment } from "../firestore";
+import { ATTACHMENT_MAX_MB, isAttachmentTooLarge, isSupportedAttachment, uploadAttachment } from "../utils/attachments";
+import AttachmentGallery from "./AttachmentGallery";
+
+export default function AttachmentManager({
+  lang,
+  userId,
+  scopeId,
+  attachments,
+  onChange
+}: {
+  lang: Lang;
+  userId: string;
+  scopeId: string;
+  attachments: Attachment[];
+  onChange: (next: Attachment[]) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+
+    setError(null);
+    setUploading(true);
+    // Each file is uploaded (and any failure caught) individually, and
+    // onChange fires in `finally` with whatever succeeded — so one file
+    // failing partway through a multi-file batch doesn't discard files that
+    // already finished uploading before it.
+    const uploaded: Attachment[] = [];
+    try {
+      for (const file of Array.from(files)) {
+        if (!isSupportedAttachment(file)) {
+          setError(
+            lang === "da"
+              ? `Filtypen understøttes ikke: ${file.name}`
+              : `Unsupported file type: ${file.name}`
+          );
+          continue;
+        }
+        if (isAttachmentTooLarge(file)) {
+          setError(
+            lang === "da"
+              ? `${file.name} er for stor (maks ${ATTACHMENT_MAX_MB}MB).`
+              : `${file.name} is too large (max ${ATTACHMENT_MAX_MB}MB).`
+          );
+          continue;
+        }
+        try {
+          uploaded.push(await uploadAttachment({ userId, scopeId, file }));
+        } catch (e: any) {
+          setError(e?.message ?? String(e));
+        }
+      }
+    } finally {
+      if (uploaded.length) onChange([...attachments, ...uploaded]);
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  };
+
+  const handleRemove = (attachment: Attachment) => {
+    // Deleting from Storage happens once the enclosing form is actually
+    // saved (not here) — otherwise discarding the edit would leave the
+    // still-persisted record pointing at a file we already deleted.
+    onChange(attachments.filter((a) => a.id !== attachment.id));
+  };
+
+  return (
+    <div className="attachmentManager">
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*,video/*,audio/*"
+        multiple
+        style={{ display: "none" }}
+        onChange={(e) => handleFiles(e.target.files)}
+      />
+
+      <button
+        type="button"
+        className="btn btnSecondary"
+        onClick={() => inputRef.current?.click()}
+        disabled={uploading}
+      >
+        {uploading
+          ? lang === "da"
+            ? "Uploader…"
+            : "Uploading…"
+          : lang === "da"
+          ? "+ Tilføj foto, video eller lyd"
+          : "+ Add photo, video, or audio"}
+      </button>
+
+      <div className="muted" style={{ marginTop: 6, fontSize: 12 }}>
+        {lang === "da"
+          ? `Maks. filstørrelse: ${ATTACHMENT_MAX_MB}MB pr. fil.`
+          : `Max file size: ${ATTACHMENT_MAX_MB}MB per file.`}
+      </div>
+
+      {error && (
+        <div className="alert alertError" style={{ marginTop: 8 }}>
+          {error}
+        </div>
+      )}
+
+      <AttachmentGallery
+        attachments={attachments}
+        onRemove={handleRemove}
+        removeLabel={lang === "da" ? "Fjern" : "Remove"}
+      />
+    </div>
+  );
+}

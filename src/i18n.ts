@@ -11,9 +11,12 @@ export type Translations = {
   // Auth
   welcome: string;
   accountInfo: string;
+  accountInfoDetail: string;
   email: string;
   password: string;
   createPassword: string;
+  activationCode: string;
+  activationCodePlaceholder: string;
   signUp: string;
   login: string;
   sendReset: string;
@@ -24,42 +27,20 @@ export type Translations = {
   myPets: string;
   petName: string;
   species: string;
-  age: string;
   sex: string;
   weight: string;
   microchip: string;
   allergies: string;
-  medications: string;
   diet: string;
-  clinic: string;
-  emergencyContact: string;
   notes: string;
-  addPet: string;
   savePet: string;
   editPet: string;
   deletePet: string;
 
   // Visits
   myVisits: string;
-  prepareVisit: string;
-  visitDate: string;
-  mainConcern: string;
-  whenStart: string;
-  howProgressing: string;
-  patterns: string;
-  associatedSigns: string;
-  previousTreatment: string;
-  questionsVet: string;
-  savePrep: string;
-  clearForm: string;
-  selectPet: string;
-  update: string;
-  save: string;
-  delete: string;
-  yourVisits: string;
 
   // Visit Notes
-  visitNotes: string;
   vetName: string;
   diagnosis: string;
   testsPerformed: string;
@@ -79,7 +60,6 @@ export type Translations = {
 
   // AI Assistant
   aiAssistant: string;
-  askAiAssistant: string;
 
   // Hamburger Menu
   deleteAccount: string;
@@ -95,12 +75,15 @@ const en: Translations = {
   saved: "Saved!",
 
   // Auth
-  welcome: "Welcome",
-  accountInfo: "Create an account or log in to save your animals and visits.",
+  welcome: "Welcome to Pause First",
+  accountInfo: "Every great vet visit starts before you arrive.",
+  accountInfoDetail: "Prepare for a calmer, more productive conversation with your vet.",
   email: "Email",
   password: "Password",
   createPassword: "Create a password",
-  signUp: "Sign up",
+  activationCode: "Activation code",
+  activationCodePlaceholder: "Enter your activation code",
+  signUp: "Create account",
   login: "Log in",
   sendReset: "Send reset link",
   forgotPassword: "Forgot password?",
@@ -110,42 +93,20 @@ const en: Translations = {
   myPets: "My Animals",
   petName: "Animal's Name",
   species: "Species",
-  age: "Age",
   sex: "Sex",
   weight: "Weight",
   microchip: "Microchip",
   allergies: "Allergies",
-  medications: "Medications",
   diet: "Diet",
-  clinic: "Clinic",
-  emergencyContact: "Emergency Contact",
   notes: "Notes",
-  addPet: "Add Animal",
   savePet: "Save Animal",
   editPet: "Edit",
   deletePet: "Delete",
 
   // Visits
   myVisits: "My Visits",
-  prepareVisit: "Prepare Visit",
-  visitDate: "Visit Date (or Expected)",
-  mainConcern: "Main Concern — What brought you in today?",
-  whenStart: "When Did This Start?",
-  howProgressing: "How Is It Progressing?",
-  patterns: "Patterns or Triggers",
-  associatedSigns: "Associated Signs (What Else Is Different?)",
-  previousTreatment: "Previous Treatment",
-  questionsVet: "Questions for Your Veterinarian",
-  savePrep: "Save Visit Preparation",
-  clearForm: "Clear Form",
-  selectPet: "Select animal",
-  update: "Update",
-  save: "Save",
-  delete: "Delete",
-  yourVisits: "Your Visits",
 
   // Visit Notes
-  visitNotes: "Visit Notes",
   vetName: "Veterinarian Name",
   diagnosis: "Diagnosis / Findings",
   testsPerformed: "Tests Performed",
@@ -165,7 +126,6 @@ const en: Translations = {
 
   // AI Assistant
   aiAssistant: "Pause First AI Assistant",
-  askAiAssistant: "Ask AI assistant?",
 
   // Hamburger Menu
   deleteAccount: "Delete Account",
@@ -181,11 +141,14 @@ const da: Translations = {
   saved: "Gemt!",
 
   // Auth
-  welcome: "Velkommen",
-  accountInfo: "Opret en konto eller log ind for at gemme dine dyr og besøg.",
+  welcome: "Velkommen til Pause First",
+  accountInfo: "Saml det vigtigste på forhånd.",
+  accountInfoDetail: "Et godt dyrlægebesøg starter før du træder ind ad døren.",
   email: "E-mail",
   password: "Adgangskode",
   createPassword: "Opret en adgangskode",
+  activationCode: "Aktiveringskode",
+  activationCodePlaceholder: "Indtast din aktiveringskode",
   signUp: "Opret konto",
   login: "Log ind",
   sendReset: "Send nulstillingslink",
@@ -196,42 +159,20 @@ const da: Translations = {
   myPets: "Mine dyr",
   petName: "Dyrets navn",
   species: "Art",
-  age: "Alder",
   sex: "Køn",
   weight: "Vægt",
   microchip: "Mikrochip",
   allergies: "Allergier",
-  medications: "Medicin",
   diet: "Diæt",
-  clinic: "Klinik",
-  emergencyContact: "Nødkontakt",
   notes: "Noter",
-  addPet: "Tilføj dyr",
   savePet: "Gem dyr",
   editPet: "Rediger",
   deletePet: "Slet",
 
   // Visits
   myVisits: "Mine besøg",
-  prepareVisit: "Forbered besøg",
-  visitDate: "Besøgsdato (eller forventet)",
-  mainConcern: "Hovedbekymring — Hvad bragte dig herind i dag?",
-  whenStart: "Hvornår startede det?",
-  howProgressing: "Hvordan udvikler det sig?",
-  patterns: "Mønstre eller udløsende faktorer",
-  associatedSigns: "Tilknyttede tegn (Hvad er anderledes?)",
-  previousTreatment: "Tidligere behandling",
-  questionsVet: "Spørgsmål til dyrlægen",
-  savePrep: "Gem besøgsforberedelse",
-  clearForm: "Ryd formular",
-  selectPet: "Vælg dyr",
-  update: "Opdater",
-  save: "Gem",
-  delete: "Slet",
-  yourVisits: "Dine besøg",
 
   // Visit Notes
-  visitNotes: "Besøgsnoter",
   vetName: "Dyrlægens navn",
   diagnosis: "Diagnose / Resultater",
   testsPerformed: "Udførte tests",
@@ -251,7 +192,6 @@ const da: Translations = {
 
   // AI Assistant
   aiAssistant: "Pause First AI-assistent",
-  askAiAssistant: "Spørg AI-assistenten?",
 
   // Hamburger Menu
   deleteAccount: "Slet konto",

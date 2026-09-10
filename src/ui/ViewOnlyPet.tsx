@@ -1,5 +1,7 @@
-import React from "react";
+import type { Lang } from "../i18n";
 import type { Pet } from "../firestore";
+import { patientInfoRows } from "../utils/petInfo";
+import PetAvatar from "./PetAvatar";
 
 function Row({ label, value }: { label: string; value?: string }) {
   if (!value) return null;
@@ -11,23 +13,24 @@ function Row({ label, value }: { label: string; value?: string }) {
   );
 }
 
-export function ViewOnlyPet({ pet }: { pet: Pet }) {
+export function ViewOnlyPet({ pet, lang }: { pet: Pet; lang: Lang }) {
+  const rows = patientInfoRows(pet, lang);
+
   return (
     <div className="vo">
-      <h3 className="vo-title">Pet Profile</h3>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <PetAvatar photoUrl={pet.photoUrl} size={44} />
+        <h3 className="vo-title" style={{ margin: 0 }}>
+          {lang === "da" ? "Dyreprofil" : "Pet Profile"}
+        </h3>
+      </div>
       <div className="vo-card">
-        <Row label="Name" value={pet.name} />
-        <Row label="Species" value={pet.species} />
-        <Row label="Age" value={pet.age} />
-        <Row label="Sex" value={pet.sex} />
-        <Row label="Weight" value={pet.weight} />
-        <Row label="Microchip" value={pet.microchip} />
-        <Row label="Allergies" value={pet.allergies} />
-        <Row label="Medications" value={pet.medications} />
-        <Row label="Diet" value={pet.diet} />
-        <Row label="Clinic" value={pet.clinic} />
-        <Row label="Emergency Contact" value={pet.emergencyContact} />
-        <Row label="Notes" value={pet.notes} />
+        <Row label={lang === "da" ? "Navn" : "Name"} value={pet.name} />
+        <Row label={lang === "da" ? "Klinik" : "Clinic"} value={pet.clinic} />
+        <Row label={lang === "da" ? "Nødkontakt" : "Emergency contact"} value={pet.emergencyContact} />
+        {rows.map((r) => (
+          <Row key={r.label} label={r.label} value={r.value} />
+        ))}
       </div>
     </div>
   );

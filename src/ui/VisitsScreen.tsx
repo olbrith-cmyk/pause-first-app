@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Lang } from "../i18n";
 import { useTranslation } from "../i18n";
 
-import type { Pet, Visit, VisitNote } from "../firestore";
+import type { Attachment, Pet, Visit, VisitNote } from "../firestore";
 import {
   addVisitNote,
   getUserPets,
@@ -12,10 +12,12 @@ import {
   addPet,
   deleteVisitFully
 } from "../firestore";
+import { deleteAttachment } from "../utils/attachments";
 
-import { ViewOnlyPrepare } from "./ViewOnlyPrepare";
-import { ViewOnlyNotes } from "./ViewOnlyNotes";
+import ViewDocument from "./ViewDocument";
 import PrepareWizard from "./PrepareWizard";
+import AttachmentManager from "./AttachmentManager";
+import PetAvatar from "./PetAvatar";
 
 export type Mode = "myVisits" | "prepare";
 
@@ -40,12 +42,9 @@ export default function VisitsScreen({
   onGoToAnimals,
   onOpenVisitChange,
   backSignal,
-
-  // NEW
-  pendingNav,
-  onPendingNavHandled,
+  isDemo,
 }: {
-  
+
   lang: Lang;
   userId: string;
   mode: Mode;
@@ -59,10 +58,7 @@ export default function VisitsScreen({
 
     // NEW: Dashboard increments this to request "Back" (close open visit)
   backSignal?: number;
-
-  // NEW: bottom-nav requested navigation while wizard is open
-  pendingNav?: null | "pets" | "myVisits";
-  onPendingNavHandled?: () => void;
+  isDemo?: boolean;
 }) {
   
   const t = useTranslation(lang);
@@ -73,6 +69,17 @@ export default function VisitsScreen({
   const [openNote, setOpenNote] = useState<VisitNote | null>(null);
   const [editingNote, setEditingNote] = useState<VisitNote | null>(null);
   const [noteVisitId, setNoteVisitId] = useState<string | null>(null);
+  const noteEditorRef = useRef<HTMLDivElement>(null);
+  // Snapshot of the note's attachments as last persisted, so save/cancel can
+  // tell which attachments are safe to actually delete from Storage (see
+  // AttachmentManager — it only updates local state, never deletes).
+  const savedNoteAttachmentsRef = useRef<Attachment[]>([]);
+
+  useEffect(() => {
+    if (editingNote && noteVisitId) {
+      noteEditorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [editingNote, noteVisitId]);
   const [toast, setToast] = useState<string | null>(null);
   const showToast = (message: string) => {
   setToast(message);
@@ -83,46 +90,6 @@ export default function VisitsScreen({
   const [selectedPetForWizard, setSelectedPetForWizard] = useState<Pet | null>(null);
   const [showWizard, setShowWizard] = useState(false);
   const [editingVisitId, setEditingVisitId] = useState<string | null>(null);
-  // NEW: leave wizard modal
-  const [showLeaveWizardModal, setShowLeaveWizardModal] = useState(false);
-  const [leaveTarget, setLeaveTarget] = useState<null | "pets" | "myVisits">(null);
-
-  const leaveWithoutSaving = () => {
-    setShowWizard(false);
-    setEditingVisitId(null);
-    setSelectedPetForWizard(null);
-    setShowChoosePetModal(false);
-  };
-
-  const saveDraftAndLeave = async () => {
-    showToast(lang === "da" ? "Kladde gemt." : "Draft saved.");
-
-    leaveWithoutSaving();
-
-    if (leaveTarget === "pets") onGoToAnimals?.();
-    else onModeChange?.("myVisits");
-
-    onPendingNavHandled?.();
-    setShowLeaveWizardModal(false);
-    setLeaveTarget(null);
-  };
-
-  const discardAndLeave = () => {
-    leaveWithoutSaving();
-
-    if (leaveTarget === "pets") onGoToAnimals?.();
-    else onModeChange?.("myVisits");
-
-    onPendingNavHandled?.();
-    setShowLeaveWizardModal(false);
-    setLeaveTarget(null);
-  };
-
-  const cancelLeave = () => {
-    setShowLeaveWizardModal(false);
-    setLeaveTarget(null);
-    onPendingNavHandled?.();
-  };
   const load = async () => {
     const [p, v] = await Promise.all([getUserPets(userId), getUserVisits(userId)]);
     setPets(p);
@@ -142,23 +109,6 @@ useEffect(() => {
 useEffect(() => {
   onWizardOpenChange?.(showWizard);
 }, [showWizard, onWizardOpenChange]);
-
-  useEffect(() => {
-  if (!pendingNav) return;
-
-  if (showWizard) {
-    setLeaveTarget(pendingNav);
-    setShowLeaveWizardModal(true);
-    return;
-  }
-
-  // Wizard not open: navigate immediately
-  if (pendingNav === "pets") onGoToAnimals?.();
-  else onModeChange?.("myVisits");
-
-  onPendingNavHandled?.();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [pendingNav]);
 
 useEffect(() => {
   if (!backSignal) return;
@@ -204,13 +154,21 @@ useEffect(() => {
     }
   };
 
+  const closeOpenVisit = () => {
+    setOpenVisitId(null);
+    onOpenVisitChange?.(null);
+    setOpenNote(null);
+  };
+
   const loadNoteForVisit = async (visitId: string) => {
     setNoteVisitId(visitId);
     try {
       const note = await getVisitNote(userId, visitId);
+      savedNoteAttachmentsRef.current = note?.attachments ?? [];
       setEditingNote(note ?? emptyNote(userId, visitId));
     } catch (e) {
       console.error("Error loading note:", e);
+      savedNoteAttachmentsRef.current = [];
       setEditingNote(emptyNote(userId, visitId));
     }
   };
@@ -224,6 +182,13 @@ useEffect(() => {
       } else {
         await addVisitNote(editingNote);
       }
+      // Now that the note's new attachment list is safely persisted, it's
+      // safe to delete whatever attachments were removed from it.
+      const keptIds = new Set((editingNote.attachments ?? []).map((a) => a.id));
+      for (const removed of savedNoteAttachmentsRef.current) {
+        if (!keptIds.has(removed.id)) deleteAttachment(removed);
+      }
+
       alert(t.saved);
       await load();
       setEditingNote(null);
@@ -232,7 +197,7 @@ useEffect(() => {
       alert(t.error + ": " + (e?.message ?? String(e)));
     }
   };
-  
+
 const handleDeleteVisit = async (visitId: string) => {
   const ok = window.confirm(
     lang === "da"
@@ -263,14 +228,6 @@ const handleDeleteVisit = async (visitId: string) => {
     setShowWizard(true);
   };
 
-  const openWizardForVisit = (visitId: string, petId: string) => {
-    const pet = pets.find((p) => p.id === petId) ?? null;
-    setEditingVisitId(visitId);
-    setSelectedPetForWizard(pet);
-    setShowChoosePetModal(false);
-    setShowWizard(true);
-  };
-
   const isDraft = (v: Visit) => (v.status ?? "final") === "draft";
 
   const hasAnyPreparation = (v: Visit) => {
@@ -279,7 +236,6 @@ const handleDeleteVisit = async (visitId: string) => {
       v.whenStart?.trim() ||
       v.howProgressing?.trim() ||
       v.patterns?.trim() ||
-      v.associatedSigns?.trim() ||
       v.previousTreatment?.trim() ||
       v.questionsVet?.trim() ||
       (v.currentStatus && Object.keys(v.currentStatus).length > 0)
@@ -317,18 +273,10 @@ const handleDeleteVisit = async (visitId: string) => {
         notes: ""
       };
 
-      await addPet(minimalPet);
+      const ref = await addPet(minimalPet);
       await load();
 
-      const updated = await getUserPets(userId);
-      const createdPet = [...updated].reverse().find((p) => p.name === "(Unnamed pet)") ?? null;
-
-      if (!createdPet?.id) {
-        alert("Could not create pet. Please try again.");
-        return;
-      }
-
-      setSelectedPetForWizard(createdPet);
+      setSelectedPetForWizard({ ...minimalPet, id: ref.id });
       setShowChoosePetModal(false);
       setShowWizard(true);
     } catch (e: any) {
@@ -348,6 +296,17 @@ const handleDeleteVisit = async (visitId: string) => {
         <div className="stack">
           <h3>{t.myVisits}</h3>
 
+          {!openVisit && (
+            <div className="splitActionRow">
+              <button className="btn btnPrimary" onClick={() => onModeChange?.("prepare")}>
+                {lang === "da" ? "+ Tilføj endnu et besøg" : "+ Add another visit"}
+              </button>
+              <button className="btn btnSecondary" onClick={() => onGoHome?.()}>
+                {lang === "da" ? "Hjem" : "Home"}
+              </button>
+            </div>
+          )}
+
           {/* Continue draft */}
 {draftVisits.length > 0 && !openVisit && (
   <div className="panel" style={{ marginBottom: 12 }}>
@@ -356,12 +315,12 @@ const handleDeleteVisit = async (visitId: string) => {
     </div>
 
     <div className="stack">
-      {draftVisits.slice(0, 3).map((v) => {
+      {draftVisits.map((v) => {
         const pet = pets.find((p) => p.id === v.petId);
         return (
           <button
             key={v.id}
-            className="itemCard"
+            className="itemCard itemCardDraft"
             onClick={() => openVisitCard(v.id!)}   // ✅ open details screen (not wizard)
             style={{ cursor: "pointer", textAlign: "left" }}
           >
@@ -400,7 +359,7 @@ const handleDeleteVisit = async (visitId: string) => {
         </h4>
         <div className="muted" style={{ marginTop: 4 }}>
           {lang === "da"
-            ? "Færdige besøgsnotater (ikke kladder)"
+            ? "Færdige besøgsforberedelser (ikke kladder)"
             : "Finished Visit Briefs (not drafts)"}
         </div>
       </div>
@@ -411,7 +370,7 @@ const handleDeleteVisit = async (visitId: string) => {
       return (
         <button
           key={v.id}
-          className="itemCard"
+          className="itemCard itemCardFinal"
           onClick={() => openVisitCard(v.id!)}
           style={{ cursor: "pointer", textAlign: "left" }}
         >
@@ -435,6 +394,14 @@ const handleDeleteVisit = async (visitId: string) => {
 
           {openVisit && (
             <div className="panel">
+                <button
+                  className="btn btnSecondary btnSmall"
+                  style={{ marginBottom: 12 }}
+                  onClick={closeOpenVisit}
+                >
+                  ← {lang === "da" ? "Tilbage til Mine besøg" : "Back to My visits"}
+                </button>
+
                 <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
   <button
     className="btn btnSecondary btnSmall"
@@ -451,13 +418,15 @@ const handleDeleteVisit = async (visitId: string) => {
   </button>
 
   <button
-    className="btn btnSecondary btnSmall"
+    className={`btn ${openNote ? "btnSecondary" : "btnPrimary"} btnSmall`}
     style={{ flex: 1 }}
     onClick={async () => {
       await loadNoteForVisit(openVisit.id!);
     }}
   >
-    {lang === "da" ? "Noter" : "Notes"}
+    {openNote
+      ? (lang === "da" ? "Redigér noter" : "Edit notes")
+      : (lang === "da" ? "+ Tilføj noter" : "+ Add notes")}
   </button>
 
   <button
@@ -478,22 +447,12 @@ const handleDeleteVisit = async (visitId: string) => {
                 </div>
               </div>
 
-              <h4 style={{ marginTop: 12 }}>{lang === "da" ? "Forberedelse" : "Preparation"}</h4>
-              <ViewOnlyPrepare visit={openVisit} />
-
-              <h4 style={{ marginTop: 16 }}>{lang === "da" ? "Besøgsnoter" : "Visit Notes"}</h4>
-              {openNote ? (
-                <ViewOnlyNotes note={openNote} />
-              ) : (
-                <div className="muted">
-                  {lang === "da" ? "Ingen besøgsnoter endnu." : "No visit notes yet."}
-                </div>
-              )}
+              <ViewDocument lang={lang} visit={openVisit} pet={openPet} note={openNote} isDemo={isDemo} />
             </div>
           )}
 
           {editingNote && noteVisitId && (
-            <div className="panel" style={{ marginTop: 16 }}>
+            <div className="panel" style={{ marginTop: 16 }} ref={noteEditorRef}>
               <div className="panelHeader">
                 <h4 style={{ margin: 0 }}>
                   {lang === "da" ? "Redigér besøgsnoter" : "Edit Visit Notes"}
@@ -571,6 +530,17 @@ const handleDeleteVisit = async (visitId: string) => {
                 />
               </label>
 
+              <label className="label">
+                {lang === "da" ? "Foto, video & lyd" : "Photos, video & audio"}
+                <AttachmentManager
+                  lang={lang}
+                  userId={userId}
+                  scopeId={noteVisitId}
+                  attachments={editingNote.attachments ?? []}
+                  onChange={(next) => setEditingNote({ ...editingNote, attachments: next })}
+                />
+              </label>
+
               <div className="row" style={{ marginTop: 16, gap: 8 }}>
                 <button className="btn btnPrimary" onClick={saveNote}>
                   {t.saveNote}
@@ -578,6 +548,13 @@ const handleDeleteVisit = async (visitId: string) => {
                 <button
                   className="btn btnSecondary"
                   onClick={() => {
+                    // Any attachment added during this edit but never saved
+                    // is an orphaned Storage file now — clean it up. Ones
+                    // that were already persisted are left untouched.
+                    const savedIds = new Set(savedNoteAttachmentsRef.current.map((a) => a.id));
+                    for (const added of editingNote.attachments ?? []) {
+                      if (!savedIds.has(added.id)) deleteAttachment(added);
+                    }
                     setEditingNote(null);
                     setNoteVisitId(null);
                   }}
@@ -594,17 +571,12 @@ const handleDeleteVisit = async (visitId: string) => {
           <PrepareWizard
             lang={lang}
             userId={userId}
-            mode="prepare"
             petId={selectedPetForWizard.id}
             petName={selectedPetForWizard.name || "(Unnamed)"}
+            pet={selectedPetForWizard}
             visitId={editingVisitId ?? undefined}
+            isDemo={isDemo}
             onClose={async () => {
-              setShowWizard(false);
-              setEditingVisitId(null);
-              setSelectedPetForWizard(null);
-              await load();
-            }}
-            onComplete={async () => {
               setShowWizard(false);
               setEditingVisitId(null);
               setSelectedPetForWizard(null);
@@ -613,47 +585,6 @@ const handleDeleteVisit = async (visitId: string) => {
             onToast={showToast}
           />
         )}
-                {showLeaveWizardModal && (
-          <div className="leaveModalOverlay" onClick={cancelLeave}>
-            <div className="modalCard" onClick={(e) => e.stopPropagation()}>
-              <div className="modalHeader">
-                <h3 className="modalTitle" style={{ margin: 0 }}>
-                  {lang === "da" ? "Forlad kladden?" : "Leave this draft?"}
-                </h3>
-                <button
-                  className="modalClose"
-                  onClick={cancelLeave}
-                  aria-label={lang === "da" ? "Luk" : "Close"}
-                >
-                  ✕
-                </button>
-              </div>
-
-              <div className="modalBody">
-                <p style={{ marginTop: 0 }}>
-                  {lang === "da"
-                    ? "Vil du gemme kladden, før du går videre?"
-                    : "Do you want to save the draft before leaving?"}
-                </p>
-
-                <div className="stack" style={{ gap: 10 }}>
-                  <button className="btn btnPrimary" onClick={saveDraftAndLeave}>
-                    {lang === "da" ? "Gem kladde & gå videre" : "Save draft & leave"}
-                  </button>
-
-                  <button className="btn btnSecondary" onClick={discardAndLeave}>
-                    {lang === "da" ? "Gå videre uden at gemme" : "Leave without saving"}
-                  </button>
-
-                  <button className="btn btnSecondary" onClick={cancelLeave}>
-                    {lang === "da" ? "Annullér" : "Cancel"}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
         {toast && <div className="toast">{toast}</div>}
       </div>
     );
@@ -734,19 +665,39 @@ const handleDeleteVisit = async (visitId: string) => {
                   </h4>
 
                   <div className="stack" style={{ marginBottom: 20 }}>
-                    {pets.map((pet) => (
-                      <button
-                        key={pet.id}
-                        className="itemCard"
-                        onClick={() => handleSelectPetForWizard(pet)}
-                        style={{ cursor: "pointer", textAlign: "left" }}
-                      >
-                        <div className="itemTitle">{pet.name || "(Unnamed)"}</div>
-                        <div className="muted">
-                          {pet.species || (lang === "da" ? "Ukendt art" : "Unknown species")}
-                        </div>
-                      </button>
-                    ))}
+                    {pets.map((pet) => {
+                      const locked = isDemo && !pet.isDemoSeed;
+                      return (
+                        <button
+                          key={pet.id}
+                          className="itemCard"
+                          onClick={() => !locked && handleSelectPetForWizard(pet)}
+                          disabled={locked}
+                          style={{
+                            cursor: locked ? "not-allowed" : "pointer",
+                            textAlign: "left",
+                            flexDirection: "row",
+                            alignItems: "center",
+                            opacity: locked ? 0.5 : 1
+                          }}
+                        >
+                          <PetAvatar photoUrl={pet.photoUrl} />
+                          <div>
+                            <div className="itemTitle">{pet.name || "(Unnamed)"}</div>
+                            <div className="muted">
+                              {pet.species || (lang === "da" ? "Ukendt art" : "Unknown species")}
+                            </div>
+                            {locked && (
+                              <div className="muted" style={{ fontSize: 12 }}>
+                                {lang === "da"
+                                  ? "Ikke tilgængeligt i demoen"
+                                  : "Not available in the demo"}
+                              </div>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
                 </>
               )}
@@ -762,9 +713,11 @@ const handleDeleteVisit = async (visitId: string) => {
   {lang === "da" ? "Tilføj en dyreprofil" : "Add an animal profile"}
 </button>
 
-                <button className="btn btnSecondary" onClick={handleContinueWithoutProfile}>
-                  {lang === "da" ? "Fortsæt uden dyreprofil" : "Continue without animal profile"}
-                </button>
+                {!isDemo && (
+                  <button className="btn btnSecondary" onClick={handleContinueWithoutProfile}>
+                    {lang === "da" ? "Fortsæt uden dyreprofil" : "Continue without animal profile"}
+                  </button>
+                )}
 
                 <button
                   className="btn btnSecondary"
@@ -786,18 +739,12 @@ const handleDeleteVisit = async (visitId: string) => {
         <PrepareWizard
           lang={lang}
           userId={userId}
-          mode="prepare"
           petId={selectedPetForWizard.id}
           petName={selectedPetForWizard.name || "(Unnamed)"}
+          pet={selectedPetForWizard}
           visitId={editingVisitId ?? undefined}
+          isDemo={isDemo}
           onClose={async () => {
-            setShowWizard(false);
-            setEditingVisitId(null);
-            setSelectedPetForWizard(null);
-            setShowChoosePetModal(false);
-            await load();
-          }}
-          onComplete={async () => {
             setShowWizard(false);
             setEditingVisitId(null);
             setSelectedPetForWizard(null);
@@ -833,48 +780,7 @@ const handleDeleteVisit = async (visitId: string) => {
           </div>
         </div>
       )}
-            {showLeaveWizardModal && (
-        <div className="leaveModalOverlay" onClick={cancelLeave}>
-          <div className="modalCard" onClick={(e) => e.stopPropagation()}>
-            <div className="modalHeader">
-              <h3 className="modalTitle" style={{ margin: 0 }}>
-                {lang === "da" ? "Forlad kladden?" : "Leave this draft?"}
-              </h3>
-              <button
-                className="modalClose"
-                onClick={cancelLeave}
-                aria-label={lang === "da" ? "Luk" : "Close"}
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="modalBody">
-              <p style={{ marginTop: 0 }}>
-                {lang === "da"
-                  ? "Vil du gemme kladden, før du går videre?"
-                  : "Do you want to save the draft before leaving?"}
-              </p>
-
-              <div className="stack" style={{ gap: 10 }}>
-                <button className="btn btnPrimary" onClick={saveDraftAndLeave}>
-                  {lang === "da" ? "Gem kladde & gå videre" : "Save draft & leave"}
-                </button>
-
-                <button className="btn btnSecondary" onClick={discardAndLeave}>
-                  {lang === "da" ? "Gå videre uden at gemme" : "Leave without saving"}
-                </button>
-
-                <button className="btn btnSecondary" onClick={cancelLeave}>
-                  {lang === "da" ? "Annullér" : "Cancel"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-     {toast && <div className="toast">{toast}</div>} 
+     {toast && <div className="toast">{toast}</div>}
     </div>
   );
 }

@@ -1,26 +1,19 @@
-const CACHE = "pause-first-v1";
-const ASSETS = [
-  "/",
-  "/index.html",
-  "/manifest.webmanifest"
-];
-
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE).then((cache) => cache.addAll(ASSETS))
-  );
+// Kill switch: unregister this service worker and wipe its caches so
+// devices that installed the old cache-first version (which could get
+// permanently stuck on a stale build) self-heal on next launch.
+self.addEventListener("install", () => {
+  self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.map((k) => (k !== CACHE ? caches.delete(k) : null)))
-    )
-  );
-});
+    (async () => {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((k) => caches.delete(k)));
+      await self.registration.unregister();
 
-self.addEventListener("fetch", (event) => {
-  event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request))
+      const clientsList = await self.clients.matchAll({ type: "window" });
+      clientsList.forEach((client) => client.navigate(client.url));
+    })()
   );
 });

@@ -11,10 +11,12 @@ import {
   where,
   Timestamp,
   setDoc,
-  writeBatch
+  writeBatch,
+  runTransaction
 } from "firebase/firestore";
 import { deleteUser, getAuth } from "firebase/auth";
 import { firebaseApp } from "./firebase";
+import { deleteAttachment, deletePetPhoto } from "./utils/attachments";
 
 const db = getFirestore(firebaseApp);
 
@@ -52,6 +54,7 @@ export interface Pet {
   // About your pet
   name: string;
   species: string;
+  photoUrl?: string;
 
   // Legacy field (keep for backwards compatibility; we will stop showing it in UI)
   age: string;
@@ -92,7 +95,11 @@ export interface Pet {
   preventatives?: string;
 
   surgeries?: string;
-  lifestyle?: string; // indoor/outdoor, other animals, travel, etc.
+  lifestyle?: string; // other animals in the home, indoor/outdoor status, travel, etc.
+
+  // True only for the pet pre-populated by seedDemoData for a demo account.
+  // Used to allow creating new visits only for this pet in demo mode.
+  isDemoSeed?: boolean;
 
   updatedAt?: Timestamp;
   createdAt?: Timestamp;
@@ -153,10 +160,24 @@ export interface Visit {
   whenStart: string;
   howProgressing: string;
   patterns: string;
-  associatedSigns: string;
+
+  // NEW (optional) — how worried the owner is, shown next to Main Concern
+  // so the vet gets an urgency signal at a glance.
+  urgency?: "routine" | "concerned" | "very_worried";
+
+  // NEW (optional) — structured duration + trend, feeds the scannable
+  // headline line (chief complaint + duration + trend) at the top of the
+  // Brief, instead of relying on freeform text alone.
+  durationValue?: string;
+  durationUnit?: "hours" | "days" | "weeks" | "months";
+  trend?: "better" | "worse" | "same";
 
   // NEW (optional) — broad catch-all “Other details for the vet”
   otherDetails?: string;
+
+  // NEW (optional) — severity, framed as observable impact on daily life
+  // rather than a false-precision 1–10 scale.
+  functionalImpact?: string;
 
   previousTreatment: string;
   medicationsSupplements?: string;
@@ -179,6 +200,11 @@ export interface Visit {
   // NEW — derived flags for fast UI
   hasNotes?: boolean;
   notesUpdatedAt?: Timestamp;
+
+  // True only for the visits pre-populated by seedDemoData for a demo
+  // account. Used to allow PDF download / vet sharing only for these
+  // visits in demo mode, not for anything created from scratch.
+  isDemoSeed?: boolean;
 
   createdAt?: Timestamp;
   updatedAt?: Timestamp;
@@ -419,6 +445,65 @@ async function deleteAllDocsForUser(params: { collectionName: string; userId: st
   return deleted;
 }
 
+// --------------------
+// Activation codes (gate signup behind a purchased code)
+// --------------------
+
+export type ActivationCodeCheckResult = { valid: boolean; reason?: "not_found" | "used" };
+export type ActivationCodeRedeemResult = { ok: boolean; reason?: "not_found" | "used" | "error" };
+
+// Read-only pre-check so a bad/used code fails fast, before we create an
+// account for it. The real enforcement is the transaction in
+// redeemActivationCode below — this is just for quick, friendly feedback.
+export async function checkActivationCode(code: string): Promise<ActivationCodeCheckResult> {
+  const ref = doc(db, "activationCodes", code.trim());
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return { valid: false, reason: "not_found" };
+  if ((snap.data() as any).used) return { valid: false, reason: "used" };
+  return { valid: true };
+}
+
+// Atomically flips a code from unused to used. Runs as a transaction so two
+// signups racing on the same code can't both succeed.
+export async function redeemActivationCode(code: string, userId: string): Promise<ActivationCodeRedeemResult> {
+  const ref = doc(db, "activationCodes", code.trim());
+  try {
+    await runTransaction(db, async (tx) => {
+      const snap = await tx.get(ref);
+      if (!snap.exists()) throw new Error("not_found");
+      if ((snap.data() as any).used) throw new Error("used");
+      tx.update(ref, { used: true, usedByUserId: userId, usedAt: Timestamp.now() });
+    });
+    return { ok: true };
+  } catch (e: any) {
+    // Only "not_found"/"used" mean the code is genuinely invalid — anything
+    // else (network blip, permission error, transaction retry exhaustion)
+    // is a transient failure, not proof the code was bad.
+    if (e?.message === "used") return { ok: false, reason: "used" };
+    if (e?.message === "not_found") return { ok: false, reason: "not_found" };
+    return { ok: false, reason: "error" };
+  }
+}
+
+// Best-effort cleanup of Firebase Storage files (pet photos, visit/note
+// attachments) a user's docs reference, since deleting the Firestore docs
+// alone leaves those files orphaned in Storage forever. Each individual
+// delete already swallows its own errors (see deleteAttachment/
+// deletePetPhoto), so one missing/already-deleted file can't block the rest.
+async function deleteStorageFilesForUser(userId: string) {
+  const [pets, visits] = await Promise.all([getUserPets(userId), getUserVisits(userId)]);
+
+  const notesQuery = query(collection(db, "visitNotes"), where("userId", "==", userId));
+  const notesSnap = await getDocs(notesQuery);
+  const notes = notesSnap.docs.map((d) => d.data() as VisitNote);
+
+  await Promise.all([
+    ...pets.filter((p) => p.photoUrl).map((p) => deletePetPhoto(p.photoUrl!)),
+    ...visits.flatMap((v) => (v.attachments ?? []).map((a) => deleteAttachment(a))),
+    ...notes.flatMap((n) => (n.attachments ?? []).map((a) => deleteAttachment(a)))
+  ]);
+}
+
 export async function deleteUserAccount(userId: string) {
   const auth = getAuth();
   const user = auth.currentUser;
@@ -427,6 +512,11 @@ export async function deleteUserAccount(userId: string) {
   if (user.uid !== userId) throw new Error("User mismatch. Please log in again.");
 
   const results: Record<string, number> = {};
+
+  // Storage files (pet photos, visit/note attachments) live outside these
+  // Firestore docs, so read the docs first to know what to clean up there
+  // too — deleting only the docs would leave the files behind forever.
+  await deleteStorageFilesForUser(userId);
 
   // Delete in order: notes → visits → pets
   results["visitNotes"] = await deleteAllDocsForUser({ collectionName: "visitNotes", userId });
