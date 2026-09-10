@@ -465,7 +465,7 @@ export default function PdfVisitBriefDocument({
         </SectionLabel>
         <div>
           <AskedInfoRow
-            label={tt("Meds / Supplements for This Visit", "Medicin / tilskud for dette besøg")}
+            label={tt("Meds & Supplements", "Medicin & tilskud")}
             value={medsSupplements}
             placeholder={notProvided}
           />
