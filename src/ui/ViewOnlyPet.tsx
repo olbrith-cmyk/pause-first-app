@@ -1,6 +1,6 @@
 import type { Lang } from "../i18n";
 import type { Pet } from "../firestore";
-import { fullProfileRows } from "../utils/petInfo";
+import { patientInfoRows } from "../utils/petInfo";
 import PetAvatar from "./PetAvatar";
 
 function Row({ label, value }: { label: string; value?: string }) {
@@ -14,7 +14,7 @@ function Row({ label, value }: { label: string; value?: string }) {
 }
 
 export function ViewOnlyPet({ pet, lang }: { pet: Pet; lang: Lang }) {
-  const rows = fullProfileRows(pet, lang);
+  const rows = patientInfoRows(pet, lang);
 
   return (
     <div className="vo">

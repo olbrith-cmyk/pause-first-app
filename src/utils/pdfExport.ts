@@ -2,7 +2,7 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import type { Lang } from "../i18n";
 import type { Attachment, AttachmentType, CurrentStatus, Pet, TriState, Visit, VisitNote } from "../firestore";
-import { medicationsSummary, patientInfoLines, signalmentLine } from "./petInfo";
+import { patientInfoLines, signalmentLine } from "./petInfo";
 import { formatDuration, trendLabel, urgencyIcon, urgencyLabel } from "./visitBrief";
 
 function currentStatusLines(cs: CurrentStatus | undefined, lang: Lang): string[] {
@@ -49,14 +49,10 @@ function buildShareText(params: { visit: Visit; pet: Pet; note: VisitNote | null
 
   const lines: string[] = [];
 
-  // Falls back to the pet's standing profile medication list if the fresher,
-  // per-visit "meds & supplements" question wasn't asked/answered — keeps
-  // this in sync with ViewDocument.tsx, which no longer shows the profile's
-  // medications as its own separate row.
-  const medicationsSupplements = (visit.medicationsSupplements ?? "").trim() || medicationsSummary(pet, lang);
+  const medicationsSupplements = visit.medicationsSupplements ?? "";
   const knownConditions = ((visit as any).knownConditions as string) ?? "";
   const recentTests = ((visit as any).recentTests as string) ?? "";
-  const notAnswered = lang === "da" ? "Ikke oplyst af ejeren" : "Not provided by owner";
+  const notAnswered = lang === "da" ? "Ikke besvaret" : "Not answered";
   // Keep in sync with ViewDocument.tsx: routine visits skip the
   // Timeline/Patterns/Other details wizard steps entirely, so those
   // questions were never asked and stay omitted rather than "Not answered".
@@ -258,57 +254,40 @@ function buildShortShareText(params: { visit: Visit; pet: Pet; lang: Lang }, att
   ].join("\n");
 }
 
-// Adds one canvas as one or more PDF pages (slicing further only if the
-// canvas is taller than a single page), starting a fresh page before the
-// very first one only when `pdf` already has content on its current page.
-//
-// JPEG rather than PNG: this document is mostly flat white/tinted boxes with
-// text, and PNG's lossless compression handles that badly at scale — a
-// multi-page export ran to 20MB+. JPEG at high quality is visually
-// indistinguishable here and comes in at a fraction of the size, which
-// matters both for the download and for emailing it via Share with Vet.
-function addCanvasAsPages(pdf: jsPDF, canvas: HTMLCanvasElement, isFirstOverall: boolean) {
+async function renderDocumentPdf(params: { visit: Visit; pet: Pet }): Promise<{ pdf: jsPDF; fileName: string }> {
+  const el = document.getElementById("document-content");
+  if (!el) throw new Error("Document content not found.");
+
+  // Render the document content to a canvas
+  const canvas = await html2canvas(el, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: "#ffffff"
+  });
+
+  const imgData = canvas.toDataURL("image/png");
+
+  // Create PDF (A4)
+  const pdf = new jsPDF("p", "mm", "a4");
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
 
-  const imgData = canvas.toDataURL("image/jpeg", 0.92);
+  // Calculate image dimensions to fit A4 width
   const imgWidth = pageWidth;
   const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
   let heightLeft = imgHeight;
   let position = 0;
 
-  if (!isFirstOverall) pdf.addPage();
-  pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
+  pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
   heightLeft -= pageHeight;
 
+  // Add extra pages if needed
   while (heightLeft > 0) {
     position = heightLeft - imgHeight;
     pdf.addPage();
-    pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
+    pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
     heightLeft -= pageHeight;
-  }
-}
-
-async function renderDocumentPdf(params: { visit: Visit; pet: Pet }): Promise<{ pdf: jsPDF; fileName: string }> {
-  const root = document.getElementById("document-content");
-  if (!root) throw new Error("Document content not found.");
-
-  // Each .docPage (Visit Brief / Patient Info / Visit Notes) is screenshotted
-  // and paginated independently, so page breaks fall at these deliberate
-  // boundaries instead of an arbitrary pixel cut partway through a section.
-  const pageEls = Array.from(root.querySelectorAll<HTMLElement>(".docPage"));
-  const sections = pageEls.length ? pageEls : [root];
-
-  const pdf = new jsPDF("p", "mm", "a4");
-
-  for (let i = 0; i < sections.length; i++) {
-    const canvas = await html2canvas(sections[i], {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: "#ffffff"
-    });
-    addCanvasAsPages(pdf, canvas, i === 0);
   }
 
   const fileName = `PauseFirst_${params.pet.name}_${params.visit.visitDate || "visit"}.pdf`

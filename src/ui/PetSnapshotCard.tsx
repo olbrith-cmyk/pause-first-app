@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import type { Pet } from "../firestore";
-import { fullProfileRows, preventativesSummary, vaccinationsSummary } from "../utils/petInfo";
+import { patientInfoRows, preventativesSummary, vaccinationsSummary } from "../utils/petInfo";
 
 export default function PetSnapshotCard(props: {
   pet: Pet | null;
@@ -14,7 +14,7 @@ export default function PetSnapshotCard(props: {
 
   const rows = useMemo(() => {
     if (!pet) return [];
-    return fullProfileRows(pet, lang);
+    return patientInfoRows(pet, lang);
   }, [pet, lang]);
 
   if (!pet) return null;
