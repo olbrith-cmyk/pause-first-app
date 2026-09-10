@@ -169,3 +169,64 @@ export function patientInfoRows(pet: Pet, lang: Lang): { label: string; value: s
 export function patientInfoLines(pet: Pet, lang: Lang): string[] {
   return patientInfoRows(pet, lang).map((r) => `${r.label}: ${r.value}`);
 }
+
+// --- PDF-only formatting below (used exclusively by PdfVisitBriefDocument /
+// pdfExport.ts). The on-screen document and the plain-text share keep using
+// the functions above unchanged — these exist so the PDF layout can differ
+// without touching either of those. ---
+
+export type InfoRow = { label: string; value: string };
+
+// Species | breed | sex, neutered status | age | weight — the PDF's
+// one-line "signalment" summary under the pet's name.
+export function pdfSignalmentLine(pet: Pet, lang: Lang, asOf: Date = new Date()): string {
+  const sexAndNeutered = [pet.sex, pet.neuteredStatus].map((p) => (p ?? "").trim()).filter(Boolean).join(", ");
+  return [pet.species, pet.breedType, sexAndNeutered, computedAgeText(pet, lang, asOf), pet.weight]
+    .map((p) => (p ?? "").trim())
+    .filter(Boolean)
+    .join(" | ");
+}
+
+// The pet's stable identity/background facts. Blank fields are omitted
+// rather than shown as "not provided", since these come from the pet's
+// saved profile rather than being asked fresh each visit.
+export function patientInfoBasicsRows(pet: Pet, lang: Lang): InfoRow[] {
+  const rows: InfoRow[] = [];
+  const push = (label: string, value?: string) => {
+    const v = (value ?? "").trim();
+    if (v) rows.push({ label, value: v });
+  };
+
+  push(lang === "da" ? "Art" : "Species", pet.species);
+  push(lang === "da" ? "Race" : "Breed", pet.breedType);
+  push(lang === "da" ? "Fødselsdato / alder" : "Date of birth / age", ageOrBirthSummary(pet));
+  push(lang === "da" ? "Køn" : "Sex", pet.sex);
+  push(lang === "da" ? "Kastreret/steriliseret" : "Neutered status", pet.neuteredStatus);
+  push(lang === "da" ? "Livsstil/miljø" : "Lifestyle / environment", pet.lifestyle);
+  push(lang === "da" ? "Vægt" : "Weight", pet.weight);
+  push(lang === "da" ? "Mikrochip" : "Microchip", pet.microchip);
+
+  return rows;
+}
+
+// The pet's standing health background from its profile. Medications is
+// deliberately left out here: the PDF shows the fresher, per-visit "meds &
+// supplements" answer instead (falling back to this profile's medication
+// list only if that wasn't asked/answered) — see medicationsSummary above
+// and PdfVisitBriefDocument.
+export function healthBackgroundRows(pet: Pet, lang: Lang): InfoRow[] {
+  const rows: InfoRow[] = [];
+  const push = (label: string, value?: string) => {
+    const v = (value ?? "").trim();
+    if (v) rows.push({ label, value: v });
+  };
+
+  push(lang === "da" ? "Vaccinationer" : "Vaccinations", vaccinationsSummary(pet, lang));
+  push(lang === "da" ? "Foder" : "Diet / feed", pet.diet);
+  push(lang === "da" ? "Forebyggelse" : "Preventatives", preventativesSummary(pet, lang));
+  push(lang === "da" ? "Allergier/reaktioner" : "Allergies / reactions", pet.allergies);
+  push(lang === "da" ? "Operationer/indgreb" : "Surgeries / procedures", pet.surgeries);
+  push(lang === "da" ? "Noter" : "Notes", pet.notes);
+
+  return rows;
+}

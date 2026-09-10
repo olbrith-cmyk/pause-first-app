@@ -37,6 +37,18 @@ export function formatDuration(value: string | undefined, unit: DurationUnit | u
   return lang === "da" ? `Varighed: ${durationText}` : `Duration: ${durationText}`;
 }
 
+// Bare "2 days" with no "Duration:" label — used by the PDF's compact
+// three-up summary row, which already has a "Duration" header above the
+// value. formatDuration above (with the label) is still used everywhere
+// else (on-screen document, plain-text share).
+export function durationText(value: string | undefined, unit: DurationUnit | undefined, lang: Lang): string {
+  const v = (value ?? "").trim();
+  if (!v) return "";
+  const n = Number(v);
+  const unitLabel = durationUnitLabel(unit ?? "days", lang, Number.isFinite(n) ? n : 2);
+  return `${v} ${unitLabel}`;
+}
+
 export function trendLabel(trend: Trend | undefined, lang: Lang): string {
   if (!trend) return "";
   const labels: Record<Lang, Record<Trend, string>> = {

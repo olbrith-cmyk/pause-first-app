@@ -1,9 +1,11 @@
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import { createRoot } from "react-dom/client";
 import type { Lang } from "../i18n";
 import type { Attachment, AttachmentType, CurrentStatus, Pet, TriState, Visit, VisitNote } from "../firestore";
 import { patientInfoLines, signalmentLine } from "./petInfo";
 import { formatDuration, trendLabel, urgencyIcon, urgencyLabel } from "./visitBrief";
+import PdfVisitBriefDocument from "../ui/PdfVisitBriefDocument";
 
 function currentStatusLines(cs: CurrentStatus | undefined, lang: Lang): string[] {
   if (!cs) return [];
@@ -254,47 +256,113 @@ function buildShortShareText(params: { visit: Visit; pet: Pet; lang: Lang }, att
   ].join("\n");
 }
 
-async function renderDocumentPdf(params: { visit: Visit; pet: Pet }): Promise<{ pdf: jsPDF; fileName: string }> {
-  const el = document.getElementById("document-content");
-  if (!el) throw new Error("Document content not found.");
+// Waits for every <img> under `root` to finish loading (or fail) before the
+// caller screenshots it — html2canvas can only capture images that have
+// already loaded, and this template is freshly mounted off-screen each time
+// (unlike the old approach of screenshotting the already-visible document),
+// so photo attachments need this to reliably show up in the PDF.
+function waitForImages(root: HTMLElement, timeoutMs = 4000): Promise<void> {
+  const imgs = Array.from(root.querySelectorAll("img"));
+  const pending = imgs.filter((img) => !img.complete);
+  if (!pending.length) return Promise.resolve();
 
-  // Render the document content to a canvas
-  const canvas = await html2canvas(el, {
-    scale: 2,
-    useCORS: true,
-    backgroundColor: "#ffffff"
-  });
+  return Promise.race([
+    Promise.all(
+      pending.map(
+        (img) =>
+          new Promise<void>((resolve) => {
+            img.addEventListener("load", () => resolve(), { once: true });
+            img.addEventListener("error", () => resolve(), { once: true });
+          })
+      )
+    ).then(() => undefined),
+    new Promise<void>((resolve) => setTimeout(resolve, timeoutMs))
+  ]);
+}
 
-  const imgData = canvas.toDataURL("image/png");
-
-  // Create PDF (A4)
-  const pdf = new jsPDF("p", "mm", "a4");
+// Adds one canvas as one or more PDF pages (slicing further only if the
+// canvas is taller than a single page), starting a fresh page before the
+// very first one only when `pdf` already has content on its current page.
+//
+// JPEG rather than PNG: this document is mostly flat white/tinted boxes with
+// text, and PNG's lossless compression handles that badly at scale — a
+// multi-page export ran to 20MB+. JPEG at high quality is visually
+// indistinguishable here and comes in at a fraction of the size, which
+// matters both for the download and for emailing it via Share with Vet.
+function addCanvasAsPages(pdf: jsPDF, canvas: HTMLCanvasElement, isFirstOverall: boolean) {
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
 
-  // Calculate image dimensions to fit A4 width
+  const imgData = canvas.toDataURL("image/jpeg", 0.92);
   const imgWidth = pageWidth;
   const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
   let heightLeft = imgHeight;
   let position = 0;
 
-  pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+  if (!isFirstOverall) pdf.addPage();
+  pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
   heightLeft -= pageHeight;
 
-  // Add extra pages if needed
   while (heightLeft > 0) {
     position = heightLeft - imgHeight;
     pdf.addPage();
-    pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+    pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
     heightLeft -= pageHeight;
   }
+}
 
-  const fileName = `PauseFirst_${params.pet.name}_${params.visit.visitDate || "visit"}.pdf`
-    .replace(/\s+/g, "_")
-    .replace(/[^\w\-\.]/g, "");
+// Renders PdfVisitBriefDocument into a detached, off-screen container (never
+// part of the visible page — the on-screen ViewDocument stays exactly as it
+// was) purely so each ".docPage" section can be screenshotted for the PDF.
+async function renderDocumentPdf(params: {
+  visit: Visit;
+  pet: Pet;
+  note: VisitNote | null;
+  lang: Lang;
+}): Promise<{ pdf: jsPDF; fileName: string }> {
+  const { visit, pet, note, lang } = params;
 
-  return { pdf, fileName };
+  const container = document.createElement("div");
+  container.style.position = "fixed";
+  container.style.top = "0";
+  container.style.left = "-10000px";
+  container.style.width = "800px";
+  container.setAttribute("aria-hidden", "true");
+  document.body.appendChild(container);
+
+  const root = createRoot(container);
+
+  try {
+    await new Promise<void>((resolve) => {
+      root.render(<PdfVisitBriefDocument lang={lang} visit={visit} pet={pet} note={note} />);
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+    });
+    await waitForImages(container);
+
+    const pageEls = Array.from(container.querySelectorAll<HTMLElement>(".docPage"));
+    const sections = pageEls.length ? pageEls : [container];
+
+    const pdf = new jsPDF("p", "mm", "a4");
+
+    for (let i = 0; i < sections.length; i++) {
+      const canvas = await html2canvas(sections[i], {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff"
+      });
+      addCanvasAsPages(pdf, canvas, i === 0);
+    }
+
+    const fileName = `PauseFirst_${pet.name}_${visit.visitDate || "visit"}.pdf`
+      .replace(/\s+/g, "_")
+      .replace(/[^\w\-\.]/g, "");
+
+    return { pdf, fileName };
+  } finally {
+    root.unmount();
+    container.remove();
+  }
 }
 
 export async function exportToPDF(params: {
@@ -307,7 +375,7 @@ export async function exportToPDF(params: {
   pdf.save(fileName);
 }
 
-async function generatePdfFile(params: { visit: Visit; pet: Pet }): Promise<File | null> {
+async function generatePdfFile(params: { visit: Visit; pet: Pet; note: VisitNote | null; lang: Lang }): Promise<File | null> {
   try {
     const { pdf, fileName } = await renderDocumentPdf(params);
     const blob = pdf.output("blob");
@@ -395,7 +463,7 @@ export async function shareWithVet(params: {
 
   const attachments = [...(visit.attachments ?? []), ...(note?.attachments ?? [])];
   const [pdfFile, attachmentResult] = await Promise.all([
-    generatePdfFile({ visit, pet }),
+    generatePdfFile({ visit, pet, note, lang }),
     attachments.length
       ? attachmentsToFiles(attachments)
       : Promise.resolve({ files: [] as File[], succeeded: [] as Attachment[], failedCount: 0 })
