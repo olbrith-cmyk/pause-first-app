@@ -280,16 +280,52 @@ function waitForImages(root: HTMLElement, timeoutMs = 4000): Promise<void> {
   ]);
 }
 
+// Every atomic chunk of text in PdfVisitBriefDocument (a FieldBox, an info
+// row, a single current-status finding, a photo grid, etc.) carries this
+// class. When a ".docPage" section is taller than one PDF page, the export
+// below only ever cuts between two of these elements — never through the
+// middle of one — so a long answer can't have its sentence split across a
+// page break.
+const PDF_BLOCK_SELECTOR = ".pdfBlock";
+
+// Returns the top offset (in CSS px, relative to `root`'s own top edge) of
+// every ".pdfBlock" inside it — each one is a position it's safe to start a
+// new PDF page at, since nothing straddles that line. Measured against the
+// live DOM before html2canvas clones it, so these line up with the
+// coordinates the resulting canvas was rendered at (same element, same
+// layout — html2canvas doesn't mutate the original).
+function getSafeBreakOffsetsPx(root: HTMLElement): number[] {
+  const rootTop = root.getBoundingClientRect().top;
+  const offsets = Array.from(root.querySelectorAll<HTMLElement>(PDF_BLOCK_SELECTOR)).map(
+    (el) => el.getBoundingClientRect().top - rootTop
+  );
+  offsets.push(root.scrollHeight);
+  return offsets.sort((a, b) => a - b);
+}
+
 // Adds one canvas as one or more PDF pages (slicing further only if the
 // canvas is taller than a single page), starting a fresh page before the
 // very first one only when `pdf` already has content on its current page.
+//
+// Each slice boundary snaps backward to the nearest safe break (see
+// getSafeBreakOffsetsPx) within reach of a full page, so a page break lands
+// in the gap between two fields/rows instead of mid-sentence through one —
+// unless a single block is itself taller than a page, in which case there's
+// no safe place to cut and it falls back to a plain height-based cut so
+// content is never lost or stretched off a page.
 //
 // JPEG rather than PNG: this document is mostly flat white/tinted boxes with
 // text, and PNG's lossless compression handles that badly at scale — a
 // multi-page export ran to 20MB+. JPEG at high quality is visually
 // indistinguishable here and comes in at a fraction of the size, which
 // matters both for the download and for emailing it via Share with Vet.
-function addCanvasAsPages(pdf: jsPDF, canvas: HTMLCanvasElement, isFirstOverall: boolean) {
+function addCanvasAsPages(
+  pdf: jsPDF,
+  canvas: HTMLCanvasElement,
+  isFirstOverall: boolean,
+  safeBreaksPx: number[],
+  sectionHeightPx: number
+) {
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
 
@@ -297,18 +333,53 @@ function addCanvasAsPages(pdf: jsPDF, canvas: HTMLCanvasElement, isFirstOverall:
   const imgWidth = pageWidth;
   const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-  let heightLeft = imgHeight;
-  let position = 0;
+  // mm of rendered image per CSS px of the original (un-scaled) element —
+  // lets safe-break offsets (measured in CSS px) be compared against
+  // consumed/remaining image height (tracked in mm, like the rest of this
+  // function).
+  const mmPerPx = sectionHeightPx > 0 ? imgHeight / sectionHeightPx : 0;
+  const safeBreaksMm = safeBreaksPx.map((px) => px * mmPerPx);
+  // Never accept a safe break this close to the top of the current page —
+  // avoids a near-empty page when a block happens to start just inside the
+  // search window with nothing else breakable before the next full page.
+  const minSliceMm = pageHeight * 0.15;
 
-  if (!isFirstOverall) pdf.addPage();
-  pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
-  heightLeft -= pageHeight;
+  let consumedMm = 0;
+  let isFirstSliceOfThisCanvas = true;
 
-  while (heightLeft > 0) {
-    position = heightLeft - imgHeight;
-    pdf.addPage();
-    pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
+  while (consumedMm < imgHeight - 0.01) {
+    if (!isFirstSliceOfThisCanvas || !isFirstOverall) pdf.addPage();
+
+    const remainingMm = imgHeight - consumedMm;
+    let sliceMm = Math.min(pageHeight, remainingMm);
+
+    if (sliceMm < remainingMm) {
+      // Not the last slice for this canvas — look for the latest safe break
+      // that still fits within this page.
+      const maxCutMm = consumedMm + pageHeight;
+      let best: number | null = null;
+      for (const b of safeBreaksMm) {
+        if (b > consumedMm + minSliceMm && b <= maxCutMm) best = b;
+      }
+      if (best !== null) sliceMm = best - consumedMm;
+    }
+
+    pdf.addImage(imgData, "JPEG", 0, -consumedMm, imgWidth, imgHeight);
+
+    // addImage always draws the full (tall) image — the page's own edge
+    // naturally hides everything below pageHeight, but when this slice ends
+    // earlier than that (snapped to a safe break) the content between
+    // sliceMm and pageHeight is still sitting right there under the page
+    // edge and would otherwise get drawn AGAIN at the top of the next page.
+    // Mask it with a plain white rectangle so it's blank here instead of
+    // duplicated.
+    if (sliceMm < pageHeight) {
+      pdf.setFillColor(255, 255, 255);
+      pdf.rect(0, sliceMm, imgWidth, pageHeight - sliceMm, "F");
+    }
+
+    consumedMm += sliceMm;
+    isFirstSliceOfThisCanvas = false;
   }
 }
 
@@ -346,12 +417,17 @@ async function renderDocumentPdf(params: {
     const pdf = new jsPDF("p", "mm", "a4");
 
     for (let i = 0; i < sections.length; i++) {
+      // Measured before the html2canvas call, against the same live element
+      // it's about to screenshot, so these line up with the canvas's pixels.
+      const safeBreaksPx = getSafeBreakOffsetsPx(sections[i]);
+      const sectionHeightPx = sections[i].scrollHeight;
+
       const canvas = await html2canvas(sections[i], {
         scale: 2,
         useCORS: true,
         backgroundColor: "#ffffff"
       });
-      addCanvasAsPages(pdf, canvas, i === 0);
+      addCanvasAsPages(pdf, canvas, i === 0, safeBreaksPx, sectionHeightPx);
     }
 
     const fileName = `PauseFirst_${pet.name}_${visit.visitDate || "visit"}.pdf`

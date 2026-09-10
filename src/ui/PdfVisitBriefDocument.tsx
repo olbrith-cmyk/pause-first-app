@@ -162,6 +162,7 @@ function SectionLabel({ children, color = "var(--blue)" }: { children: ReactNode
 function FieldBox({ label, children, shaded, empty }: { label: string; children: ReactNode; shaded?: boolean; empty?: boolean }) {
   return (
     <div
+      className="pdfBlock"
       style={{
         padding: "10px 14px",
         marginBottom: 8,
@@ -194,6 +195,7 @@ function InfoTable({ rows }: { rows: { label: string; value: string }[] }) {
       {rows.map((r, i) => (
         <div
           key={r.label}
+          className="pdfBlock"
           style={{
             display: "flex",
             flexWrap: "wrap",
@@ -218,6 +220,7 @@ function AskedInfoRow({ label, value, placeholder, shaded }: { label: string; va
   const empty = !value.trim();
   return (
     <div
+      className="pdfBlock"
       style={{
         display: "flex",
         flexWrap: "wrap",
@@ -239,7 +242,7 @@ function ThreeUp({ items }: { items: { label: string; value: string }[] }) {
   return (
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10, marginBottom: 14 }}>
       {present.map((i) => (
-        <div key={i.label} style={{ padding: "8px 12px", background: "var(--bg)", borderRadius: 8, border: "1px solid var(--border)" }}>
+        <div key={i.label} className="pdfBlock" style={{ padding: "8px 12px", background: "var(--bg)", borderRadius: 8, border: "1px solid var(--border)" }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.3px" }}>
             {i.label}
           </div>
@@ -308,6 +311,7 @@ export default function PdfVisitBriefDocument({
         {signalment && <div style={{ fontSize: 14, color: "var(--muted)", marginBottom: 16 }}>{signalment}</div>}
 
         <div
+          className="pdfBlock"
           style={{
             padding: "16px 18px",
             marginBottom: 14,
@@ -372,7 +376,7 @@ export default function PdfVisitBriefDocument({
                     {tt("Different", "Anderledes")}
                   </div>
                   {statusSummary.different.map((f) => (
-                    <div key={f.label} style={{ display: "flex", flexWrap: "wrap", gap: 6, fontSize: 14, marginBottom: 2 }}>
+                    <div key={f.label} className="pdfBlock" style={{ display: "flex", flexWrap: "wrap", gap: 6, fontSize: 14, marginBottom: 2 }}>
                       <span style={{ fontWeight: 700, color: "var(--text)" }}>{f.label}</span>
                       {f.notes && <span style={{ color: "var(--text)" }}>{f.notes}</span>}
                     </div>
@@ -385,7 +389,7 @@ export default function PdfVisitBriefDocument({
                     {tt("N/A / Not Sure", "Ikke relevant / ved ikke")}
                   </div>
                   {statusSummary.notSure.map((f) => (
-                    <div key={f.label} style={{ display: "flex", flexWrap: "wrap", gap: 6, fontSize: 14, marginBottom: 2 }}>
+                    <div key={f.label} className="pdfBlock" style={{ display: "flex", flexWrap: "wrap", gap: 6, fontSize: 14, marginBottom: 2 }}>
                       <span style={{ fontWeight: 700, color: "var(--text)" }}>{f.label}</span>
                       {f.notes && <span style={{ color: "var(--text)" }}>{f.notes}</span>}
                     </div>
@@ -393,7 +397,7 @@ export default function PdfVisitBriefDocument({
                 </div>
               )}
               {!!statusSummary.asUsual.length && (
-                <div style={{ fontSize: 13 }}>
+                <div className="pdfBlock" style={{ fontSize: 13 }}>
                   <span style={{ fontWeight: 800, color: "var(--green)", textTransform: "uppercase", letterSpacing: "0.3px", marginRight: 6 }}>
                     {tt("As Usual", "Som normalt")}
                   </span>
@@ -401,7 +405,7 @@ export default function PdfVisitBriefDocument({
                 </div>
               )}
               {statusSummary.otherNotes && (
-                <p style={{ margin: "8px 0 0 0", fontSize: 14, lineHeight: "1.6" }}>{statusSummary.otherNotes}</p>
+                <p className="pdfBlock" style={{ margin: "8px 0 0 0", fontSize: 14, lineHeight: "1.6" }}>{statusSummary.otherNotes}</p>
               )}
             </div>
           </>
@@ -419,7 +423,9 @@ export default function PdfVisitBriefDocument({
         {!!visit.attachments?.length && (
           <>
             <SectionLabel>{tt("Photos, Video & Audio", "Fotos, video & lyd")}</SectionLabel>
-            <AttachmentGallery attachments={visit.attachments} />
+            <div className="pdfBlock">
+              <AttachmentGallery attachments={visit.attachments} />
+            </div>
           </>
         )}
 
@@ -470,14 +476,14 @@ export default function PdfVisitBriefDocument({
             placeholder={notProvided}
           />
           {healthRows.map((r, i) => (
-            <div key={r.label} style={{ padding: "8px 10px", background: (i + 3) % 2 === 1 ? "var(--bg)" : "var(--card)", borderRadius: 6, display: "flex", flexWrap: "wrap", gap: 4 }}>
+            <div key={r.label} className="pdfBlock" style={{ padding: "8px 10px", background: (i + 3) % 2 === 1 ? "var(--bg)" : "var(--card)", borderRadius: 6, display: "flex", flexWrap: "wrap", gap: 4 }}>
               <div style={{ width: 190, flexShrink: 0, color: "var(--muted)", fontSize: 13, fontWeight: 700 }}>{r.label}</div>
               <div style={{ fontSize: 14, color: "var(--text)" }}>{r.value}</div>
             </div>
           ))}
         </div>
 
-        <div style={{ marginTop: 14, padding: "10px 12px", background: "var(--bg)", borderRadius: 8, fontSize: 12, color: "var(--muted)" }}>
+        <div className="pdfBlock" style={{ marginTop: 14, padding: "10px 12px", background: "var(--bg)", borderRadius: 8, fontSize: 12, color: "var(--muted)" }}>
           <strong style={{ color: "var(--text)" }}>{tt("Reading key:", "Sådan læses det:")}</strong>{" "}
           {tt(
             "'None known' is an owner answer. 'Not provided' means no answer was entered.",
@@ -525,7 +531,9 @@ export default function PdfVisitBriefDocument({
           {!!note.attachments?.length && (
             <>
               <SectionLabel color="var(--green)">{tt("Photos, Video & Audio", "Fotos, video & lyd")}</SectionLabel>
-              <AttachmentGallery attachments={note.attachments} />
+              <div className="pdfBlock">
+                <AttachmentGallery attachments={note.attachments} />
+              </div>
             </>
           )}
 
